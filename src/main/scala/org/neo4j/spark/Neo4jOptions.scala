@@ -1,4 +1,4 @@
-package org.neo4j.spark.v2
+package org.neo4j.spark
 
 import org.neo4j.driver.Config.TrustStrategy
 

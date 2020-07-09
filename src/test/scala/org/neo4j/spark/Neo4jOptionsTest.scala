@@ -1,7 +1,7 @@
-package org.neo4j.spark.v2
+package org.neo4j.spark
 
-import org.junit.Test
 import org.junit.Assert._
+import org.junit.Test
 import org.neo4j.driver.Config.TrustStrategy
 
 class Neo4jOptionsTest {
