@@ -17,7 +17,7 @@ class Neo4jOptionsTest {
   @Test
   def testUrlIsRequired(): Unit = {
     val options: java.util.Map[String, String] = java.util.Map.of(
-      "node", "Person"
+      QueryType.QUERY.toString.toLowerCase, "Person"
     )
 
     _expectedException.expect(classOf[IllegalArgumentException])
@@ -29,13 +29,13 @@ class Neo4jOptionsTest {
   @Test
   def testQueryAndNodeShouldThrowError(): Unit = {
     val options: java.util.Map[String, String] = java.util.Map.of(
-      "url", "bolt://localhost",
-      "query", "MATCH n RETURN n",
-      "node", "Person"
+      Neo4jOptions.URL, "bolt://localhost",
+      QueryType.QUERY.toString.toLowerCase, "MATCH n RETURN n",
+      QueryType.NODE.toString.toLowerCase, "Person"
     )
 
     _expectedException.expect(classOf[IllegalArgumentException])
-    _expectedException.expectMessage("You need to specify just one of these options: 'query', 'node', 'relationship'")
+    _expectedException.expectMessage("You need to specify just one of these options: 'node', 'query', 'relationship'")
 
     new Neo4jOptions(options)
   }
@@ -43,13 +43,13 @@ class Neo4jOptionsTest {
   @Test
   def testQueryAndRelationshipShouldThrowError(): Unit = {
     val options: java.util.Map[String, String] = java.util.Map.of(
-      "url", "bolt://localhost",
-      "query", "MATCH n RETURN n",
-      "relationship", "Knows"
+      Neo4jOptions.URL, "bolt://localhost",
+      QueryType.QUERY.toString.toLowerCase, "MATCH n RETURN n",
+      QueryType.RELATIONSHIP.toString.toLowerCase, "KNOWS"
     )
 
     _expectedException.expect(classOf[IllegalArgumentException])
-    _expectedException.expectMessage("You need to specify just one of these options: 'query', 'node', 'relationship'")
+    _expectedException.expectMessage("You need to specify just one of these options: 'node', 'query', 'relationship'")
 
     new Neo4jOptions(options)
   }
@@ -57,13 +57,13 @@ class Neo4jOptionsTest {
   @Test
   def testNodeAndRelationshipShouldThrowError(): Unit = {
     val options: java.util.Map[String, String] = java.util.Map.of(
-      "url", "bolt://localhost",
-      "node", "PERSON",
-      "relationship", "Knows"
+      Neo4jOptions.URL, "bolt://localhost",
+      QueryType.NODE.toString.toLowerCase, "PERSON",
+      QueryType.RELATIONSHIP.toString.toLowerCase, "Knows"
     )
 
     _expectedException.expect(classOf[IllegalArgumentException])
-    _expectedException.expectMessage("You need to specify just one of these options: 'query', 'node', 'relationship'")
+    _expectedException.expectMessage("You need to specify just one of these options: 'node', 'query', 'relationship'")
 
     new Neo4jOptions(options)
   }
@@ -72,13 +72,13 @@ class Neo4jOptionsTest {
   def testQueryShouldHaveQueryType(): Unit = {
     val query: String = "MATCH n RETURN n"
     val options: java.util.Map[String, String] = java.util.Map.of(
-      "url", "bolt://localhost",
-      "query", query
+      Neo4jOptions.URL, "bolt://localhost",
+      QueryType.QUERY.toString.toLowerCase, query
     )
 
     val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
 
-    assertEquals(QueryType.TYPE_QUERY, neo4jOptions.query.queryType)
+    assertEquals(QueryType.QUERY, neo4jOptions.query.queryType)
     assertEquals(query, neo4jOptions.query.value)
   }
 
@@ -86,13 +86,13 @@ class Neo4jOptionsTest {
   def testNodeShouldHaveNodeType(): Unit = {
     val label: String = "Person"
     val options: java.util.Map[String, String] = java.util.Map.of(
-      "url", "bolt://localhost",
-      "node", label
+      Neo4jOptions.URL, "bolt://localhost",
+      QueryType.NODE.toString.toLowerCase, label
     )
 
     val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
 
-    assertEquals(QueryType.TYPE_NODE, neo4jOptions.query.queryType)
+    assertEquals(QueryType.NODE, neo4jOptions.query.queryType)
     assertEquals(label, neo4jOptions.query.value)
   }
 
@@ -100,27 +100,27 @@ class Neo4jOptionsTest {
   def testRelationshipShouldHaveRelationshipType(): Unit = {
     val relationship: String = "KNOWS"
     val options: java.util.Map[String, String] = java.util.Map.of(
-      "url", "bolt://localhost",
-      "node", relationship
+      Neo4jOptions.URL, "bolt://localhost",
+      QueryType.NODE.toString.toLowerCase, relationship
     )
 
     val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
 
-    assertEquals(QueryType.TYPE_NODE, neo4jOptions.query.queryType)
+    assertEquals(QueryType.NODE, neo4jOptions.query.queryType)
     assertEquals(relationship, neo4jOptions.query.value)
   }
 
   @Test
   def testDrierDefaults(): Unit = {
     val options: java.util.Map[String, String] = java.util.Map.of(
-      "url", "bolt://localhost",
-      "query", "MATCH n RETURN n"
+      Neo4jOptions.URL, "bolt://localhost",
+      QueryType.QUERY.toString.toLowerCase, "MATCH n RETURN n"
     )
 
     val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
 
     assertEquals("neo4j", neo4jOptions.connection.database)
-    assertEquals("none", neo4jOptions.connection.auth)
+    assertEquals("basic", neo4jOptions.connection.auth)
     assertEquals("", neo4jOptions.connection.username)
     assertEquals("", neo4jOptions.connection.password)
     assertEquals(false, neo4jOptions.connection.encryption)

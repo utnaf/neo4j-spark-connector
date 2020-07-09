@@ -2,7 +2,7 @@ package org.neo4j.spark.v2
 
 import org.neo4j.driver.Config.TrustStrategy
 
-class Neo4jOptions(parameters: java.util.Map[String, String]) {
+class Neo4jOptions(private val parameters: java.util.Map[String, String]) {
 
   import Neo4jOptions._
   import QueryType._
@@ -15,44 +15,38 @@ class Neo4jOptions(parameters: java.util.Map[String, String]) {
     parameters.get(parameter)
   }
 
-  private def getParameter(parameter: String): Option[String] = {
+  private def getParameter(parameter: String, defaultValue: String = ""): String = {
     if (!parameters.containsKey(parameter) || parameters.get((parameter)).isEmpty) {
-      return None
+      return defaultValue
     }
 
-    Some(parameters.get(parameter).trim())
+    parameters.get(parameter).trim()
   }
 
-  val query: QueryOption = (getParameter(QUERY), getParameter(NODE), getParameter(RELATIONSHIP)) match {
-    case (Some(query), None, None) => new QueryOption(TYPE_QUERY, query)
-    case (None, Some(node), None) => new QueryOption(TYPE_NODE, node)
-    case (None, None, Some(relationship)) => new QueryOption(TYPE_RELATIONSHIP, relationship)
-    case _ => throw new IllegalArgumentException(s"You need to specify just one of these options: '$QUERY', '$NODE', '$RELATIONSHIP'")
+  val query: QueryOption = (
+    getParameter(QUERY.toString.toLowerCase),
+    getParameter(NODE.toString.toLowerCase),
+    getParameter(RELATIONSHIP.toString.toLowerCase())
+  ) match {
+    case (query, "", "") => QueryOption(QUERY, query)
+    case ("", node, "") => QueryOption(NODE, node)
+    case ("", "", relationship) => QueryOption(RELATIONSHIP, relationship)
+    case _ => throw new IllegalArgumentException(
+      s"You need to specify just one of these options: ${QueryType.values.toSeq.map( value => s"'${value.toString.toLowerCase()}'").sorted.mkString(", ")}"
+    )
   }
 
-  val connection: Neo4jOptionsDriver = new Neo4jOptionsDriver(
+  val connection: Neo4jOptionsDriver = Neo4jOptionsDriver(
     getRequiredParameter(URL),
-    getParameter(DATABASE) getOrElse DEFAULT_DATABASE,
-    getParameter(AUTH_TYPE) getOrElse DEFAULT_AUTH_TYPE,
-    getParameter(AUTH_BASIC_USERNAME) getOrElse DEFAULT_AUTH_BASIC_USERNAME,
-    getParameter(AUTH_BASIC_PASSWORD) getOrElse DEFAULT_AUTH_BASIC_PASSWORD,
-    getParameter(ENCRYPTION_ENABLED) match {
-      case Some(enabled) => if (enabled.equals("true")) true else false
-      case _ => DEFAULT_ENCRYPTION_ENABLED
-    },
-    getParameter(ENCRYPTION_TRUST_STRATEGY) match {
-      case Some(strategy) => TrustStrategy.Strategy.valueOf(strategy)
-      case _ => DEFAULT_ENCRYPTION_TRUST_STRATEGY
-    },
-    getParameter(ENCRYPTION_CA_CERTIFICATE_PATH) getOrElse DEFAULT_ENCRYPTION_CA_CERTIFICATE_PATH,
-    getParameter(MAX_CONNECTION_LIFETIME_MSECS) match {
-      case Some(lifetime) => lifetime.toInt
-      case _ => DEFAULT_MAX_CONNECTION_LIFETIME_MSECS
-    },
-    getParameter(MAX_CONNECTION_ACQUISITION_TIMEOUT_MSECS) match {
-      case Some(timeout) => timeout.toInt
-      case _ => DEFAULT_MAX_CONNECTION_ACQUISITION_TIMEOUT_MSECS
-    }
+    getParameter(DATABASE, DEFAULT_DATABASE),
+    getParameter(AUTH_TYPE, DEFAULT_AUTH_TYPE),
+    getParameter(AUTH_BASIC_USERNAME, DEFAULT_AUTH_BASIC_USERNAME),
+    getParameter(AUTH_BASIC_PASSWORD, DEFAULT_AUTH_BASIC_PASSWORD),
+    getParameter(ENCRYPTION_ENABLED, DEFAULT_ENCRYPTION_ENABLED.toString).toBoolean,
+    TrustStrategy.Strategy.valueOf(getParameter(ENCRYPTION_TRUST_STRATEGY, DEFAULT_ENCRYPTION_TRUST_STRATEGY.name())),
+    getParameter(ENCRYPTION_CA_CERTIFICATE_PATH, DEFAULT_ENCRYPTION_CA_CERTIFICATE_PATH),
+    getParameter(MAX_CONNECTION_LIFETIME_MSECS, DEFAULT_MAX_CONNECTION_LIFETIME_MSECS.toString).toInt,
+    getParameter(MAX_CONNECTION_ACQUISITION_TIMEOUT_MSECS, DEFAULT_MAX_CONNECTION_ACQUISITION_TIMEOUT_MSECS.toString).toInt
   )
 }
 
@@ -85,14 +79,9 @@ object Neo4jOptions {
   val MAX_CONNECTION_LIFETIME_MSECS = "connection.max.lifetime.msecs"
   val MAX_CONNECTION_ACQUISITION_TIMEOUT_MSECS = "connection.acquisition.timeout.msecs"
 
-  // query options
-  val QUERY: String = "query"
-  val NODE: String = "node"
-  val RELATIONSHIP: String = "relationship"
-
   // defaults
   val DEFAULT_DATABASE = "neo4j"
-  val DEFAULT_AUTH_TYPE = "none"
+  val DEFAULT_AUTH_TYPE = "basic"
   val DEFAULT_AUTH_BASIC_USERNAME = ""
   val DEFAULT_AUTH_BASIC_PASSWORD = ""
   val DEFAULT_ENCRYPTION_ENABLED = false
@@ -103,5 +92,5 @@ object Neo4jOptions {
 }
 
 object QueryType extends Enumeration {
-  val TYPE_QUERY, TYPE_NODE, TYPE_RELATIONSHIP = Value
+  val QUERY, NODE, RELATIONSHIP = Value
 }
