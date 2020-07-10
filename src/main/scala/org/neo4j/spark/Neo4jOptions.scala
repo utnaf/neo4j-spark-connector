@@ -23,7 +23,7 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) {
     parameters.get(parameter).trim()
   }
 
-  val query: QueryOption = (
+  val queryOption: QueryOption = (
     getParameter(QUERY.toString.toLowerCase),
     getParameter(NODE.toString.toLowerCase),
     getParameter(RELATIONSHIP.toString.toLowerCase())
@@ -36,7 +36,7 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) {
     )
   }
 
-  val connection: Neo4jOptionsDriver = Neo4jOptionsDriver(
+  val connection: Neo4jDriverOptions = Neo4jDriverOptions(
     getRequiredParameter(URL),
     getParameter(DATABASE, DEFAULT_DATABASE),
     getParameter(AUTH_TYPE, DEFAULT_AUTH_TYPE),
@@ -52,7 +52,7 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) {
 
 case class QueryOption(queryType: QueryType.Value, value: String) extends Serializable
 
-case class Neo4jOptionsDriver(
+case class Neo4jDriverOptions(
                                url: String,
                                database: String,
                                auth: String,
