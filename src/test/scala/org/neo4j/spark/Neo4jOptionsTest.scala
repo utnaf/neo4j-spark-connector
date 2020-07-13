@@ -4,6 +4,7 @@ import java.util
 
 import org.junit.Assert._
 import org.junit.Test
+import org.neo4j.driver.AccessMode
 import org.neo4j.driver.Config.TrustStrategy
 
 class Neo4jOptionsTest {
@@ -107,14 +108,14 @@ class Neo4jOptionsTest {
 
   @Test
   def testDrierDefaults(): Unit = {
-    val relationship: String = "KNOWS"
     val options: java.util.Map[String, String] = new util.HashMap[String, String]()
     options.put(Neo4jOptions.URL, "bolt://localhost")
     options.put(QueryType.QUERY.toString.toLowerCase, "MATCH n RETURN n")
 
     val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
 
-    assertEquals("neo4j", neo4jOptions.connection.database)
+    assertEquals("", neo4jOptions.session.database)
+    assertEquals(AccessMode.READ, neo4jOptions.session.accessMode)
     assertEquals("basic", neo4jOptions.connection.auth)
     assertEquals("", neo4jOptions.connection.username)
     assertEquals("", neo4jOptions.connection.password)

@@ -1,5 +1,6 @@
 package org.neo4j.spark
 
+import org.neo4j.driver.AccessMode
 import org.neo4j.driver.Config.TrustStrategy
 
 class Neo4jOptions(private val parameters: java.util.Map[String, String]) {
@@ -36,9 +37,8 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) {
     )
   }
 
-  val connection: Neo4jOptionsDriver = Neo4jOptionsDriver(
+  val connection: Neo4jDriverOptions = Neo4jDriverOptions(
     getRequiredParameter(URL),
-    getParameter(DATABASE, DEFAULT_DATABASE),
     getParameter(AUTH_TYPE, DEFAULT_AUTH_TYPE),
     getParameter(AUTH_BASIC_USERNAME, DEFAULT_AUTH_BASIC_USERNAME),
     getParameter(AUTH_BASIC_PASSWORD, DEFAULT_AUTH_BASIC_PASSWORD),
@@ -48,13 +48,16 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) {
     getParameter(MAX_CONNECTION_LIFETIME_MSECS, DEFAULT_MAX_CONNECTION_LIFETIME_MSECS.toString).toInt,
     getParameter(MAX_CONNECTION_ACQUISITION_TIMEOUT_MSECS, DEFAULT_MAX_CONNECTION_ACQUISITION_TIMEOUT_MSECS.toString).toInt
   )
+
+  val session: Neo4jSessionOptions = Neo4jSessionOptions(getParameter(DATABASE, DEFAULT_DATABASE))
 }
 
 case class QueryOption(queryType: QueryType.Value, value: String) extends Serializable
 
-case class Neo4jOptionsDriver(
+case class Neo4jSessionOptions(database: String, accessMode: AccessMode = AccessMode.READ)
+
+case class Neo4jDriverOptions(
                                url: String,
-                               database: String,
                                auth: String,
                                username: String,
                                password: String,
@@ -69,7 +72,6 @@ object Neo4jOptions {
 
   // connection options
   val URL = "url"
-  val DATABASE = "database"
   val AUTH_TYPE = "authentication.type"
   val AUTH_BASIC_USERNAME = "authentication.basic.username"
   val AUTH_BASIC_PASSWORD = "authentication.basic.password"
@@ -79,8 +81,11 @@ object Neo4jOptions {
   val MAX_CONNECTION_LIFETIME_MSECS = "connection.max.lifetime.msecs"
   val MAX_CONNECTION_ACQUISITION_TIMEOUT_MSECS = "connection.acquisition.timeout.msecs"
 
+  // session options
+  val DATABASE = "database"
+
   // defaults
-  val DEFAULT_DATABASE = "neo4j"
+  val DEFAULT_DATABASE = ""
   val DEFAULT_AUTH_TYPE = "basic"
   val DEFAULT_AUTH_BASIC_USERNAME = ""
   val DEFAULT_AUTH_BASIC_PASSWORD = ""
