@@ -24,14 +24,14 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) {
     parameters.get(parameter).trim()
   }
 
-  val query: QueryOption = (
+  val query: Neo4jQueryOptions = (
     getParameter(QUERY.toString.toLowerCase),
     getParameter(NODE.toString.toLowerCase),
     getParameter(RELATIONSHIP.toString.toLowerCase())
   ) match {
-    case (query, "", "") => QueryOption(QUERY, query)
-    case ("", node, "") => QueryOption(NODE, node)
-    case ("", "", relationship) => QueryOption(RELATIONSHIP, relationship)
+    case (query, "", "") => Neo4jQueryOptions(QUERY, query)
+    case ("", node, "") => Neo4jQueryOptions(NODE, node)
+    case ("", "", relationship) => Neo4jQueryOptions(RELATIONSHIP, relationship)
     case _ => throw new IllegalArgumentException(
       s"You need to specify just one of these options: ${QueryType.values.toSeq.map( value => s"'${value.toString.toLowerCase()}'").sorted.mkString(", ")}"
     )
@@ -52,7 +52,7 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) {
   val session: Neo4jSessionOptions = Neo4jSessionOptions(getParameter(DATABASE, DEFAULT_DATABASE))
 }
 
-case class QueryOption(queryType: QueryType.Value, value: String) extends Serializable
+case class Neo4jQueryOptions(queryType: QueryType.Value, value: String) extends Serializable
 
 case class Neo4jSessionOptions(database: String, accessMode: AccessMode = AccessMode.READ)
 
