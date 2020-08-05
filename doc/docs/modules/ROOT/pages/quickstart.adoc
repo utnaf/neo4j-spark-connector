@@ -408,12 +408,6 @@ df.show()
 This means that the struct returned by the query will be composed by strings that you can than cast via simply Spark's
 transformations.
 
-[NOTE]
-Inference (`schema.strategy` = `sample`) is good when all instances of a property in neo4j are the same type,
-and string followed by cast is better when property types may differ.
-Remember that Neo4j does not enforce property typing, and so `person.age` could sometimes be a `long
-and sometimes be a `string`.
-
 ==== Schema
 
 If APOC are installed, schema will be created with `apoc.meta.relTypeProperties`. Otherwise the first 10 (or any number specified by the `schema.flatten.limit` option) results will be flattened and the schema will be create from those properties.
