@@ -1,6 +1,7 @@
 package org.neo4j.spark.service
 
 import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.sources.Filter
 import org.neo4j.cypherdsl.core.Cypher
 import org.neo4j.cypherdsl.core.renderer.Renderer
 import org.neo4j.spark.{Neo4jOptions, QueryType}
@@ -12,8 +13,8 @@ import collection.JavaConverters._
 class Neo4jQueryWriteStrategy(private val saveMode: SaveMode) extends Neo4jQueryStrategy {
   override def createStatementForQuery(options: Neo4jOptions): String =
     s"""UNWIND ${"$"}events AS event
-      |${options.query.value}
-      |""".stripMargin
+       |${options.query.value}
+       |""".stripMargin
 
   override def createStatementForRelationships(options: Neo4jOptions): String = throw new UnsupportedOperationException("TODO implement method")
 
@@ -37,7 +38,7 @@ class Neo4jQueryWriteStrategy(private val saveMode: SaveMode) extends Neo4jQuery
   }
 }
 
-class Neo4jQueryReadStrategy extends Neo4jQueryStrategy {
+class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy {
   private val renderer: Renderer = Renderer.getDefaultRenderer
 
   override def createStatementForQuery(options: Neo4jOptions): String = options.query.value
@@ -54,7 +55,15 @@ class Neo4jQueryReadStrategy extends Neo4jQueryStrategy {
     val primaryLabel = options.nodeMetadata.labels.head
     val otherLabels = options.nodeMetadata.labels.takeRight(options.nodeMetadata.labels.size - 1)
     val node = Cypher.node(primaryLabel, otherLabels.asJava).named(Neo4jUtil.NODE_ALIAS)
-    renderer.render(Cypher.`match`(node).returning(node).build())
+    val matchQuery = Cypher.`match`(node)
+
+    if (filters.nonEmpty) {
+      matchQuery.where(
+        filters.map { Neo4jUtil.mapSparkFiltersToCypher(_, node) } reduce { (a, b) => a.and(b) }
+      )
+    }
+
+    renderer.render(matchQuery.returning(node).build())
   }
 }
 
@@ -66,7 +75,8 @@ abstract class Neo4jQueryStrategy {
   def createStatementForNodes(options: Neo4jOptions): String
 }
 
-class Neo4jQueryService(private val options: Neo4jOptions, private val strategy: Neo4jQueryStrategy) extends Serializable {
+class Neo4jQueryService(private val options: Neo4jOptions,
+                        val strategy: Neo4jQueryStrategy) extends Serializable {
 
   def createQuery(): String = options.query.queryType match {
     case QueryType.LABELS => strategy.createStatementForNodes(options)
