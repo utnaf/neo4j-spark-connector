@@ -2,7 +2,7 @@ package org.neo4j.spark.service
 
 import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.sources.Filter
-import org.neo4j.cypherdsl.core.Cypher
+import org.neo4j.cypherdsl.core.{Cypher, PropertyContainer}
 import org.neo4j.cypherdsl.core.renderer.Renderer
 import org.neo4j.spark.{Neo4jOptions, QueryType}
 import org.neo4j.spark.util.Neo4jImplicits._
@@ -44,11 +44,49 @@ class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy 
   override def createStatementForQuery(options: Neo4jOptions): String = options.query.value
 
   override def createStatementForRelationships(options: Neo4jOptions): String = {
-    s"""MATCH (${Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS}:${options.relationshipMetadata.source.labels.mkString(":")})
-       |MATCH (${Neo4jUtil.RELATIONSHIP_TARGET_ALIAS}:${options.relationshipMetadata.target.labels.mkString(":")})
-       |MATCH (${Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS})-[${Neo4jUtil.RELATIONSHIP_ALIAS}:${options.relationshipMetadata.relationshipType}]->(${Neo4jUtil.RELATIONSHIP_TARGET_ALIAS})
-       |RETURN ${Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS}, ${Neo4jUtil.RELATIONSHIP_ALIAS}, ${Neo4jUtil.RELATIONSHIP_TARGET_ALIAS}
-       |""".stripMargin
+    val sourcePrimaryLabel = options.relationshipMetadata.source.labels.head
+    val sourceOtherLabels = options.relationshipMetadata.source.labels.takeRight(options.nodeMetadata.labels.size - 1)
+    val sourceNode = Cypher.node(sourcePrimaryLabel, sourceOtherLabels.asJava).named(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS)
+
+    val targetPrimaryLabel = options.relationshipMetadata.target.labels.head
+    val targetOtherLabels = options.relationshipMetadata.target.labels.takeRight(options.nodeMetadata.labels.size - 1)
+    val targetNode = Cypher.node(targetPrimaryLabel, targetOtherLabels.asJava).named(Neo4jUtil.RELATIONSHIP_TARGET_ALIAS)
+
+    val relationship = sourceNode.relationshipBetween(targetNode, options.relationshipMetadata.relationshipType)
+      .named(Neo4jUtil.RELATIONSHIP_ALIAS)
+
+
+    val matchQuery = Cypher.`match`(sourceNode).`match`(targetNode).`match`(relationship)
+
+    if (filters.nonEmpty) {
+      val filtersMap: Map[PropertyContainer, Array[Filter]] = filters.map(filter => {
+        if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS)) {
+          (sourceNode, filter)
+        }
+        else if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_TARGET_ALIAS)) {
+          (targetNode, filter)
+        }
+        else if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_ALIAS)) {
+          (relationship, filter)
+        }
+        else {
+          throw new IllegalArgumentException(s"Attribute '${filter.getAttribute.get}' is not valid")
+        }
+      }).groupBy[PropertyContainer](_._1).mapValues(_.map(_._2))
+
+      matchQuery.where(
+        filtersMap.flatMap(t => {
+          val filters: Array[Filter] = t._2
+          filters.map(filter => Neo4jUtil.mapSparkFiltersToCypher(
+            filter,
+            t._1,
+            filter.getAttribute.map(_.split('.').drop(1).mkString("."))
+          ))
+        }).reduce { (a, b) => a.and(b) }
+      )
+    }
+
+    renderer.render(matchQuery.returning(sourceNode, relationship, targetNode).build())
   }
 
   override def createStatementForNodes(options: Neo4jOptions): String = {
@@ -59,7 +97,9 @@ class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy 
 
     if (filters.nonEmpty) {
       matchQuery.where(
-        filters.map { Neo4jUtil.mapSparkFiltersToCypher(_, node) } reduce { (a, b) => a.and(b) }
+        filters.map {
+          Neo4jUtil.mapSparkFiltersToCypher(_, node)
+        } reduce { (a, b) => a.and(b) }
       )
     }
 

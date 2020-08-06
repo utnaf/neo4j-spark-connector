@@ -1,17 +1,19 @@
 package org.neo4j.spark.util
 
-import java.util
 
 import javax.lang.model.SourceVersion
+import org.apache.spark.sql.sources.{EqualNullSafe, Filter}
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 import org.neo4j.driver.types.{Entity, Node, Relationship}
 import org.neo4j.spark.service.SchemaService
+import org.apache.spark.sql.sources.{And, EqualNullSafe, EqualTo, Filter, GreaterThan, GreaterThanOrEqual, In, IsNotNull, IsNull, LessThan, LessThanOrEqual, Not, Or, StringContains, StringEndsWith, StringStartsWith}
 
 import scala.collection.JavaConverters._
 
 object Neo4jImplicits {
+
   implicit class CypherImplicits(str: String) {
-    def quote(): String = if (!SourceVersion.isIdentifier(str) && !str.trim.startsWith("`")  && !str.trim.endsWith("`")) s"`$str`" else str
+    def quote(): String = if (!SourceVersion.isIdentifier(str) && !str.trim.startsWith("`") && !str.trim.endsWith("`")) s"`$str`" else str
   }
 
   implicit class EntityImplicits(entity: Entity) {
@@ -44,7 +46,7 @@ object Neo4jImplicits {
       val entityFields = entity match {
         case node: Node => {
           Map(Neo4jUtil.INTERNAL_ID_FIELD -> node.id(),
-            Neo4jUtil.INTERNAL_LABELS_FIELD-> node.labels())
+            Neo4jUtil.INTERNAL_LABELS_FIELD -> node.labels())
         }
         case relationship: Relationship => {
           Map(Neo4jUtil.INTERNAL_REL_ID_FIELD -> relationship.id(),
@@ -54,6 +56,27 @@ object Neo4jImplicits {
         }
       }
       (entityFields ++ entityMap).asJava
+    }
+  }
+
+  implicit class FilterImplicit(filter: Filter) {
+    def getAttribute: Option[String] = Option(filter match {
+      case eqns: EqualNullSafe => eqns.attribute
+      case eq: EqualTo => eq.attribute
+      case gt: GreaterThan => gt.attribute
+      case gte: GreaterThanOrEqual => gte.attribute
+      case lt: LessThan => lt.attribute
+      case lte: LessThanOrEqual => lte.attribute
+      case in: In => in.attribute
+      case notNull: IsNotNull => notNull.attribute
+      case isNull: IsNull => isNull.attribute
+      case startWith: StringStartsWith => startWith.attribute
+      case endsWith: StringEndsWith => endsWith.attribute
+      case contains: StringContains => contains.attribute
+    })
+
+    def isAttribute(entityType: String): Boolean = {
+      getAttribute.exists(_.startsWith(entityType))
     }
   }
 }
