@@ -44,21 +44,15 @@ class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy 
   override def createStatementForQuery(options: Neo4jOptions): String = options.query.value
 
   override def createStatementForRelationships(options: Neo4jOptions): String = {
-    val sourcePrimaryLabel = options.relationshipMetadata.source.labels.head
-    val sourceOtherLabels = options.relationshipMetadata.source.labels.takeRight(options.nodeMetadata.labels.size - 1)
-    val sourceNode = Cypher.node(sourcePrimaryLabel, sourceOtherLabels.asJava).named(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS)
-
-    val targetPrimaryLabel = options.relationshipMetadata.target.labels.head
-    val targetOtherLabels = options.relationshipMetadata.target.labels.takeRight(options.nodeMetadata.labels.size - 1)
-    val targetNode = Cypher.node(targetPrimaryLabel, targetOtherLabels.asJava).named(Neo4jUtil.RELATIONSHIP_TARGET_ALIAS)
+    val sourceNode = createNode(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS, options.relationshipMetadata.source.labels)
+    val targetNode = createNode(Neo4jUtil.RELATIONSHIP_TARGET_ALIAS, options.relationshipMetadata.target.labels)
 
     val relationship = sourceNode.relationshipBetween(targetNode, options.relationshipMetadata.relationshipType)
       .named(Neo4jUtil.RELATIONSHIP_ALIAS)
 
-
     val matchQuery = Cypher.`match`(sourceNode).`match`(targetNode).`match`(relationship)
 
-    if (filters.nonEmpty) {
+    if (options.pushdownFiltersEnabled && filters.nonEmpty) {
       val filtersMap: Map[PropertyContainer, Array[Filter]] = filters.map(filter => {
         if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS)) {
           (sourceNode, filter)
@@ -90,20 +84,24 @@ class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy 
   }
 
   override def createStatementForNodes(options: Neo4jOptions): String = {
-    val primaryLabel = options.nodeMetadata.labels.head
-    val otherLabels = options.nodeMetadata.labels.takeRight(options.nodeMetadata.labels.size - 1)
-    val node = Cypher.node(primaryLabel, otherLabels.asJava).named(Neo4jUtil.NODE_ALIAS)
+    val node = createNode(Neo4jUtil.NODE_ALIAS, options.nodeMetadata.labels)
     val matchQuery = Cypher.`match`(node)
 
-    if (filters.nonEmpty) {
+    if (options.pushdownFiltersEnabled && filters.nonEmpty) {
       matchQuery.where(
         filters.map {
           Neo4jUtil.mapSparkFiltersToCypher(_, node)
-        } reduce { (a, b) => a.and(b) }
+        }.reduce { (a, b) => a.and(b) }
       )
     }
 
     renderer.render(matchQuery.returning(node).build())
+  }
+
+  private def createNode(name: String, labels: Seq[String]) = {
+    val primaryLabel = labels.head
+    val otherLabels = labels.takeRight(labels.size - 1)
+    Cypher.node(primaryLabel, otherLabels.asJava).named(name)
   }
 }
 
