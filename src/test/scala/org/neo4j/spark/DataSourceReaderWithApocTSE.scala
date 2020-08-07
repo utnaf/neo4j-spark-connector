@@ -522,6 +522,63 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
   }
 
   @Test
+  def testRelFiltersWithMap(): Unit = {
+    val fixtureQuery: String =
+      """UNWIND range(1,100) as id
+        |CREATE (p:Person {id:id,ids:[id,id]}) WITH collect(p) as people
+        |UNWIND people as p1
+        |UNWIND range(1,10) as friend
+        |WITH p1, people[(p1.id + friend) % size(people)] as p2
+        |CREATE (p1)-[:KNOWS]->(p2)
+        |RETURN *
+    """.stripMargin
+
+    SparkConnectorScalaSuiteWithApocIT.session()
+      .writeTransaction(
+        new TransactionWork[ResultSummary] {
+          override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
+        })
+
+    val df = ss.read.format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
+      .option("relationship", "KNOWS")
+      .option("relationship.source.labels", "Person")
+      .option("relationship.target.labels", "Person")
+      .load()
+
+    assertEquals(1, df.filter("`<source>`.`id` = '10' AND `<target>`.`id` = '1'").collectAsList().size())
+  }
+
+  @Test
+  def testRelFiltersWithoutMap(): Unit = {
+    val fixtureQuery: String =
+      """UNWIND range(1,100) as id
+        |CREATE (p:Person {id:id,ids:[id,id]}) WITH collect(p) as people
+        |UNWIND people as p1
+        |UNWIND range(1,10) as friend
+        |WITH p1, people[(p1.id + friend) % size(people)] as p2
+        |CREATE (p1)-[:KNOWS]->(p2)
+        |RETURN *
+    """.stripMargin
+
+    SparkConnectorScalaSuiteWithApocIT.session()
+      .writeTransaction(
+        new TransactionWork[ResultSummary] {
+          override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
+        })
+
+    val df = ss.read.format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
+      .option("relationship", "KNOWS")
+      .option("relationship.nodes.map", "false")
+      .option("relationship.source.labels", "Person")
+      .option("relationship.target.labels", "Person")
+      .load()
+
+    assertEquals(1, df.filter("`source.id` = 10 AND `target.id` = 1").collectAsList().size())
+  }
+
+  @Test
   def testReadNodeRepartition(): Unit = {
     val fixtureQuery: String =
       """UNWIND range(1,100) as id

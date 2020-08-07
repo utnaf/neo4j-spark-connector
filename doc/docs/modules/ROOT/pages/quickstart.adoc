@@ -371,9 +371,36 @@ otherwise if `false`:
 * `<targetId>` the internal Neo4j id of target node
 * `<targetLabels>` a list of labels for target node
 
+==== Filter
+
+You can use Spark to filter properties of the relationship, the source node, or the target node. Just use the correct prefix:
+
+If `relationship.node.map` is set to **false**
+
+* `source.[property]` for the source node properties
+* `rel.[property]` for the relation property
+* `target.[property]` for the target node property
+
+If `relationship.node.map` is set to **true**
+
+* ``\`<source>`.[property]`` for the source node map properties
+* ``\`<rel>`.[property]`` for the relation map property
+* ``\`<target>`.[property]`` for the target node map property
+
+```scala
+val df = spark.read.format("org.neo4j.spark.DataSource")
+      .option("relationship.node.map", false)
+      .option("relationship", "BOUGHT")
+      .option("relationship.source.labels", "Person")
+      .option("relationship.target.labels", "Product")
+      .load()
+
+df.where("source.name = 'John Doe' AND target.price >= 33")
+```
+
 ==== Schema
 
-If APOC are installed, schema will be created with `apoc.meta.relTypeProperties`. Otherwise the first 10 (or any number specified by the `schema.flatten.limit` option) results will be flattened and the schema will be create from those properties.
+If APOC are available, the schema will be created with `apoc.meta.relTypeProperties`. Otherwise the first 10 (or any number specified by the `schema.flatten.limit` option) results will be flattened and the schema will be create from those properties.
 
 === Read data by custom Cypher Query
 
