@@ -377,15 +377,19 @@ You can use Spark to filter properties of the relationship, the source node, or 
 
 If `relationship.node.map` is set to **false**
 
-* `source.[property]` for the source node properties
-* `rel.[property]` for the relation property
-* `target.[property]` for the target node property
+* ``\`source.[property]` `` for the source node properties
+* ``\`rel.[property]` `` for the relation property
+* ``\`target.[property]` `` for the target node property
 
 If `relationship.node.map` is set to **true**
 
-* ``\`<source>`.[property]`` for the source node map properties
-* ``\`<rel>`.[property]`` for the relation map property
-* ``\`<target>`.[property]`` for the target node map property
+* ``\`<source>`.\`[property]` `` for the source node map properties
+* ``\`<rel>`.\`[property]` `` for the relation map property
+* ``\`<target>`.\`[property]` `` for the target node map property
+
+in this case, all the map values will be strings, so the filter value must be a string too.
+
+**Note**: when using `relationship.node.map = true` the PushDownFilters support is not active, thus the filters will be applied by Spark and not by Neo4j.
 
 ```scala
 val df = spark.read.format("org.neo4j.spark.DataSource")
