@@ -211,7 +211,7 @@ When using `relationship.node.map = true` or `query` the PushDownFilters support
 
 ==== How we extract the schema
 
-As Neo4j has ha schema-less approach and Spark needs a Schema in order to create a Dataset,
+As Neo4j has a schema-less approach and Spark needs a Schema in order to create a Dataset,
 we use several approaches in order to sample the dataset into Neo4j and compute the schema for Spark's Dataset.
 
 ===== Extract schema for Nodes
