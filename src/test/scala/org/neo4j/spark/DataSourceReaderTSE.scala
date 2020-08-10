@@ -546,7 +546,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .option("relationship.target.labels", "Person")
       .load()
 
-    assertEquals(1, df.filter("`<source>`.`id` = '10' AND `<target>`.`id` = '1'").collectAsList().size())
+    assertEquals(1, df.filter("`<source>`.`id` = '14' AND `<target>`.`id` = '16'").collectAsList().size())
   }
 
   @Test
@@ -575,7 +575,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .option("relationship.target.labels", "Person")
       .load()
 
-    assertEquals(1, df.filter("`source.id` = 10 AND `target.id` = 1").collectAsList().size())
+    assertEquals(1, df.filter("`source.id` = 14 AND `target.id` = 16").collectAsList().size())
   }
 
   @Test

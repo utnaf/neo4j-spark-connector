@@ -235,8 +235,8 @@ object Neo4jUtil {
       case endsWith: StringEndsWith => container.property(attributeAlias.getOrElse(endsWith.attribute)).endsWith(Cypher.literalOf(endsWith.value))
       case contains: StringContains => container.property(attributeAlias.getOrElse(contains.attribute)).contains(Cypher.literalOf(contains.value))
       case not: Not => mapSparkFiltersToCypher(not.child, container, attributeAlias).not()
-      case or: Or => mapSparkFiltersToCypher(or.left, container, attributeAlias).or(mapSparkFiltersToCypher(or.right, container, attributeAlias))
-      case and: And => mapSparkFiltersToCypher(and.left, container, attributeAlias).and(mapSparkFiltersToCypher(and.right, container, attributeAlias))
+      // case or: Or => mapSparkFiltersToCypher(or.left, containerLeft, attributeAlias).or(mapSparkFiltersToCypher(or.right, containerRight, attributeAlias))
+      // case and: And => mapSparkFiltersToCypher(and.left, containerLeft, attributeAlias).and(mapSparkFiltersToCypher(and.right, containerRight, attributeAlias))
       case filter@(_: Filter) => throw new IllegalArgumentException(s"Filter of type `${filter}` is not supported.")
     }
   }

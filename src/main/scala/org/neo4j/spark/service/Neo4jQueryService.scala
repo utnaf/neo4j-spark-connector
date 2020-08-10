@@ -1,8 +1,8 @@
 package org.neo4j.spark.service
 
 import org.apache.spark.sql.SaveMode
-import org.apache.spark.sql.sources.Filter
-import org.neo4j.cypherdsl.core.{Cypher, PropertyContainer}
+import org.apache.spark.sql.sources.{And, Filter, Or}
+import org.neo4j.cypherdsl.core.{Condition, Cypher, PropertyContainer}
 import org.neo4j.cypherdsl.core.renderer.Renderer
 import org.neo4j.spark.{Neo4jOptions, QueryType}
 import org.neo4j.spark.util.Neo4jImplicits._
@@ -47,36 +47,38 @@ class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy 
     val sourceNode = createNode(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS, options.relationshipMetadata.source.labels)
     val targetNode = createNode(Neo4jUtil.RELATIONSHIP_TARGET_ALIAS, options.relationshipMetadata.target.labels)
 
-    val relationship = sourceNode.relationshipBetween(targetNode, options.relationshipMetadata.relationshipType)
+    val relationship = sourceNode.relationshipTo(targetNode, options.relationshipMetadata.relationshipType)
       .named(Neo4jUtil.RELATIONSHIP_ALIAS)
 
     val matchQuery = Cypher.`match`(sourceNode).`match`(targetNode).`match`(relationship)
 
+    def getContainer(filter: Filter): PropertyContainer = {
+      if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS)) {
+        sourceNode
+      }
+      else if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_TARGET_ALIAS)) {
+        targetNode
+      }
+      else if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_ALIAS)) {
+        relationship
+      }
+      else {
+        throw new IllegalArgumentException(s"Attribute '${filter.getAttribute.get}' is not valid")
+      }
+    }
+
     if (filters.nonEmpty) {
-      val filtersMap: Map[PropertyContainer, Array[Filter]] = filters.map(filter => {
-        if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS)) {
-          (sourceNode, filter)
+      def mapFilter(filter: Filter): Condition = {
+        filter match {
+          case and: And => mapFilter(and.left).and(mapFilter(and.right))
+          case or: Or => mapFilter(or.left).or(mapFilter(or.right))
+          case filter: Filter => Neo4jUtil.mapSparkFiltersToCypher(filter, getContainer(filter), filter.getAttributeWithoutEntityName)
         }
-        else if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_TARGET_ALIAS)) {
-          (targetNode, filter)
-        }
-        else if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_ALIAS)) {
-          (relationship, filter)
-        }
-        else {
-          throw new IllegalArgumentException(s"Attribute '${filter.getAttribute.get}' is not valid")
-        }
-      }).groupBy[PropertyContainer](_._1).mapValues(_.map(_._2))
+      }
+      val cypherFilters = filters.map(mapFilter)
 
       matchQuery.where(
-        filtersMap.flatMap(t => {
-          val filters: Array[Filter] = t._2
-          filters.map(filter => Neo4jUtil.mapSparkFiltersToCypher(
-            filter,
-            t._1,
-            filter.getAttribute.map(_.split('.').drop(1).mkString("."))
-          ))
-        }).reduce { (a, b) => a.and(b) }
+        cypherFilters.reduce { (a, b) => a.and(b) }
       )
     }
 
@@ -88,10 +90,18 @@ class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy 
     val matchQuery = Cypher.`match`(node)
 
     if (filters.nonEmpty) {
+      def mapFilter(filter: Filter): Condition = {
+        filter match {
+          case and: And => mapFilter(and.left).and(mapFilter(and.right))
+          case or: Or => mapFilter(or.left).or(mapFilter(or.right))
+          case filter: Filter => Neo4jUtil.mapSparkFiltersToCypher(filter, node)
+        }
+      }
+
+      val cypherFilters = filters.map(mapFilter)
+
       matchQuery.where(
-        filters.map {
-          Neo4jUtil.mapSparkFiltersToCypher(_, node)
-        }.reduce { (a, b) => a.and(b) }
+        cypherFilters.reduce { (a, b) => a.and(b) }
       )
     }
 

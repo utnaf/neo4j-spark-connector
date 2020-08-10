@@ -7,6 +7,7 @@ import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 import org.neo4j.driver.types.{Entity, Node, Relationship}
 import org.neo4j.spark.service.SchemaService
 import org.apache.spark.sql.sources.{And, EqualNullSafe, EqualTo, Filter, GreaterThan, GreaterThanOrEqual, In, IsNotNull, IsNull, LessThan, LessThanOrEqual, Not, Or, StringContains, StringEndsWith, StringStartsWith}
+import org.neo4j.cypherdsl.core.Condition
 
 import scala.collection.JavaConverters._
 
@@ -73,11 +74,14 @@ object Neo4jImplicits {
       case startWith: StringStartsWith => startWith.attribute
       case endsWith: StringEndsWith => endsWith.attribute
       case contains: StringContains => contains.attribute
+      case not: Not => not.child.getAttribute.orNull
       case _ => null
     })
 
     def isAttribute(entityType: String): Boolean = {
       getAttribute.exists(_.startsWith(entityType))
     }
+
+    def getAttributeWithoutEntityName: Option[String] = filter.getAttribute.map(_.split('.').drop(1).mkString("."))
   }
 }
