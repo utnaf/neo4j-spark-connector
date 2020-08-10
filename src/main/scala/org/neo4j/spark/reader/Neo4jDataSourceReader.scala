@@ -36,8 +36,11 @@ class Neo4jDataSourceReader(private val options: DataSourceOptions, private val 
   }
 
   override def pushFilters(filtersArray: Array[Filter]): Array[Filter] = {
-    filters = filtersArray
-    filters
+    if (neo4jOptions.pushdownFiltersEnabled) {
+      filters = filtersArray
+    }
+
+    filtersArray
   }
 
   override def pushedFilters(): Array[Filter] = filters

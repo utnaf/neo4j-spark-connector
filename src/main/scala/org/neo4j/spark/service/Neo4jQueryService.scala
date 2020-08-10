@@ -52,7 +52,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy 
 
     val matchQuery = Cypher.`match`(sourceNode).`match`(targetNode).`match`(relationship)
 
-    if (options.pushdownFiltersEnabled && filters.nonEmpty) {
+    if (filters.nonEmpty) {
       val filtersMap: Map[PropertyContainer, Array[Filter]] = filters.map(filter => {
         if (filter.isAttribute(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS)) {
           (sourceNode, filter)
@@ -87,7 +87,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy 
     val node = createNode(Neo4jUtil.NODE_ALIAS, options.nodeMetadata.labels)
     val matchQuery = Cypher.`match`(node)
 
-    if (options.pushdownFiltersEnabled && filters.nonEmpty) {
+    if (filters.nonEmpty) {
       matchQuery.where(
         filters.map {
           Neo4jUtil.mapSparkFiltersToCypher(_, node)
