@@ -1,7 +1,7 @@
 package org.neo4j.spark.util
 
+import org.apache.spark.sql.sources.{EqualTo, Not}
 import org.junit.Test
-
 import org.junit.Assert._
 import org.neo4j.spark.util.Neo4jImplicits._
 
@@ -43,5 +43,27 @@ class Neo4jImplicitsTest {
     assertEquals(value, actual)
   }
 
+  @Test
+  def `should return attribute if filter has it` {
+    // given
+    val filter = EqualTo("name", "John")
 
+    // when
+    val attribute = filter.getAttribute
+
+    // then
+    assertTrue(attribute.isDefined)
+  }
+
+  @Test
+  def `should not return attribute if filter doesn't have it` {
+    // given
+    val filter = Not(EqualTo("name", "John"))
+
+    // when
+    val attribute = filter.getAttribute
+
+    // then
+    assertFalse(attribute.isDefined)
+  }
 }

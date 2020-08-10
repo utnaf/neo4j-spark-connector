@@ -73,6 +73,7 @@ object Neo4jImplicits {
       case startWith: StringStartsWith => startWith.attribute
       case endsWith: StringEndsWith => endsWith.attribute
       case contains: StringContains => contains.attribute
+      case _ => null
     })
 
     def isAttribute(entityType: String): Boolean = {
