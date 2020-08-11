@@ -206,6 +206,12 @@ The Neo4j Spark Connector implements the SupportPushDownFilters interface, that 
 
 You can manually disable the Push Down Filters support using the `pushdown.filters.enabled` option and set it to `false` (default is `true`).
 
+If you use use the filter function more than once, like in this example:
+```scala
+df.where("name = 'John Doe'").where("age = 32")
+```
+The conditions will be automatically joined with an `AND` operator.
+
 [NOTE]
 When using `relationship.node.map = true` or `query` the PushDownFilters support is not active, thus the filters will be applied by Spark and not by Neo4j.
 
@@ -321,7 +327,8 @@ When reading data with this method, the Dataframe will contain all the fields co
 
 ==== Schema
 
-If APOC are installed, schema will be created with `apoc.meta.nodeTypeProperties`. Otherwise the first 10 (or any number specified by the `schema.flatten.limit` option) results will be flattened and the schema will be create from those properties.
+If APOC are available, the schema will be created with `apoc.meta.nodeTypeProperties`.
+Otherwise the first 10 (or any number specified by the `schema.flatten.limit` option) results will be flattened and the schema will be create from those properties.
 
 ===== Example
 
@@ -416,7 +423,8 @@ df.where("source.name = 'John Doe' AND target.price >= 33")
 
 ==== Schema
 
-If APOC are available, the schema will be created with `apoc.meta.relTypeProperties`. Otherwise the first 10 (or any number specified by the `schema.flatten.limit` option) results will be flattened and the schema will be create from those properties.
+If APOC are available, the schema will be created with `apoc.meta.relTypeProperties`. 
+Otherwise the first 10 (or any number specified by the `schema.flatten.limit` option) results will be flattened and the schema will be create from those properties.
 
 === Read data by custom Cypher Query
 
