@@ -292,7 +292,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   def testReadNodeWithArrayZonedDateTime(): Unit = {
     val datetime1 = "2015-06-24T12:50:35.556+01:00"
     val datetime2 = "2015-06-23T12:50:35.556+01:00"
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p:Person {aTime: [
       datetime('$datetime1'),
       datetime('$datetime2')
@@ -328,7 +329,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithEqualToFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {name: 'John Doe'}),
       (p2:Person {name: 'Jane Doe'})
      """)
@@ -340,8 +342,23 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
+  def testReadNodeWithEqualToDateFilter(): Unit = {
+    val df: DataFrame = initTest(
+      s"""
+     CREATE (p1:Person {birth: date('1998-02-04')}),
+      (p2:Person {birth: date('1988-01-05')})
+     """)
+
+    val result = df.select("birth").where("birth = '1988-01-05'").collectAsList()
+
+    assertEquals(1, result.size())
+    assertEquals(java.sql.Date.valueOf("1988-01-05"), result.get(0).getDate(0))
+  }
+
+  @Test
   def testReadNodeWithNotEqualToFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {name: 'John Doe'}),
       (p2:Person {name: 'Jane Doe'})
      """)
@@ -353,8 +370,23 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
+  def testReadNodeWithNotEqualToDateFilter(): Unit = {
+    val df: DataFrame = initTest(
+      s"""
+     CREATE (p1:Person {birth: date('1998-02-04')}),
+      (p2:Person {birth: date('1988-01-05')})
+     """)
+
+    val result = df.select("birth").where("NOT birth = '1988-01-05'").collectAsList()
+
+    assertEquals(1, result.size())
+    assertEquals(java.sql.Date.valueOf("1998-02-04"), result.get(0).getDate(0))
+  }
+
+  @Test
   def testReadNodeWithDifferentOperatorFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {name: 'John Doe'}),
       (p2:Person {name: 'Jane Doe'})
      """)
@@ -367,7 +399,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithGtFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {age: 19}),
       (p2:Person {age: 20}),
       (p3:Person {age: 21})
@@ -380,8 +413,44 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
+  def testReadNodeWithGtDateFilter(): Unit = {
+    val df: DataFrame = initTest(
+      s"""
+     CREATE (p1:Person {birth: date('1998-02-04')}),
+      (p2:Person {birth: date('1988-01-05')}),
+      (p3:Person {birth: date('1994-10-16')})
+     """)
+
+    val result = df.select("birth").orderBy("birth").where("birth > '1990-01-01'").collectAsList()
+
+    assertEquals(2, result.size())
+    assertEquals(java.sql.Date.valueOf("1994-10-16"), result.get(0).getDate(0))
+    assertEquals(java.sql.Date.valueOf("1998-02-04"), result.get(1).getDate(0))
+  }
+
+  @Test
+  def testReadNodeWithGtSpatialFilter(): Unit = {
+    val df: DataFrame = initTest(
+      s"""
+     CREATE (p:Person {location: point({x: 12, y: 12})}),
+      (p2:Person {location: point({x: -6, y: -6})})
+     """)
+
+    val result = df.select("location").where("location.x > 0").collectAsList()
+    val row = result.get(0).getAs[GenericRowWithSchema](0);
+
+    assertEquals(1, result.size())
+
+    assertEquals("point-2d", row.get(0))
+    assertEquals(7203, row.get(1))
+    assertEquals(12.0, row.get(2))
+    assertEquals(12.0, row.get(3))
+  }
+
+  @Test
   def testReadNodeWithGteFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {age: 19}),
       (p2:Person {age: 20}),
       (p3:Person {age: 21})
@@ -396,7 +465,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithGteFilterWithProp(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {score: 19, limit: 20}),
       (p2:Person {score: 20,  limit: 18}),
       (p3:Person {score: 21,  limit: 12})
@@ -411,7 +481,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithLtFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {age: 39}),
       (p2:Person {age: 41}),
       (p3:Person {age: 43})
@@ -425,7 +496,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithLteFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {age: 39}),
       (p2:Person {age: 41}),
       (p3:Person {age: 43})
@@ -440,7 +512,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithInFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {age: 39}),
       (p2:Person {age: 41}),
       (p3:Person {age: 43})
@@ -455,7 +528,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithIsNullFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {age: 39}),
       (p2:Person {age: null}),
       (p3:Person {age: 43})
@@ -469,7 +543,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithIsNotNullFilter(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {age: 39}),
       (p2:Person {age: null}),
       (p3:Person {age: 43})
@@ -484,7 +559,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithOrCondition(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {age: 39}),
       (p2:Person {age: null}),
       (p3:Person {age: 43})
@@ -499,7 +575,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithAndCondition(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {age: 39}),
       (p2:Person {age: null}),
       (p3:Person {age: 43})
@@ -514,7 +591,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithStartsWith(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {name: 'John Mayer'}),
       (p2:Person {name: 'John Scofield'}),
       (p3:Person {name: 'John Butler'})
@@ -530,7 +608,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithEndsWith(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {name: 'John Mayer'}),
       (p2:Person {name: 'John Scofield'}),
       (p3:Person {name: 'John Butler'})
@@ -544,7 +623,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadNodeWithContains(): Unit = {
-    val df: DataFrame = initTest(s"""
+    val df: DataFrame = initTest(
+      s"""
      CREATE (p1:Person {name: 'John Mayer'}),
       (p2:Person {name: 'John Scofield'}),
       (p3:Person {name: 'John Butler'})
@@ -680,10 +760,10 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
     val total = 100
     val fixtureQuery: String =
       s"""UNWIND range(1, $total) as id
-        |CREATE (pr:Product {id: id * rand(), name: 'Product ' + id})
-        |CREATE (pe:Person {id: id, fullName: 'Person ' + id})
-        |CREATE (pe)-[:BOUGHT{when: rand(), quantity: rand() * 1000}]->(pr)
-        |RETURN *
+         |CREATE (pr:Product {id: id * rand(), name: 'Product ' + id})
+         |CREATE (pe:Person {id: id, fullName: 'Person ' + id})
+         |CREATE (pe)-[:BOUGHT{when: rand(), quantity: rand() * 1000}]->(pr)
+         |RETURN *
     """.stripMargin
 
     SparkConnectorScalaSuiteIT.session()
@@ -702,7 +782,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
     val count = df.collectAsList()
       .asScala
-      .filter(row =>row.getAs[Long]("<rel.id>") != null
+      .filter(row => row.getAs[Long]("<rel.id>") != null
         && row.getAs[String]("<rel.type>") != null
         && row.getAs[Long]("rel.when") != null
         && row.getAs[Long]("rel.quantity") != null
@@ -744,7 +824,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
     val rows = df.collectAsList().asScala
     val count = rows
-      .filter(row =>row.getAs[Long]("<rel.id>") != null
+      .filter(row => row.getAs[Long]("<rel.id>") != null
         && row.getAs[String]("<rel.type>") != null
         && row.getAs[Long]("rel.when") != null
         && row.getAs[Long]("rel.quantity") != null
@@ -848,11 +928,11 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .map(_.getAs[Row]("rel"))
       .filter(row =>
         row.getAs[Long]("<rel.id>") != null
-        && !row.getAs[String]("<rel.type>").isEmpty
-        && row.getAs[Long]("<source.id>") != null
-        && row.getAs[Long]("<target.id>") != null
-        && row.getAs[Double]("when") != null
-        && row.getAs[Double]("quantity") != null
+          && !row.getAs[String]("<rel.type>").isEmpty
+          && row.getAs[Long]("<source.id>") != null
+          && row.getAs[Long]("<target.id>") != null
+          && row.getAs[Double]("when") != null
+          && row.getAs[Double]("quantity") != null
       )
       .size
     assertEquals(100, countRel)
