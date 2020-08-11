@@ -38,7 +38,7 @@ class Neo4jQueryWriteStrategy(private val saveMode: SaveMode) extends Neo4jQuery
   }
 }
 
-class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy {
+class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter]) extends Neo4jQueryStrategy {
   private val renderer: Renderer = Renderer.getDefaultRenderer
 
   override def createStatementForQuery(options: Neo4jOptions): String = options.query.value
@@ -110,7 +110,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter]) extends Neo4jQueryStrategy 
 
   private def createNode(name: String, labels: Seq[String]) = {
     val primaryLabel = labels.head
-    val otherLabels = labels.takeRight(labels.size - 1)
+    val otherLabels = labels.tail
     Cypher.node(primaryLabel, otherLabels.asJava).named(name)
   }
 }

@@ -14,7 +14,7 @@ class Neo4jQueryServiceTest {
     options.put(QueryType.LABELS.toString.toLowerCase, "Person")
     val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
 
-    val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(Array[Filter]())).createQuery()
+    val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy).createQuery()
 
     assertEquals("MATCH (n:`Person`) RETURN n", query)
   }
@@ -26,7 +26,7 @@ class Neo4jQueryServiceTest {
     options.put(QueryType.LABELS.toString.toLowerCase, ":Person:Player:Midfield")
     val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
 
-    val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(Array[Filter]())).createQuery()
+    val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy).createQuery()
 
     assertEquals("MATCH (n:`Person`:`Player`:`Midfield`) RETURN n", query)
   }
@@ -44,7 +44,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    assertEquals("MATCH (n:`Person`) WHERE n.name = 'John Doe' RETURN n", query)
+    assertEquals("MATCH (n:`Person`) WHERE n.name = coalesce('John Doe', '') RETURN n", query)
   }
 
   @Test
@@ -65,7 +65,7 @@ class Neo4jQueryServiceTest {
 
     assertEquals("MATCH (source:`Person`) " +
       "MATCH (target:`Person`) " +
-      "MATCH (source)-[rel:`KNOWS`]->(target) WHERE source.name = 'John Doe' RETURN source, rel, target", query)
+      "MATCH (source)-[rel:`KNOWS`]->(target) WHERE source.name = coalesce('John Doe', '') RETURN source, rel, target", query)
   }
 
   @Test
@@ -86,6 +86,6 @@ class Neo4jQueryServiceTest {
 
     assertEquals("MATCH (source:`Person`) " +
       "MATCH (target:`Person`) " +
-      "MATCH (source)-[rel:`KNOWS`]->(target) WHERE (source.name = 'John Doe' OR target.name = 'John Doe') RETURN source, rel, target", query)
+      "MATCH (source)-[rel:`KNOWS`]->(target) WHERE (source.name = coalesce('John Doe', '') OR target.name = coalesce('John Doe', '')) RETURN source, rel, target", query)
   }
 }

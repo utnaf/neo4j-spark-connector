@@ -1,6 +1,6 @@
 package org.neo4j.spark.util
 
-import org.apache.spark.sql.sources.{EqualTo, Not}
+import org.apache.spark.sql.sources.{And, EqualTo, Not}
 import org.junit.Test
 import org.junit.Assert._
 import org.neo4j.spark.util.Neo4jImplicits._
@@ -56,9 +56,9 @@ class Neo4jImplicitsTest {
   }
 
   @Test
-  def `should not return attribute if filter doesn't have it` {
+  def `should return an empty option if the filter doesn't have an attribute` {
     // given
-    val filter = Not(EqualTo("name", "John"))
+    val filter = And(EqualTo("name", "John"), EqualTo("age", 32))
 
     // when
     val attribute = filter.getAttribute

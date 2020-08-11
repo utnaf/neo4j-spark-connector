@@ -353,6 +353,19 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
+  def testReadNodeWithDifferentOperatorFilter(): Unit = {
+    val df: DataFrame = initTest(s"""
+     CREATE (p1:Person {name: 'John Doe'}),
+      (p2:Person {name: 'Jane Doe'})
+     """)
+
+    val result = df.select("name").where("name != 'John Doe'").collectAsList()
+
+    assertEquals(1, result.size())
+    assertEquals("Jane Doe", result.get(0).getString(0))
+  }
+
+  @Test
   def testReadNodeWithGtFilter(): Unit = {
     val df: DataFrame = initTest(s"""
      CREATE (p1:Person {age: 19}),
@@ -360,9 +373,10 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {age: 21})
      """)
 
-    val result = df.where("age > 20").collectAsList()
+    val result = df.select("age").where("age > 20").collectAsList()
 
     assertEquals(1, result.size())
+    assertEquals(21, result.get(0).getLong(0))
   }
 
   @Test
@@ -373,9 +387,11 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {age: 21})
      """)
 
-    val result = df.where("age >= 20").collectAsList()
+    val result = df.select("age").where("age >= 20").collectAsList()
 
     assertEquals(2, result.size())
+    assertEquals(20, result.get(0).getLong(0))
+    assertEquals(21, result.get(1).getLong(0))
   }
 
   @Test
@@ -386,9 +402,11 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {score: 21,  limit: 12})
      """)
 
-    val result = df.where("score >= limit").collectAsList()
+    val result = df.select("score").where("score >= limit").collectAsList()
 
     assertEquals(2, result.size())
+    assertEquals(20, result.get(0).getLong(0))
+    assertEquals(21, result.get(1).getLong(0))
   }
 
   @Test
@@ -399,9 +417,10 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {age: 43})
      """)
 
-    val result = df.where("age < 40").collectAsList()
+    val result = df.select("age").where("age < 40").collectAsList()
 
     assertEquals(1, result.size())
+    assertEquals(39, result.get(0).getLong(0))
   }
 
   @Test
@@ -412,9 +431,11 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {age: 43})
      """)
 
-    val result = df.where("age <= 41").collectAsList()
+    val result = df.select("age").where("age <= 41").collectAsList()
 
     assertEquals(2, result.size())
+    assertEquals(39, result.get(0).getLong(0))
+    assertEquals(41, result.get(1).getLong(0))
   }
 
   @Test
@@ -425,9 +446,11 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {age: 43})
      """)
 
-    val result = df.where("age IN(41,43)").collectAsList()
+    val result = df.select("age").where("age IN(41,43)").collectAsList()
 
     assertEquals(2, result.size())
+    assertEquals(41, result.get(0).getLong(0))
+    assertEquals(43, result.get(1).getLong(0))
   }
 
   @Test
@@ -438,9 +461,10 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {age: 43})
      """)
 
-    val result = df.where("age IS NULL").collectAsList()
+    val result = df.select("age").where("age IS NULL").collectAsList()
 
     assertEquals(1, result.size())
+    assertNull(result.get(0).get(0))
   }
 
   @Test
@@ -451,9 +475,11 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {age: 43})
      """)
 
-    val result = df.where("age IS NOT NULL").collectAsList()
+    val result = df.select("age").where("age IS NOT NULL").collectAsList()
 
     assertEquals(2, result.size())
+    assertEquals(39, result.get(0).getLong(0))
+    assertEquals(43, result.get(1).getLong(0))
   }
 
   @Test
@@ -464,9 +490,11 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {age: 43})
      """)
 
-    val result = df.where("age = 43 OR age = 39 OR age = 32").collectAsList()
+    val result = df.select("age").where("age = 43 OR age = 39 OR age = 32").collectAsList()
 
     assertEquals(2, result.size())
+    assertEquals(39, result.get(0).getLong(0))
+    assertEquals(43, result.get(1).getLong(0))
   }
 
   @Test
@@ -477,9 +505,11 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {age: 43})
      """)
 
-    val result = df.where("age >= 39 AND age <= 43").collectAsList()
+    val result = df.select("age").where("age >= 39 AND age <= 43").collectAsList()
 
     assertEquals(2, result.size())
+    assertEquals(39, result.get(0).getLong(0))
+    assertEquals(43, result.get(1).getLong(0))
   }
 
   @Test
@@ -490,9 +520,13 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {name: 'John Butler'})
      """)
 
-    val result = df.where("name LIKE 'John%'").collectAsList()
+    val result = df.select("name").where("name LIKE 'John%'").collectAsList()
 
     assertEquals(3, result.size())
+    assertEquals("John Mayer", result.get(0).getString(0))
+    assertEquals("John Scofield", result.get(1).getString(0))
+    assertEquals("John Butler", result.get(2).getString(0))
+
   }
 
   @Test
@@ -503,9 +537,10 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {name: 'John Butler'})
      """)
 
-    val result = df.where("name LIKE '%Scofield'").collectAsList()
+    val result = df.select("name").where("name LIKE '%Scofield'").collectAsList()
 
     assertEquals(1, result.size())
+    assertEquals("John Scofield", result.get(0).getString(0))
   }
 
   @Test
@@ -516,9 +551,10 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       (p3:Person {name: 'John Butler'})
      """)
 
-    val result = df.where("name LIKE '%ay%'").collectAsList()
+    val result = df.select("name").where("name LIKE '%ay%'").collectAsList()
 
     assertEquals(1, result.size())
+    assertEquals("John Mayer", result.get(0).getString(0))
   }
 
   @Test
@@ -546,7 +582,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .option("relationship.target.labels", "Person")
       .load()
 
-    assertEquals(1, df.filter("`<source>`.`id` = '14' AND `<target>`.`id` = '16'").collectAsList().size())
+    assertEquals(1, df.filter("`<source>`.`id` = '14' AND `<target>`.`id` = '16'").count)
   }
 
   @Test
@@ -575,7 +611,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .option("relationship.target.labels", "Person")
       .load()
 
-    assertEquals(1, df.filter("`source.id` = 14 AND `target.id` = 16").collectAsList().size())
+    assertEquals(1, df.filter("`source.id` = 14 AND `target.id` = 16").count)
   }
 
   @Test
