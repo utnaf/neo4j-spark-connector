@@ -2,12 +2,10 @@ package org.neo4j.spark.util
 
 
 import javax.lang.model.SourceVersion
-import org.apache.spark.sql.sources.{EqualNullSafe, Filter}
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 import org.neo4j.driver.types.{Entity, Node, Relationship}
 import org.neo4j.spark.service.SchemaService
-import org.apache.spark.sql.sources.{And, EqualNullSafe, EqualTo, Filter, GreaterThan, GreaterThanOrEqual, In, IsNotNull, IsNull, LessThan, LessThanOrEqual, Not, Or, StringContains, StringEndsWith, StringStartsWith}
-import org.neo4j.cypherdsl.core.Condition
+import org.apache.spark.sql.sources.{EqualNullSafe, EqualTo, Filter, GreaterThan, GreaterThanOrEqual, In, IsNotNull, IsNull, LessThan, LessThanOrEqual, Not, StringContains, StringEndsWith, StringStartsWith}
 
 import scala.collection.JavaConverters._
 
@@ -82,6 +80,6 @@ object Neo4jImplicits {
       getAttribute.exists(_.startsWith(entityType))
     }
 
-    def getAttributeWithoutEntityName: Option[String] = filter.getAttribute.map(_.split('.').drop(1).mkString("."))
+    def getAttributeWithoutEntityName: Option[String] = filter.getAttribute.map(_.split('.').tail.mkString("."))
   }
 }

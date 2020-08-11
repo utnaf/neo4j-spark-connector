@@ -66,4 +66,16 @@ class Neo4jImplicitsTest {
     // then
     assertFalse(attribute.isDefined)
   }
+
+  @Test
+  def `should return the attribute without the entity identifier` {
+    // given
+    val filter = EqualTo("person.address.coords", 32)
+
+    // when
+    val attribute = filter.getAttributeWithoutEntityName
+
+    // then
+    assertEquals("address.coords", attribute.get)
+  }
 }
