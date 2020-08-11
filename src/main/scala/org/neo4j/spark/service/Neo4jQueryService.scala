@@ -1,8 +1,8 @@
 package org.neo4j.spark.service
 
 import org.apache.spark.sql.SaveMode
-import org.apache.spark.sql.sources.{And, Filter, Or}
-import org.neo4j.cypherdsl.core.{Condition, Cypher, PropertyContainer}
+import org.apache.spark.sql.sources.{And, EqualTo, Filter, IsNull, Not, Or}
+import org.neo4j.cypherdsl.core.{Condition, Conditions, Cypher, Functions, PropertyContainer, StatementBuilder}
 import org.neo4j.cypherdsl.core.renderer.Renderer
 import org.neo4j.spark.{Neo4jOptions, QueryType}
 import org.neo4j.spark.util.Neo4jImplicits._
@@ -77,9 +77,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter]) exten
       }
       val cypherFilters = filters.map(mapFilter)
 
-      matchQuery.where(
-        cypherFilters.reduce { (a, b) => a.and(b) }
-      )
+      assembleConditionQuery(matchQuery, cypherFilters)
     }
 
     renderer.render(matchQuery.returning(sourceNode, relationship, targetNode).build())
@@ -99,13 +97,16 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter]) exten
       }
 
       val cypherFilters = filters.map(mapFilter)
-
-      matchQuery.where(
-        cypherFilters.reduce { (a, b) => a.and(b) }
-      )
+      assembleConditionQuery(matchQuery, cypherFilters)
     }
 
     renderer.render(matchQuery.returning(node).build())
+  }
+
+  private def assembleConditionQuery(matchQuery: StatementBuilder.OngoingReadingWithoutWhere, filters: Array[Condition]): StatementBuilder.OngoingReadingWithWhere = {
+    matchQuery.where(
+      filters.fold(Conditions.noCondition()) { (a, b) => a.and(b) }
+    )
   }
 
   private def createNode(name: String, labels: Seq[String]) = {
