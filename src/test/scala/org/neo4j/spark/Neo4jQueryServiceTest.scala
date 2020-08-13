@@ -1,6 +1,6 @@
 package org.neo4j.spark
 
-import org.apache.spark.sql.sources.{And, EqualTo, Filter, GreaterThanOrEqual, LessThan, Not, Or}
+import org.apache.spark.sql.sources.{And, EqualNullSafe, EqualTo, Filter, GreaterThanOrEqual, LessThan, Not, Or}
 import org.junit.Assert._
 import org.junit.Test
 import org.neo4j.spark.service.{Neo4jQueryReadStrategy, Neo4jQueryService}
@@ -44,7 +44,24 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    assertEquals("MATCH (n:`Person`) WHERE n.name = coalesce('John Doe', '') RETURN n", query)
+    assertEquals("MATCH (n:`Person`) WHERE n.name = 'John Doe' RETURN n", query)
+  }
+
+  @Test
+  def testNodeFilterEqualNullSafe(): Unit = {
+    val options: java.util.Map[String, String] = new java.util.HashMap[String, String]()
+    options.put(Neo4jOptions.URL, "bolt://localhost")
+    options.put(QueryType.LABELS.toString.toLowerCase, "Person")
+    val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
+
+    val filters: Array[Filter] = Array[Filter](
+      EqualNullSafe("name", "John Doe"),
+      EqualTo("age", 36)
+    )
+
+    val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
+
+    assertEquals("MATCH (n:`Person`) WHERE ((n.name IS NULL OR n.name = 'John Doe') AND n.age = 36) RETURN n", query)
   }
 
   @Test
@@ -65,7 +82,7 @@ class Neo4jQueryServiceTest {
 
     assertEquals("MATCH (source:`Person`) " +
       "MATCH (target:`Person`) " +
-      "MATCH (source)-[rel:`KNOWS`]->(target) WHERE source.name = coalesce('John Doe', '') RETURN source, rel, target", query)
+      "MATCH (source)-[rel:`KNOWS`]->(target) WHERE source.name = 'John Doe' RETURN source, rel, target", query)
   }
 
   @Test
@@ -86,7 +103,7 @@ class Neo4jQueryServiceTest {
 
     assertEquals("MATCH (source:`Person`) " +
       "MATCH (target:`Person`) " +
-      "MATCH (source)-[rel:`KNOWS`]->(target) WHERE (source.name = coalesce('John Doe', '') OR target.name = coalesce('John Doe', '')) RETURN source, rel, target", query)
+      "MATCH (source)-[rel:`KNOWS`]->(target) WHERE (source.name = 'John Doe' OR target.name = 'John Doe') RETURN source, rel, target", query)
   }
 
   @Test
@@ -106,9 +123,9 @@ class Neo4jQueryServiceTest {
 
     assertEquals(
       "MATCH (n:`Person`)" +
-        " WHERE ((n.name = coalesce('John Doe', '') OR n.name = coalesce('John Scofield', ''))" +
-        " AND (n.age = coalesce(15, '') OR n.age >= coalesce(18, 0))" +
-        " AND (NOT (n.age = coalesce(22, '')) OR NOT (n.age < coalesce(11, 0))))" +
+        " WHERE ((n.name = 'John Doe' OR n.name = 'John Scofield')" +
+        " AND (n.age = 15 OR n.age >= 18)" +
+        " AND (NOT (n.age = 22) OR NOT (n.age < 11)))" +
         " RETURN n", query)
   }
 
@@ -133,9 +150,9 @@ class Neo4jQueryServiceTest {
     assertEquals("MATCH (source:`Person`) " +
       "MATCH (target:`Person`:`Customer`) " +
       "MATCH (source)-[rel:`KNOWS`]->(target) " +
-      "WHERE ((source.name = coalesce('John Doe', '') OR target.name = coalesce('John Doraemon', '') OR source.name = coalesce('Jane Doe', '')) " +
-      "AND (target.age = coalesce(34, '') OR target.age = coalesce(18, '')) " +
-      "AND rel.score = coalesce(12, '')) " +
+      "WHERE ((source.name = 'John Doe' OR target.name = 'John Doraemon' OR source.name = 'Jane Doe') " +
+      "AND (target.age = 34 OR target.age = 18) " +
+      "AND rel.score = 12) " +
       "RETURN source, rel, target", query)
   }
 
@@ -160,9 +177,9 @@ class Neo4jQueryServiceTest {
     assertEquals("MATCH (source:`Person`) " +
       "MATCH (target:`Person`:`Customer`) " +
       "MATCH (source)-[rel:`KNOWS`]->(target) " +
-      "WHERE ((source.name = coalesce('John Doe', '') OR target.name = coalesce('John Doraemon', '') OR source.name = coalesce('Jane Doe', '')) " +
-      "AND (target.age = coalesce(34, '') OR target.age = coalesce(18, '')) " +
-      "AND rel.score = coalesce(12, '')) " +
+      "WHERE ((source.name = 'John Doe' OR target.name = 'John Doraemon' OR source.name = 'Jane Doe') " +
+      "AND (target.age = 34 OR target.age = 18) " +
+      "AND rel.score = 12) " +
       "RETURN source, rel, target", query)
   }
 }

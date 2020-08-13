@@ -217,20 +217,20 @@ object Neo4jUtil {
 
   def connectorVersion: String = properties.getOrDefault("version", "UNKNOWN").toString
 
-  def mapSparkFiltersToCypher(filter: Filter, container: org.neo4j.cypherdsl.core.PropertyContainer, attributeAlias: Option[String] = None): Condition = {
+  def mapSparkFiltersToCypher(filter: Filter, container: org.neo4j.cypherdsl.core.PropertyContainer, attributeAlias: Option[String] = None): Condition =
     filter match {
       case eqns: EqualNullSafe => container.property(attributeAlias.getOrElse(eqns.attribute))
-        .isEqualTo(Functions.coalesce(Cypher.literalOf(eqns.value), Cypher.literalOf("")))
+        .isNull.or(container.property(attributeAlias.getOrElse(eqns.attribute)).isEqualTo(Cypher.literalOf(eqns.value)))
       case eq: EqualTo => container.property(attributeAlias.getOrElse(eq.attribute))
-        .isEqualTo(Functions.coalesce(Cypher.literalOf(eq.value), Cypher.literalOf("")))
+        .isEqualTo(Cypher.literalOf(eq.value))
       case gt: GreaterThan => container.property(attributeAlias.getOrElse(gt.attribute))
-        .gt(Functions.coalesce(Cypher.literalOf(gt.value), Cypher.literalOf(0)))
+        .gt(Cypher.literalOf(gt.value))
       case gte: GreaterThanOrEqual => container.property(attributeAlias.getOrElse(gte.attribute))
-        .gte(Functions.coalesce(Cypher.literalOf(gte.value), Cypher.literalOf(0)))
+        .gte(Cypher.literalOf(gte.value))
       case lt: LessThan => container.property(attributeAlias.getOrElse(lt.attribute))
-        .lt(Functions.coalesce(Cypher.literalOf(lt.value), Cypher.literalOf(0)))
+        .lt(Cypher.literalOf(lt.value))
       case lte: LessThanOrEqual => container.property(attributeAlias.getOrElse(lte.attribute))
-        .lte(Functions.coalesce(Cypher.literalOf(lte.value), Cypher.literalOf(0)))
+        .lte(Cypher.literalOf(lte.value))
       case in: In => {
         val values = in.values.map(Cypher.literalOf)
         container.property(attributeAlias.getOrElse(in.attribute)).in(Cypher.literalOf(values.toIterable.asJava))
@@ -246,5 +246,4 @@ object Neo4jUtil {
       case not: Not => mapSparkFiltersToCypher(not.child, container, attributeAlias).not()
       case filter@(_: Filter) => throw new IllegalArgumentException(s"Filter of type `${filter}` is not supported.")
     }
-  }
 }
