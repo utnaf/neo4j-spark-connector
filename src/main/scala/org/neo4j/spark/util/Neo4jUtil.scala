@@ -220,7 +220,7 @@ object Neo4jUtil {
   def mapSparkFiltersToCypher(filter: Filter, container: org.neo4j.cypherdsl.core.PropertyContainer, attributeAlias: Option[String] = None): Condition =
     filter match {
       case eqns: EqualNullSafe => container.property(attributeAlias.getOrElse(eqns.attribute))
-        .isNull.or(container.property(attributeAlias.getOrElse(eqns.attribute)).isEqualTo(Cypher.literalOf(eqns.value)))
+        .isNull.and(Cypher.literalOf(eqns.value).isNull).or(container.property(attributeAlias.getOrElse(eqns.attribute)).isEqualTo(Cypher.literalOf(eqns.value)))
       case eq: EqualTo => container.property(attributeAlias.getOrElse(eq.attribute))
         .isEqualTo(Cypher.literalOf(eq.value))
       case gt: GreaterThan => container.property(attributeAlias.getOrElse(gt.attribute))
@@ -238,11 +238,11 @@ object Neo4jUtil {
       case notNull: IsNotNull => container.property(attributeAlias.getOrElse(notNull.attribute)).isNotNull
       case isNull: IsNull => container.property(attributeAlias.getOrElse(isNull.attribute)).isNull
       case startWith: StringStartsWith => container.property(attributeAlias.getOrElse(startWith.attribute))
-        .startsWith(Functions.coalesce(Cypher.literalOf(startWith.value), Cypher.literalOf("")))
+        .startsWith(Cypher.literalOf(startWith.value))
       case endsWith: StringEndsWith => container.property(attributeAlias.getOrElse(endsWith.attribute))
-        .endsWith(Functions.coalesce(Cypher.literalOf(endsWith.value), Cypher.literalOf("")))
+        .endsWith(Cypher.literalOf(endsWith.value))
       case contains: StringContains => container.property(attributeAlias.getOrElse(contains.attribute))
-        .contains(Functions.coalesce(Cypher.literalOf(contains.value), Cypher.literalOf("")))
+        .contains(Cypher.literalOf(contains.value))
       case not: Not => mapSparkFiltersToCypher(not.child, container, attributeAlias).not()
       case filter@(_: Filter) => throw new IllegalArgumentException(s"Filter of type `${filter}` is not supported.")
     }

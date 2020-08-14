@@ -1,6 +1,6 @@
 package org.neo4j.spark
 
-import org.apache.spark.sql.sources.{And, EqualNullSafe, EqualTo, Filter, GreaterThanOrEqual, LessThan, Not, Or}
+import org.apache.spark.sql.sources.{And, EqualNullSafe, EqualTo, Filter, GreaterThanOrEqual, LessThan, Not, Or, StringEndsWith, StringStartsWith}
 import org.junit.Assert._
 import org.junit.Test
 import org.neo4j.spark.service.{Neo4jQueryReadStrategy, Neo4jQueryService}
@@ -61,7 +61,41 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    assertEquals("MATCH (n:`Person`) WHERE ((n.name IS NULL OR n.name = 'John Doe') AND n.age = 36) RETURN n", query)
+    assertEquals("MATCH (n:`Person`) WHERE (((n.name IS NULL AND 'John Doe' IS NULL) OR n.name = 'John Doe') AND n.age = 36) RETURN n", query)
+  }
+
+  @Test
+  def testNodeFilterEqualNullSafeWithNullValue(): Unit = {
+    val options: java.util.Map[String, String] = new java.util.HashMap[String, String]()
+    options.put(Neo4jOptions.URL, "bolt://localhost")
+    options.put(QueryType.LABELS.toString.toLowerCase, "Person")
+    val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
+
+    val filters: Array[Filter] = Array[Filter](
+      EqualNullSafe("name", null),
+      EqualTo("age", 36)
+    )
+
+    val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
+
+    assertEquals("MATCH (n:`Person`) WHERE (((n.name IS NULL AND NULL IS NULL) OR n.name = NULL) AND n.age = 36) RETURN n", query)
+  }
+
+  @Test
+  def testNodeFilterStartsEndsWith(): Unit = {
+    val options: java.util.Map[String, String] = new java.util.HashMap[String, String]()
+    options.put(Neo4jOptions.URL, "bolt://localhost")
+    options.put(QueryType.LABELS.toString.toLowerCase, "Person")
+    val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
+
+    val filters: Array[Filter] = Array[Filter](
+      StringStartsWith("name", "Person Name"),
+      StringEndsWith("name", "Person Surname")
+    )
+
+    val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
+
+    assertEquals("MATCH (n:`Person`) WHERE (n.name STARTS WITH 'Person Name' AND n.name ENDS WITH 'Person Surname') RETURN n", query)
   }
 
   @Test
