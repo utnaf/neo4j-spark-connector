@@ -1,15 +1,16 @@
 package org.neo4j.spark.service
 
+import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.sources.{And, Filter, Or}
 import org.neo4j.cypherdsl.core.renderer.Renderer
 import org.neo4j.cypherdsl.core._
 import org.neo4j.spark.util.Neo4jImplicits._
 import org.neo4j.spark.util.Neo4jUtil
-import org.neo4j.spark.{Neo4jOptions, NodeWriteMode, QueryType}
+import org.neo4j.spark.{Neo4jOptions, NodeSaveMode, QueryType}
 
 import scala.collection.JavaConverters._
 
-class Neo4jQueryWriteStrategy(private val saveMode: NodeWriteMode.Value) extends Neo4jQueryStrategy {
+class Neo4jQueryWriteStrategy(private val saveMode: SaveMode) extends Neo4jQueryStrategy {
   override def createStatementForQuery(options: Neo4jOptions): String =
     s"""UNWIND ${"$"}events AS $BATCH_VARIABLE
        |${options.query.value}
@@ -17,22 +18,22 @@ class Neo4jQueryWriteStrategy(private val saveMode: NodeWriteMode.Value) extends
 
   override def createStatementForRelationships(options: Neo4jOptions): String = {
     val relationshipKeyword = saveMode match {
-      case NodeWriteMode.Overwrite => "MERGE"
-      case NodeWriteMode.ErrorIfExists => "CREATE"
+      case SaveMode.Overwrite => "MERGE"
+      case SaveMode.ErrorIfExists => "CREATE"
       case _ => throw new UnsupportedOperationException(s"SaveMode $saveMode not supported")
     }
 
     val sourceKeyword = options.relationshipMetadata.sourceWriteMode match {
-      case NodeWriteMode.Overwrite => "MERGE"
-      case NodeWriteMode.ErrorIfExists => "CREATE"
-      case NodeWriteMode.Match => "MATCH"
+      case NodeSaveMode.Overwrite => "MERGE"
+      case NodeSaveMode.ErrorIfExists => "CREATE"
+      case NodeSaveMode.Match => "MATCH"
       case _ => throw new UnsupportedOperationException(s"Source SaveMode $saveMode not supported")
     }
 
     val targetKeyword = options.relationshipMetadata.targetWriteMode match {
-      case NodeWriteMode.Overwrite => "MERGE"
-      case NodeWriteMode.ErrorIfExists => "CREATE"
-      case NodeWriteMode.Match => "MATCH"
+      case NodeSaveMode.Overwrite => "MERGE"
+      case NodeSaveMode.ErrorIfExists => "CREATE"
+      case NodeSaveMode.Match => "MATCH"
       case _ => throw new UnsupportedOperationException(s"Target SaveMode $saveMode not supported")
     }
 
@@ -47,10 +48,10 @@ class Neo4jQueryWriteStrategy(private val saveMode: NodeWriteMode.Value) extends
       .mkString(":")
 
     val sourceKeys = options.relationshipMetadata.source.nodeKeys.map(key => {
-      s"${key._2.removeAlias().quote()}:$BATCH_VARIABLE.source.${Neo4jWriteMappingStrategy.KEYS}.${key._1.quote()}"
+      s"${key._2.quote()}:$BATCH_VARIABLE.source.${Neo4jWriteMappingStrategy.KEYS}.${key._1.removeAlias().quote()}"
     }).mkString(", ")
     val targetKeys = options.relationshipMetadata.target.nodeKeys.map(key => {
-      s"${key._2.removeAlias().quote()}:$BATCH_VARIABLE.target.${Neo4jWriteMappingStrategy.KEYS}.${key._1.quote()}"
+      s"${key._2.quote()}:$BATCH_VARIABLE.target.${Neo4jWriteMappingStrategy.KEYS}.${key._1.removeAlias().quote()}"
     }).mkString(", ")
 
     s"""UNWIND ${"$"}events AS $BATCH_VARIABLE
@@ -63,8 +64,8 @@ class Neo4jQueryWriteStrategy(private val saveMode: NodeWriteMode.Value) extends
 
   override def createStatementForNodes(options: Neo4jOptions): String = {
     val keyword = saveMode match {
-      case NodeWriteMode.Overwrite => "MERGE"
-      case NodeWriteMode.ErrorIfExists => "CREATE"
+      case SaveMode.Overwrite => "MERGE"
+      case SaveMode.ErrorIfExists => "CREATE"
       case _ => throw new UnsupportedOperationException(s"SaveMode $saveMode not supported")
     }
     val labels = options.nodeMetadata.labels
