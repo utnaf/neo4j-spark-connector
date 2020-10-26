@@ -1352,11 +1352,11 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .option("relationship.source.labels", "Product")
       .option("relationship.target.labels", "Person")
       .load
-      .select("`source.name`")
+      .select("`source.name`", "`<source.id>`")
 
     df.count()
 
-    assertEquals(Set("source.name"), df.columns.toSet)
+    assertEquals(Set("source.name", "<source.id>"), df.columns.toSet)
   }
 
   @Test
@@ -1388,6 +1388,33 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
     df.count()
 
     assertEquals(Set("name"), df.columns.toSet)
+  }
+
+  @Test
+  def testShouldReturnJustTheSelectedFieldWithFilter(): Unit = {
+    val total = 100
+    val fixtureQuery: String =
+      s"""UNWIND range(1, $total) as id
+         |CREATE (pr:Product {id: id, name: 'Product ' + id})
+         |RETURN *
+    """.stripMargin
+
+    SparkConnectorScalaSuiteIT.session()
+      .writeTransaction(
+        new TransactionWork[ResultSummary] {
+          override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
+        })
+
+    val df = ss.read
+      .format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("labels", "Product")
+      .load
+      .where("name = 'Product 1'")
+
+    df.count()
+
+    assertEquals(Set("<id>", "<labels>", "name", "id"), df.columns.toSet)
   }
 
   private def initTest(query: String): DataFrame = {

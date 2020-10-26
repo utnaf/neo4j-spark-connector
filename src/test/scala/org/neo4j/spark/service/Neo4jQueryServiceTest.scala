@@ -166,7 +166,28 @@ class Neo4jQueryServiceTest {
   }
 
   @Test
-  def testRelationshipWithOneMoreColumnsSelected(): Unit = {
+  def testRelationshipWithMoreColumnSelected(): Unit = {
+    val options: java.util.Map[String, String] = new java.util.HashMap[String, String]()
+    options.put(Neo4jOptions.URL, "bolt://localhost")
+    options.put("relationship", "KNOWS")
+    options.put("relationship.nodes.map", "false")
+    options.put("relationship.source.labels", "Person")
+    options.put("relationship.target.labels", "Person")
+    val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
+
+    val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(
+      Array[Filter](),
+      PartitionSkipLimit(0, -1, -1),
+      List("source.name", "<source.id>")
+    )).createQuery()
+
+    assertEquals("MATCH (source:`Person`) " +
+      "MATCH (target:`Person`) " +
+      "MATCH (source)-[rel:`KNOWS`]->(target) RETURN source.name AS `source.name`, id(source) AS `<source.id>`", query)
+  }
+
+  @Test
+  def testRelationshipWithMoreColumnsSelected(): Unit = {
     val options: java.util.Map[String, String] = new java.util.HashMap[String, String]()
     options.put(Neo4jOptions.URL, "bolt://localhost")
     options.put("relationship", "KNOWS")
