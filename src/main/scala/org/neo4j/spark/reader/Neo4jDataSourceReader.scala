@@ -14,9 +14,12 @@ import org.neo4j.spark.util.Validations
 import scala.collection.JavaConverters._
 
 class Neo4jDataSourceReader(private val options: DataSourceOptions, private val jobId: String) extends DataSourceReader
-  with SupportsPushDownFilters {
+  with SupportsPushDownFilters
+  with SupportsPushDownRequiredColumns {
 
   private var filters: Array[Filter] = Array[Filter]()
+
+  private var requiredColumns: StructType = new StructType()
 
   private val neo4jOptions: Neo4jOptions = new Neo4jOptions(options.asMap())
     .validate(options => Validations.read(options, jobId))
@@ -71,4 +74,6 @@ class Neo4jDataSourceReader(private val options: DataSourceOptions, private val 
   }
 
   override def pushedFilters(): Array[Filter] = filters
+
+  override def pruneColumns(requiredSchema: StructType): Unit = requiredColumns = requiredSchema
 }
