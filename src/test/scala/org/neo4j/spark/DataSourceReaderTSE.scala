@@ -1329,6 +1329,33 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
+  def testShouldReturnJustTheSelectedFieldWithNodeAndWeirdColumnName(): Unit = {
+    val total = 100
+    val fixtureQuery: String =
+      s"""UNWIND range(1, $total) as id
+         |CREATE (pr:Product {id: id, `(╯°□°)╯︵ ┻━┻`: 'Product ' + id})
+         |RETURN *
+    """.stripMargin
+
+    SparkConnectorScalaSuiteIT.session()
+      .writeTransaction(
+        new TransactionWork[ResultSummary] {
+          override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
+        })
+
+    val df = ss.read
+      .format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("labels", "Product")
+      .load
+      .select("`(╯°□°)╯︵ ┻━┻`")
+
+    df.count()
+
+    assertEquals(Set("(╯°□°)╯︵ ┻━┻"), df.columns.toSet)
+  }
+
+  @Test
   def testShouldReturnJustTheSelectedFieldWithRelationship(): Unit = {
     val total = 100
     val fixtureQuery: String =
@@ -1358,6 +1385,38 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
     assertEquals(Set("source.name", "<source.id>"), df.columns.toSet)
   }
+
+  @Test
+  def testShouldReturnJustTheSelectedFieldWithRelationshipAndWeirdColumn(): Unit = {
+    val total = 100
+    val fixtureQuery: String =
+      s"""UNWIND range(1, $total) as id
+         |CREATE (pr:Product {id: id * rand(), `(╯°□°)╯︵ ┻━┻`: 'Product ' + id})
+         |CREATE (pe:Person {id: id, fullName: 'Person ' + id})
+         |CREATE (pe)-[:BOUGHT{when: rand(), quantity: rand() * 1000}]->(pr)
+         |RETURN *
+    """.stripMargin
+
+    SparkConnectorScalaSuiteIT.session()
+      .writeTransaction(
+        new TransactionWork[ResultSummary] {
+          override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
+        })
+
+    val df = ss.read
+      .format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("relationship", "BOUGHT")
+      .option("relationship.source.labels", "Person")
+      .option("relationship.target.labels", "Product")
+      .load
+      .select("`target.(╯°□°)╯︵ ┻━┻`", "`<source.id>`")
+
+    df.show()
+
+    assertEquals(Set("target.(╯°□°)╯︵ ┻━┻", "<source.id>"), df.columns.toSet)
+  }
+
 
   @Test
   def testShouldReturnJustTheSelectedFieldWithQuery(): Unit = {

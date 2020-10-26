@@ -283,7 +283,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
     if (labels.isEmpty) {
       Cypher.anyNode(name)
     } else {
-      Cypher.node(primaryLabel, otherLabels.asJava).named(name)
+      Cypher.node(primaryLabel, otherLabels.asJava).named(name.quote())
     }
   }
 }
