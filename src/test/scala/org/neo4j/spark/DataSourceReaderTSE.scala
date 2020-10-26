@@ -1412,7 +1412,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .load
       .select("`target.(╯°□°)╯︵ ┻━┻`", "`<source.id>`")
 
-    df.show()
+    df.count()
 
     assertEquals(Set("target.(╯°□°)╯︵ ┻━┻", "<source.id>"), df.columns.toSet)
   }
@@ -1497,15 +1497,15 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
-      .option("relationship.source.labels", "Produce")
-      .option("relationship.target.labels", "Person")
+      .option("relationship.source.labels", "Person")
+      .option("relationship.target.labels", "Product")
       .load
-      .filter("`source.name` = 'Product 1' AND `<target>`.`id` = '16'")
-      .select("`source.name`", "`<source.id>`")
+      .filter("`target.name` = 'Product 1' AND `target.id` = '16'")
+      .select("`target.name`", "`target.id`")
 
-    df.count()
+    df.show()
 
-    assertEquals(Set("source.name", "<source.id>"), df.columns.toSet)
+    assertEquals(Set("target.name", "target.id"), df.columns.toSet)
   }
 
   private def initTest(query: String): DataFrame = {
