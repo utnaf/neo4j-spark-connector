@@ -212,11 +212,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
       matchQuery.returning(entity)
     }
     else {
-      matchQuery.returning(requiredColumns.map {
-        case Neo4jUtil.INTERNAL_ID_FIELD => Functions.id(entity.asInstanceOf[Node]).as(Neo4jUtil.INTERNAL_ID_FIELD.quote())
-        case Neo4jUtil.INTERNAL_LABELS_FIELD => Functions.labels(entity.asInstanceOf[Node]).as(Neo4jUtil.INTERNAL_LABELS_FIELD.quote())
-        case name => entity.property(name).as(name.quote())
-      }: _*)
+      matchQuery.returning(requiredColumns.map(column => getCorrectProperty(column, entity)): _*)
     }
   }
 
