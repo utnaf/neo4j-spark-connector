@@ -124,12 +124,14 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
 
     val matchQuery: StatementBuilder.OngoingReadingWithoutWhere = filterRelationship(sourceNode, targetNode, relationship)
 
-    val aliasedSourceNode = sourceNode.as(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS)
-    val aliasedTargetNode = targetNode.as(Neo4jUtil.RELATIONSHIP_TARGET_ALIAS)
-    val aliasedRelationship = relationship.getRequiredSymbolicName
+    val returnExpressions: Seq[Expression] = buildReturnExpression(sourceNode,targetNode, relationship)
 
-    val returnExpressions: Seq[Expression] = if (requiredColumns.isEmpty) {
-      Seq(aliasedRelationship, aliasedSourceNode, aliasedTargetNode)
+    renderer.render(buildStatement(matchQuery.returning(returnExpressions : _*)))
+  }
+
+  private def buildReturnExpression(sourceNode: Node, targetNode: Node, relationship: Relationship): Seq[Expression] = {
+    if (requiredColumns.isEmpty) {
+      Seq(relationship.getRequiredSymbolicName, sourceNode.as(Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS), targetNode.as(Neo4jUtil.RELATIONSHIP_TARGET_ALIAS))
     }
     else {
       requiredColumns.map(column => {
@@ -149,7 +151,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
           throw new IllegalArgumentException(s"`${column}` is not a valid column.`")
         }
 
-        if (splatColumn.length.equals(1)) {
+        if (splatColumn.length == 1) {
           entity match {
             case n: Node => n.as(entityName.quote())
             case r: Relationship => r.getRequiredSymbolicName
@@ -160,8 +162,6 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
         }
       })
     }
-
-    renderer.render(buildStatement(matchQuery.returning(returnExpressions : _*)))
   }
 
   private def buildStatement(returning: StatementBuilder.OngoingReadingAndReturn) =
@@ -230,9 +230,8 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
   override def createStatementForNodes(options: Neo4jOptions): String = {
     val node = createNode(Neo4jUtil.NODE_ALIAS, options.nodeMetadata.labels)
     val matchQuery = filterNode(node)
-//    val returning = matchQuery.returning(node)
-//    renderer.render(buildStatement(returning))
-    renderer.render(buildStatement(returnRequiredColumns(node, matchQuery)))
+    val returning = returnRequiredColumns(node, matchQuery)
+    renderer.render(buildStatement(returning))
   }
 
   private def filterNode(node: Node) = {
@@ -283,7 +282,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
     if (labels.isEmpty) {
       Cypher.anyNode(name)
     } else {
-      Cypher.node(primaryLabel, otherLabels.asJava).named(name.quote())
+      Cypher.node(primaryLabel, otherLabels.asJava).named(name)
     }
   }
 }

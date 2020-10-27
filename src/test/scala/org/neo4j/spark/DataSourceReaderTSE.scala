@@ -1417,7 +1417,6 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
     assertEquals(Set("target.(╯°□°)╯︵ ┻━┻", "<source.id>"), df.columns.toSet)
   }
 
-
   @Test
   def testShouldReturnJustTheSelectedFieldWithQuery(): Unit = {
     val total = 100
@@ -1503,7 +1502,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .filter("`target.name` = 'Product 1' AND `target.id` = '16'")
       .select("`target.name`", "`target.id`")
 
-    df.show()
+    df.count()
 
     assertEquals(Set("target.name", "target.id"), df.columns.toSet)
   }
