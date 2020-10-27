@@ -33,6 +33,21 @@ class Neo4jQueryServiceTest {
   }
 
   @Test
+  def testNodeLabelWithNoSelectedColumns(): Unit = {
+    val options: java.util.Map[String, String] = new java.util.HashMap[String, String]()
+    options.put(Neo4jOptions.URL, "bolt://localhost")
+    options.put(QueryType.LABELS.toString.toLowerCase, "Person")
+    val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
+
+    val query: String = new Neo4jQueryService(
+      neo4jOptions,
+      new Neo4jQueryReadStrategy(Array.empty[Filter], PartitionSkipLimit(0, -1, -1), Seq())
+    ).createQuery()
+
+    assertEquals("MATCH (n:`Person`) RETURN n", query)
+  }
+
+  @Test
   def testNodeOneLabelWithOneSelectedColumn(): Unit = {
     val options: java.util.Map[String, String] = new java.util.HashMap[String, String]()
     options.put(Neo4jOptions.URL, "bolt://localhost")

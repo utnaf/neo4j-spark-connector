@@ -76,6 +76,10 @@ class Neo4jDataSourceReader(private val options: DataSourceOptions, private val 
   override def pushedFilters(): Array[Filter] = filters
 
   override def pruneColumns(requiredSchema: StructType): Unit = {
-    requiredColumns = requiredSchema
+    requiredColumns = if (neo4jOptions.pushdownColumnsEnabled) {
+      requiredSchema
+    } else {
+      new StructType()
+    }
   }
 }
