@@ -41,7 +41,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(
       neo4jOptions,
-      new Neo4jQueryReadStrategy(Array.empty[Filter], PartitionSkipLimit(0, -1, -1), Seq())
+      new Neo4jQueryReadStrategy(Array.empty[Filter], PartitionSkipLimit.EMPTY, Seq())
     ).createQuery()
 
     assertEquals("MATCH (n:`Person`) RETURN n", query)
@@ -56,7 +56,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(
       neo4jOptions,
-      new Neo4jQueryReadStrategy(Array.empty[Filter], PartitionSkipLimit(0, -1, -1), Seq("name"))
+      new Neo4jQueryReadStrategy(Array.empty[Filter], PartitionSkipLimit.EMPTY, Seq("name"))
     ).createQuery()
 
     assertEquals("MATCH (n:`Person`) RETURN n.name AS name", query)
@@ -71,7 +71,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(
       neo4jOptions,
-      new Neo4jQueryReadStrategy(Array.empty[Filter], PartitionSkipLimit(0, -1, -1), List("name", "bornDate"))
+      new Neo4jQueryReadStrategy(Array.empty[Filter], PartitionSkipLimit.EMPTY, List("name", "bornDate"))
     ).createQuery()
 
     assertEquals("MATCH (n:`Person`) RETURN n.name AS name, n.bornDate AS bornDate", query)
@@ -86,7 +86,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(
       neo4jOptions,
-      new Neo4jQueryReadStrategy(Array.empty[Filter], PartitionSkipLimit(0, -1, -1), List("<id>"))
+      new Neo4jQueryReadStrategy(Array.empty[Filter], PartitionSkipLimit.EMPTY, List("<id>"))
     ).createQuery()
 
     assertEquals("MATCH (n:`Person`) RETURN id(n) AS `<id>`", query)
@@ -171,7 +171,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(
       Array[Filter](),
-      PartitionSkipLimit(0, -1, -1),
+      PartitionSkipLimit.EMPTY,
       List("source.name")
     )).createQuery()
 
@@ -192,7 +192,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(
       Array[Filter](),
-      PartitionSkipLimit(0, -1, -1),
+      PartitionSkipLimit.EMPTY,
       List("source.name", "<source.id>")
     )).createQuery()
 
@@ -213,7 +213,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(
       Array[Filter](),
-      PartitionSkipLimit(0, -1, -1),
+      PartitionSkipLimit.EMPTY,
       List("source.name", "source.id", "rel.someprops", "target.date")
     )).createQuery()
 
