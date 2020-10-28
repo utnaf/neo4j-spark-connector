@@ -8,7 +8,7 @@ import org.apache.spark.sql.sources.v2.DataSourceOptions
 import org.apache.spark.sql.sources.v2.reader.{DataSourceReader, InputPartition, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
 import org.neo4j.spark.{DriverCache, Neo4jOptions}
-import org.neo4j.spark.service.{PartitionSkipLimit, SchemaService}
+import org.neo4j.spark.service.SchemaService
 import org.neo4j.spark.util.Validations
 
 import scala.collection.JavaConverters._
@@ -62,7 +62,7 @@ class Neo4jDataSourceReader(private val options: DataSourceOptions, private val 
     // we generate a partition for each element
     partitionSkipLimitList
       .map(partitionSkipLimit => new Neo4jInputPartitionReader(neo4jOptions, filters, schema, jobId,
-        partitionSkipLimit, scriptResult))
+        partitionSkipLimit, scriptResult, requiredColumns))
   }
 
   override def pushFilters(filtersArray: Array[Filter]): Array[Filter] = {
@@ -76,10 +76,10 @@ class Neo4jDataSourceReader(private val options: DataSourceOptions, private val 
   override def pushedFilters(): Array[Filter] = filters
 
   override def pruneColumns(requiredSchema: StructType): Unit = {
-    requiredColumns = if (neo4jOptions.pushdownColumnsEnabled) {
-      requiredSchema
-    } else {
+    requiredColumns = if (!neo4jOptions.pushdownColumnsEnabled || neo4jOptions.relationshipMetadata.nodeMap) {
       new StructType()
+    } else {
+      requiredSchema
     }
   }
 }
