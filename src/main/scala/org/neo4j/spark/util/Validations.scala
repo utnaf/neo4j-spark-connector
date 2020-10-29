@@ -96,6 +96,13 @@ object Validations {
     val schemaService = new SchemaService(neo4jOptions, cache)
     try {
       validateConnection(cache.getOrCreate().session(neo4jOptions.session.toNeo4jSession))
+
+      if (neo4jOptions.query.value.isEmpty
+        && neo4jOptions.relationshipMetadata.relationshipType.isEmpty
+        && neo4jOptions.nodeMetadata.labels.isEmpty) {
+        throw new IllegalArgumentException("No valid read option found. You must specify one between: query, labels, relationship.")
+      }
+
       neo4jOptions.query.queryType match {
         case QueryType.LABELS => {
           ValidationUtil.isNotEmpty(neo4jOptions.nodeMetadata.labels,
