@@ -17,6 +17,9 @@ object Validations extends Logging {
     val schemaService = new SchemaService(neo4jOptions, cache)
     try {
       validateConnection(cache.getOrCreate().session(neo4jOptions.session.toNeo4jSession))
+
+      checkOptionsConsistency(neo4jOptions)
+
       neo4jOptions.query.queryType match {
         case QueryType.QUERY => {
           ValidationUtil.isTrue(schemaService.isValidQuery(
@@ -97,6 +100,9 @@ object Validations extends Logging {
     val schemaService = new SchemaService(neo4jOptions, cache)
     try {
       validateConnection(cache.getOrCreate().session(neo4jOptions.session.toNeo4jSession))
+
+      checkOptionsConsistency(neo4jOptions)
+
       neo4jOptions.query.queryType match {
         case QueryType.LABELS => {
           ValidationUtil.isNotEmpty(neo4jOptions.nodeMetadata.labels,
@@ -135,30 +141,38 @@ object Validations extends Logging {
     }
   }
 
-  def checkOptionsConsistency(options: java.util.Map[String, String]): Unit = {
-    Seq(
-      options.containsKey(QueryType.LABELS.toString.toLowerCase),
-      options.containsKey(QueryType.RELATIONSHIP.toString.toLowerCase),
-      options.containsKey(QueryType.QUERY.toString.toLowerCase)
-    ).count(_ == true) match {
-      case 0 => throw new IllegalArgumentException("No valid option found. One of `query`, `labels`, `relationship` is required.")
-      case x if x > 1 => throw new IllegalArgumentException("You must specify just one of `query`, `labels`, `relationship`.")
-      case _ => logInfo("Options are ok")
+  def checkOptionsConsistency(neo4jOptions: Neo4jOptions): Unit = {
+    if (neo4jOptions.query.value.isEmpty) {
+      throw new IllegalArgumentException("No valid option found. One of `query`, `labels`, `relationship` is required")
     }
 
-//    neo4jOptions.query.queryType match {
-//      case QueryType.LABELS => {
-//        if (!neo4jOptions.query.value.isEmpty) {
-//          ignoreOption(QueryType.QUERY.toString.toLowerCase, QueryType.LABELS.toString.toLowerCase)
-//        }
-//        if (!neo4jOptions.relationshipMetadata.relationshipType.isEmpty) {
-//          ignoreOption(QueryType.RELATIONSHIP.toString.toLowerCase, QueryType.LABELS.toString.toLowerCase)
-//        }
-//        if(!neo4jOptions.queryMetadata.queryCount.isEmpty) {
-//          ignoreOption(Neo4jOptions.QUERY_COUNT, QueryType.LABELS.toString.toLowerCase)
-//        }
-//      }
-//    }
+    neo4jOptions.query.queryType match {
+      case QueryType.LABELS | QueryType.RELATIONSHIP => {
+        if(neo4jOptions.queryMetadata.queryCount.nonEmpty) {
+          ignoreOption(Neo4jOptions.QUERY_COUNT, QueryType.LABELS.toString.toLowerCase)
+        }
+      }
+      case QueryType.QUERY | QueryType.LABELS => {
+        if(neo4jOptions.relationshipMetadata.source.labels.nonEmpty) {
+          ignoreOption(Neo4jOptions.RELATIONSHIP_SOURCE_LABELS, QueryType.RELATIONSHIP.toString.toLowerCase)
+        }
+        if(neo4jOptions.relationshipMetadata.source.nodeProps.nonEmpty) {
+          ignoreOption(Neo4jOptions.RELATIONSHIP_SOURCE_NODE_PROPS, QueryType.RELATIONSHIP.toString.toLowerCase)
+        }
+        if(neo4jOptions.relationshipMetadata.source.nodeKeys.nonEmpty) {
+          ignoreOption(Neo4jOptions.RELATIONSHIP_SOURCE_NODE_KEYS, QueryType.RELATIONSHIP.toString.toLowerCase)
+        }
+        if(neo4jOptions.relationshipMetadata.target.labels.nonEmpty) {
+          ignoreOption(Neo4jOptions.RELATIONSHIP_TARGET_LABELS, QueryType.RELATIONSHIP.toString.toLowerCase)
+        }
+        if(neo4jOptions.relationshipMetadata.target.nodeProps.nonEmpty) {
+          ignoreOption(Neo4jOptions.RELATIONSHIP_TARGET_NODE_PROPS, QueryType.RELATIONSHIP.toString.toLowerCase)
+        }
+        if(neo4jOptions.relationshipMetadata.target.nodeKeys.nonEmpty) {
+          ignoreOption(Neo4jOptions.RELATIONSHIP_TARGET_NODE_KEYS, QueryType.RELATIONSHIP.toString.toLowerCase)
+        }
+      }
+    }
   }
 
   def ignoreOption(ignoredOption: String, primaryOption: String): Unit =

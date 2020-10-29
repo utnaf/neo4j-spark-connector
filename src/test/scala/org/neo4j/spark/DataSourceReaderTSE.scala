@@ -37,7 +37,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .load()
     } catch {
       case e: IllegalArgumentException =>
-        assertEquals("You must specify just one of `query`, `labels`, `relationship`.", e.getMessage)
+        assertEquals("You must specify one of `query`, `labels`, `relationship`", e.getMessage)
       case _ => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}")
     }
   }
@@ -53,7 +53,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .load()
     } catch {
       case e: IllegalArgumentException =>
-        assertEquals("You must specify just one of `query`, `labels`, `relationship`.", e.getMessage)
+        assertEquals("You must specify one of `query`, `labels`, `relationship`", e.getMessage)
       case _ => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}")
     }
   }
