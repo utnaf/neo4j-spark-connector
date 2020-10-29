@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 import org.apache.spark.sql.SaveMode
 import org.neo4j.driver.Config.TrustStrategy
 import org.neo4j.driver._
-import org.neo4j.spark.util.Neo4jUtil
+import org.neo4j.spark.util.{Neo4jUtil, Validations}
 
 
 class Neo4jOptions(private val parameters: java.util.Map[String, String]) extends Serializable {
@@ -31,6 +31,8 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) extend
     parameters.get(parameter).trim()
   }
 
+  Validations.checkOptionsConsistency(parameters);
+
   val pushdownFiltersEnabled: Boolean = getParameter(PUSHDOWN_FILTERS_ENABLED, DEFAULT_PUSHDOWN_FILTERS_ENABLED.toString).toBoolean
   val pushdownColumnsEnabled: Boolean = getParameter(PUSHDOWN_COLUMNS_ENABLED, DEFAULT_PUSHDOWN_COLUMNS_ENABLED.toString).toBoolean
 
@@ -49,12 +51,6 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) extend
       Neo4jQueryOptions(LABELS, parsed)
     }
     case ("", "", relationship) => Neo4jQueryOptions(RELATIONSHIP, relationship)
-    case _ => throw new IllegalArgumentException(
-      s"You need to specify just one of these options: ${
-        QueryType.values.toSeq.map(value => s"'${value.toString.toLowerCase()}'")
-          .sorted.mkString(", ")
-      }"
-    )
   }
 
   val connection: Neo4jDriverOptions = Neo4jDriverOptions(

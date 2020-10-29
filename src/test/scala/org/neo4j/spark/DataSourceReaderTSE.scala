@@ -22,7 +22,38 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .load()
     } catch {
       case e: IllegalArgumentException =>
-        assertEquals(e.getMessage, "No valid read option found. You must specify one between: query, labels, relationship.")
+        assertEquals("No valid option found. One of `query`, `labels`, `relationship` is required.", e.getMessage)
+      case _ => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}")
+    }
+  }
+
+  @Test
+  def testThrowsExceptionIfTwoValidReadOptionAreSet(): Unit = {
+    try {
+      ss.read.format(classOf[DataSource].getName)
+        .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+        .option("labels", "Person")
+        .option("relationship", "KNOWS")
+        .load()
+    } catch {
+      case e: IllegalArgumentException =>
+        assertEquals("You must specify just one of `query`, `labels`, `relationship`.", e.getMessage)
+      case _ => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}")
+    }
+  }
+
+  @Test
+  def testThrowsExceptionIfThreeValidReadOptionAreSet(): Unit = {
+    try {
+      ss.read.format(classOf[DataSource].getName)
+        .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+        .option("labels", "Person")
+        .option("relationship", "KNOWS")
+        .option("query", "MATCH (n) RETURN n")
+        .load()
+    } catch {
+      case e: IllegalArgumentException =>
+        assertEquals("You must specify just one of `query`, `labels`, `relationship`.", e.getMessage)
       case _ => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}")
     }
   }
