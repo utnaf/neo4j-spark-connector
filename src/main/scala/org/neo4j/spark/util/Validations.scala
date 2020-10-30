@@ -141,6 +141,12 @@ object Validations extends Logging {
     }
   }
 
+  /**
+   * df: this method checks for inconsistencies between provided options.
+   * Ex: if we use the QueryType.LABELS, we will ignore any relationship options.
+   *
+   * Plus it throws an exception if no QueryType is provided.
+   */
   def checkOptionsConsistency(neo4jOptions: Neo4jOptions): Unit = {
     if (neo4jOptions.query.value.isEmpty) {
       throw new IllegalArgumentException("No valid option found. One of `query`, `labels`, `relationship` is required")

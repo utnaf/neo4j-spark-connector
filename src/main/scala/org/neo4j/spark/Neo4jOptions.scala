@@ -49,7 +49,12 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) extend
       Neo4jQueryOptions(LABELS, parsed)
     }
     case ("", "", relationship) => Neo4jQueryOptions(RELATIONSHIP, relationship)
-    case _ => throw new IllegalArgumentException("You must specify one of `query`, `labels`, `relationship`")
+    case _ => throw new IllegalArgumentException(
+      s"You need to specify just one of these options: ${
+        QueryType.values.toSeq.map(value => s"'${value.toString.toLowerCase()}'")
+          .sorted.mkString(", ")
+      }"
+    )
   }
 
   val connection: Neo4jDriverOptions = Neo4jDriverOptions(
