@@ -22,7 +22,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .load()
     } catch {
       case e: IllegalArgumentException =>
-        assertEquals("No valid option found. One of `query`, `labels`, `relationship` is required.", e.getMessage)
+        assertEquals("No valid option found. One of `query`, `labels`, `relationship` is required", e.getMessage)
       case _ => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}")
     }
   }
