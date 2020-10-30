@@ -1165,7 +1165,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (i:Instrument) RETURN id(i) as internal_id, i.id as id, i.name as name, i.name")
       .load
-      .sort("id")
+      .orderBy("id")
 
     val row = df.collectAsList().get(0)
     assertEquals(1L, row.get(1))
