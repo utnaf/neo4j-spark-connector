@@ -13,7 +13,7 @@ import org.neo4j.spark.util.Neo4jUtil
 
 
 object SparkConnectorScalaSuiteIT {
-  val server: Neo4jContainerExtension = new Neo4jContainerExtension()
+  val server: Neo4jContainerExtension = new Neo4jContainerExtension(s"neo4j:4.1.4-enterprise")
     .withNeo4jConfig("dbms.security.auth_enabled", "false")
     .withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
     .withDatabases(Seq("db1", "db2"))
@@ -86,7 +86,6 @@ object SparkConnectorScalaSuiteIT {
   classOf[SchemaServiceTSE],
   classOf[DataSourceReaderTSE],
   classOf[DataSourceReaderNeo4j4xTSE],
-  classOf[DataSourceWriterTSE],
   classOf[DataSourceWriterNeo4j4xTSE],
   classOf[DataSourceReaderNeo4j35xTSE]
 ))

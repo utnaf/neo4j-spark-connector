@@ -2,8 +2,8 @@ package org.neo4j.spark.reader
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.connector.read.{InputPartition, PartitionReader}
 import org.apache.spark.sql.sources.Filter
-import org.apache.spark.sql.sources.v2.reader.{InputPartition, InputPartitionReader}
 import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.{Record, Session, Transaction, Values}
 import org.neo4j.spark.service.{MappingService, Neo4jQueryReadStrategy, Neo4jQueryService, Neo4jQueryStrategy, Neo4jReadMappingStrategy, PartitionSkipLimit}
@@ -20,7 +20,6 @@ class Neo4jInputPartitionReader(private val options: Neo4jOptions,
                                 private val partitionSkipLimit: PartitionSkipLimit,
                                 private val scriptResult: java.util.List[java.util.Map[String, AnyRef]],
                                 private val requiredColumns: StructType) extends InputPartition[InternalRow]
-  with InputPartitionReader[InternalRow]
   with Logging {
 
   private var result: Iterator[Record] = _
@@ -33,9 +32,6 @@ class Neo4jInputPartitionReader(private val options: Neo4jOptions,
     .createQuery()
 
   private val mappingService = new MappingService(new Neo4jReadMappingStrategy(options, requiredColumns), options)
-
-  override def createPartitionReader(): InputPartitionReader[InternalRow] = new Neo4jInputPartitionReader(options, filters, schema,
-    jobId, partitionSkipLimit, scriptResult, requiredColumns)
 
   def next: Boolean = {
     if (result == null) {
@@ -57,5 +53,4 @@ class Neo4jInputPartitionReader(private val options: Neo4jOptions,
     Neo4jUtil.closeSafety(session, log)
     driverCache.close()
   }
-
 }

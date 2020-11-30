@@ -17,7 +17,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testThrowsExceptionIfNoValidReadOptionIsSet(): Unit = {
     try {
-      ss.read.format(classOf[DataSource].getName)
+      ss.read.format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .load()
     } catch {
@@ -30,7 +30,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testThrowsExceptionIfTwoValidReadOptionAreSet(): Unit = {
     try {
-      ss.read.format(classOf[DataSource].getName)
+      ss.read.format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
         .option("relationship", "KNOWS")
@@ -45,7 +45,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testThrowsExceptionIfThreeValidReadOptionAreSet(): Unit = {
     try {
-      ss.read.format(classOf[DataSource].getName)
+      ss.read.format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
         .option("relationship", "KNOWS")
@@ -708,7 +708,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df = ss.read.format(classOf[DataSource].getName)
+    val df = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship.nodes.map", "true")
       .option("relationship", "KNOWS")
@@ -737,7 +737,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df = ss.read.format(classOf[DataSource].getName)
+    val df = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "KNOWS")
       .option("relationship.nodes.map", "false")
@@ -786,7 +786,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df: DataFrame = ss.read.format(classOf[DataSource].getName)
+    val df: DataFrame = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship.nodes.map", "false")
       .option("relationship", "BOUGHT")
@@ -825,7 +825,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixture2Query).consume()
         })
 
-    val partitionedDf = ss.read.format(classOf[DataSource].getName)
+    val partitionedDf = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person:Customer")
       .option("partitions", "5")
@@ -849,7 +849,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val partitionedDf = ss.read.format(classOf[DataSource].getName)
+    val partitionedDf = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship.nodes.map", "true")
       .option("relationship", "BOUGHT")
@@ -891,7 +891,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureProduct2Query).consume()
         })
 
-    val partitionedQueryCountDf = ss.read.format(classOf[DataSource].getName)
+    val partitionedQueryCountDf = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
         """
@@ -908,7 +908,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
     assertEquals(50, partitionedQueryCountDf.collect().map(_.getAs[String]("person")).toSet.size)
     assertEquals(50, partitionedQueryCountDf.collect().map(_.getAs[String]("person")).size)
 
-    val partitionedQueryCountLiteralDf = ss.read.format(classOf[DataSource].getName)
+    val partitionedQueryCountLiteralDf = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
         """
@@ -940,7 +940,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df: DataFrame = ss.read.format(classOf[DataSource].getName)
+    val df: DataFrame = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
       .option("relationship.nodes.map", "false")
@@ -983,7 +983,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df: DataFrame = ss.read.format(classOf[DataSource].getName)
+    val df: DataFrame = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship.nodes.map", "true")
       .option("relationship", "BOUGHT")
@@ -1014,7 +1014,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testQueries(): Unit = {
-    val dfMap = ss.read.format(classOf[DataSource].getName)
+    val dfMap = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "RETURN {a: 1, b: '3'} AS map")
       .load()
@@ -1022,7 +1022,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
     val expectedMap = Map("a" -> "1", "b" -> "3")
     assertEquals(expectedMap, map)
 
-    val dfArrayMap = ss.read.format(classOf[DataSource].getName)
+    val dfArrayMap = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "RETURN [{a: 1, b: '3'}, {a: 'foo'}] AS listMap")
       .load()
@@ -1030,7 +1030,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
     val expectedListMap = Seq(Map("a" -> "1", "b" -> "3"), Map("a" -> "foo"))
     assertEquals(expectedListMap, listMap)
 
-    val dfArray = ss.read.format(classOf[DataSource].getName)
+    val dfArray = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "RETURN [1, 'foo'] AS list")
       .load()
@@ -1056,7 +1056,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df: DataFrame = ss.read.format(classOf[DataSource].getName)
+    val df: DataFrame = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (n:Person) WITH n LIMIT 2 RETURN collect(n) AS nodes")
       .load()
@@ -1070,7 +1070,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .size
     assertEquals(2, count)
 
-    val dfString: DataFrame = ss.read.format(classOf[DataSource].getName)
+    val dfString: DataFrame = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
         """MATCH (p:Person)-[b:BOUGHT]->(pr:Product)
@@ -1086,7 +1086,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       .size
     assertEquals(100, countString)
 
-    val dfRel: DataFrame = ss.read.format(classOf[DataSource].getName)
+    val dfRel: DataFrame = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
         """MATCH (p:Person)-[b:BOUGHT]->(pr:Product)
@@ -1110,7 +1110,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   @Test(expected = classOf[IllegalArgumentException])
   def testThrowsExceptionOnWriteQuery(): Unit = {
     try {
-      ss.read.format(classOf[DataSource].getName)
+      ss.read.format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("query", "CREATE (p:Person)")
         .load()
@@ -1131,7 +1131,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run("CREATE (i1:Instrument{name: 'Drums'}), (i2:Instrument{name: 'Guitar'})").consume()
         })
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Instrument")
       .option("partitions", "2")
@@ -1143,7 +1143,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testEmptyDataset(): Unit = {
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (e:ID_DO_NOT_EXIST) RETURN id(e) as f, 1 as g")
       .load
@@ -1161,7 +1161,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (i:Instrument) RETURN id(i) as internal_id, i.id as id, i.name as name, i.name")
       .load
@@ -1190,7 +1190,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df = ss.read.format(classOf[DataSource].getName)
+    val df = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
         """MATCH (p:Person)-[b:BOUGHT]->(pr:Product)
@@ -1204,7 +1204,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testComplexReturnStatementNoValues(): Unit = {
-    val df = ss.read.format(classOf[DataSource].getName)
+    val df = ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
         """MATCH (p:Person)-[b:BOUGHT]->(pr:Product)
@@ -1219,7 +1219,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testShouldPassTheScriptResult(): Unit = {
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("script", "RETURN 'foo' AS val")
       .option("query", "UNWIND range(1,2) as id RETURN id AS val, scriptResult[0].val AS script")
@@ -1239,7 +1239,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   def testShouldFailWithExplicitErrorIfSkipLimitIsUsedAtTheEndOfTheQuery(): Unit = {
     try {
       ss.read
-        .format(classOf[DataSource].getName)
+        .format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("query", "MATCH (n:Label) RETURN id(n) as id LIMIT 100")
         .option("partitions", 2)
@@ -1259,7 +1259,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   def testShouldFailWithExplicitErrorIfLowercaseSkipLimitIsUsedAtTheEndOfTheQuery(): Unit = {
     try {
       ss.read
-        .format(classOf[DataSource].getName)
+        .format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("query", "MATCH (n:Label) RETURN id(n) as id limit 100 skip 2")
         .option("partitions", 2)
@@ -1279,7 +1279,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   def testShouldFailWithExplicitErrorIfRandomcaseSkipLimitIsUsedAtTheEndOfTheQuery(): Unit = {
     try {
       ss.read
-        .format(classOf[DataSource].getName)
+        .format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("query", "MATCH (n:Label) RETURN id(n) as id LiMIt 100 skIp 2")
         .option("partitions", 2)
@@ -1299,7 +1299,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   def testShouldFailWithExplicitErrorIfSkipLimitIsUsedAtTheEndOfTheQueryWithMultilineQuery(): Unit = {
     try {
       ss.read
-        .format(classOf[DataSource].getName)
+        .format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("query", "MATCH (n:Label)\n" +
           "RETURN id(n) as id\n" +
@@ -1333,7 +1333,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (p:Product) WITH p\nLIMIT 10\nRETURN p")
       .option("partitions", 2)
@@ -1359,7 +1359,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Product")
       .load
@@ -1386,7 +1386,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Product")
       .load
@@ -1446,7 +1446,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
       .option("relationship.source.labels", "Product")
@@ -1477,7 +1477,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
       .option("relationship.source.labels", "Person")
@@ -1508,7 +1508,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (p:Product) RETURN p.name as name")
       .option("partitions", 2)
@@ -1537,7 +1537,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Product")
       .load
@@ -1566,7 +1566,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DataSource].getName)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
       .option("relationship.source.labels", "Person")
@@ -1587,7 +1587,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(query).consume()
         })
 
-    ss.read.format(classOf[DataSource].getName)
+    ss.read.format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Person")
       .load()

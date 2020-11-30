@@ -41,12 +41,11 @@
     </licenses>
 
     <properties>
-        <scala.version>2.11.12</scala.version>
-        <scala.binary.version>2.11</scala.binary.version>
+        <scala.version>2.12.12</scala.version>
+        <scala.binary.version>2.12</scala.binary.version>
         <neo4j.version>4.0.8</neo4j.version>
         <driver.version>4.1.1</driver.version>
-        <spark.version>2.4.5</spark.version>
-        <neo4j.experimental>false</neo4j.experimental>
+        <spark.version>3.0.1</spark.version>
         <testcontainers.version>1.15.0</testcontainers.version>
         <xbean.version>4.10</xbean.version>
         <cypherdsl.version>2020.0.0</cypherdsl.version>
@@ -61,9 +60,6 @@
                 <scala.version>2.11.12</scala.version>
                 <scala.binary.version>2.11</scala.binary.version>
             </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
         </profile>
         <profile>
             <id>neo4j-4.0</id>
@@ -83,7 +79,7 @@
         <profile>
             <id>neo4j-4.1</id>
             <properties>
-                <neo4j.version>4.1.2</neo4j.version>
+                <neo4j.version>4.1.4</neo4j.version>
             </properties>
         </profile>
         <profile>
@@ -98,6 +94,9 @@
                 <scala.version>2.12.12</scala.version>
                 <scala.binary.version>2.12</scala.binary.version>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
     </profiles>
 
