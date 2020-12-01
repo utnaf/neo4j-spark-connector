@@ -13,13 +13,13 @@ import org.neo4j.spark.{DriverCache, Neo4jOptions}
 
 import scala.collection.JavaConverters._
 
-class Neo4jInputPartitionReader(private val options: Neo4jOptions,
-                                private val filters: Array[Filter],
-                                private val schema: StructType,
-                                private val jobId: String,
-                                private val partitionSkipLimit: PartitionSkipLimit,
-                                private val scriptResult: java.util.List[java.util.Map[String, AnyRef]],
-                                private val requiredColumns: StructType) extends InputPartition[InternalRow]
+class Neo4jPartitionReader(private val options: Neo4jOptions,
+                           private val filters: Array[Filter],
+                           private val schema: StructType,
+                           private val jobId: String,
+                           private val partitionSkipLimit: PartitionSkipLimit,
+                           private val scriptResult: java.util.List[java.util.Map[String, AnyRef]],
+                           private val requiredColumns: StructType) extends PartitionReader[InternalRow]
   with Logging {
 
   private var result: Iterator[Record] = _
@@ -33,6 +33,7 @@ class Neo4jInputPartitionReader(private val options: Neo4jOptions,
 
   private val mappingService = new MappingService(new Neo4jReadMappingStrategy(options, requiredColumns), options)
 
+  @transient
   def next: Boolean = {
     if (result == null) {
       session = driverCache.getOrCreate().session(options.session.toNeo4jSession)

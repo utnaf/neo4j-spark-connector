@@ -14,12 +14,12 @@ class SimplePartitionReaderFactory(private val neo4jOptions: Neo4jOptions,
                                    private val partitionSkipLimit: PartitionSkipLimit,
                                    private val scriptResult: java.util.List[java.util.Map[String, AnyRef]],
                                    private val requiredColumns: StructType) extends PartitionReaderFactory {
-  override def createReader(partition: InputPartition): InputPartition[InternalRow] = new Neo4jInputPartitionReader(
+  override def createReader(partition: InputPartition): PartitionReader[InternalRow] = new Neo4jPartitionReader(
     neo4jOptions,
     filters,
     schema,
     jobId,
-    partitionSkipLimit,
+    partition.asInstanceOf[Neo4jPartition].partitionSkipLimit,
     scriptResult,
     requiredColumns
   )

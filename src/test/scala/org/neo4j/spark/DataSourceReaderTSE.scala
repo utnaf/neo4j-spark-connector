@@ -1587,7 +1587,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(query).consume()
         })
 
-    ss.read.format(classOf[DefaultSource].getName)
+    ss.read.format("org.neo4j.spark")
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Person")
       .load()

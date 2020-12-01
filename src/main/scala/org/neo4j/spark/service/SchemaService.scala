@@ -166,7 +166,7 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
         .getOrElse("apoc.meta.relTypeProperties", Map.empty[String, AnyRef])
         .asInstanceOf[Map[String, AnyRef]]
       val config = apocConfig ++ Map("includeRels" -> Seq(options.relationshipMetadata.relationshipType).asJava)
-      val params = Map[String, AnyRef]("config" -> config,
+      val params = Map[String, AnyRef]("config" -> config.asJava,
         "sourceLabels" -> options.relationshipMetadata.source.labels.asJava,
         "targetLabels" -> options.relationshipMetadata.target.labels.asJava)
         .asJava
