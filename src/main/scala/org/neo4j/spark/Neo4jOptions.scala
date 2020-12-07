@@ -192,7 +192,7 @@ case class Neo4jQueryMetadata(query: String, queryCount: String)
 
 case class Neo4jQueryOptions(queryType: QueryType.Value, value: String)
 
-case class Neo4jSessionOptions(database: String, accessMode: AccessMode = AccessMode.READ) {
+case class Neo4jSessionOptions(database: String, var accessMode: AccessMode = AccessMode.READ) {
   def toNeo4jSession: SessionConfig = {
     val builder = SessionConfig.builder()
       .withDefaultAccessMode(accessMode)
@@ -203,7 +203,6 @@ case class Neo4jSessionOptions(database: String, accessMode: AccessMode = Access
 
     builder.build()
   }
-
 }
 
 case class Neo4jDriverOptions(

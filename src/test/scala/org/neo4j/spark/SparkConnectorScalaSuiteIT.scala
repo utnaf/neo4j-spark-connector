@@ -87,6 +87,7 @@ object SparkConnectorScalaSuiteIT {
   classOf[DataSourceReaderTSE],
   classOf[DataSourceReaderNeo4j4xTSE],
   classOf[DataSourceWriterNeo4j4xTSE],
-  classOf[DataSourceReaderNeo4j35xTSE]
+  classOf[DataSourceReaderNeo4j35xTSE],
+  classOf[DataSourceWriterTSE]
 ))
 class SparkConnectorScalaSuiteIT {}

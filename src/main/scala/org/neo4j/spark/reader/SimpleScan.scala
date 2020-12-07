@@ -14,6 +14,8 @@ class SimpleScan(neo4jOptions: Neo4jOptions, jobId: String, schema: StructType) 
 
   override def toBatch: Batch = this
 
+  var scriptResult: java.util.List[java.util.Map[String, AnyRef]] = _
+
   private def callSchemaService[T](function: SchemaService => T): T = {
     val driverCache = new DriverCache(neo4jOptions.connection, jobId)
     val schemaService = new SchemaService(neo4jOptions, driverCache)
@@ -32,22 +34,22 @@ class SimpleScan(neo4jOptions: Neo4jOptions, jobId: String, schema: StructType) 
     }
   }
 
-  private def createPartitions(schema: StructType) = {
+  private def createPartitions() = {
     // we get the skip/limit for each partition and execute the "script"
     val (partitionSkipLimitList, scriptResult) = callSchemaService { schemaService =>
       (schemaService.skipLimitFromPartition(), schemaService.execute(neo4jOptions.script)) }
     // we generate a partition for each element
+    this.scriptResult = scriptResult
     partitionSkipLimitList
-      .map(partitionSkipLimit => new Neo4jPartition(partitionSkipLimit))
+      .map(partitionSkipLimit => Neo4jPartition(partitionSkipLimit))
   }
 
   override def planInputPartitions(): Array[InputPartition] = {
-    val schema = readSchema()
-    val neo4jPartitions: Seq[Neo4jPartition] = createPartitions(schema)
+    val neo4jPartitions: Seq[Neo4jPartition] = createPartitions()
     neo4jPartitions.toArray
   }
   override def createReaderFactory(): PartitionReaderFactory = new SimplePartitionReaderFactory(
-    neo4jOptions, Array.empty[Filter], schema, jobId, PartitionSkipLimit.EMPTY, List.empty[java.util.Map[String, AnyRef]].asJava, new StructType()
+    neo4jOptions, Array.empty[Filter], schema, jobId, scriptResult, new StructType()
   )
 
   override def readSchema(): StructType = schema
