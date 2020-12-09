@@ -4,9 +4,8 @@ import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.connector.write.{BatchWrite, DataWriterFactory, PhysicalWriteInfo, WriterCommitMessage}
 import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.AccessMode
-import org.neo4j.spark.{DriverCache, Neo4jOptions}
 import org.neo4j.spark.service.SchemaService
-import org.neo4j.spark.util.Validations
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
 
 class Neo4jBatchWriter(jobId: String,
                        structType: StructType,
@@ -28,8 +27,8 @@ class Neo4jBatchWriter(jobId: String,
   }
 
   private val neo4jOptions: Neo4jOptions = {
-    neo4jOptions.session.accessMode = AccessMode.WRITE
-    neo4jOptions.validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode))
+    options.session.accessMode = AccessMode.WRITE
+    options.validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode))
   }
 
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)

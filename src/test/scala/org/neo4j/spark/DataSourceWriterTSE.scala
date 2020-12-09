@@ -1,7 +1,6 @@
 package org.neo4j.spark
 
 import java.time.ZoneOffset
-
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.spark.SparkException
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
@@ -12,6 +11,7 @@ import org.neo4j.driver.internal.{InternalPoint2D, InternalPoint3D}
 import org.neo4j.driver.summary.ResultSummary
 import org.neo4j.driver.types.{IsoDuration, Type}
 import org.neo4j.driver.{Result, Transaction, TransactionWork}
+import org.neo4j.spark.util.Neo4jOptions
 
 import scala.collection.JavaConverters._
 import scala.util.Random
@@ -49,7 +49,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
   private def testType[T](ds: DataFrame, neo4jType: Type): Unit = {
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -79,7 +79,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
   private def testArray[T](ds: DataFrame): Unit = {
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -212,7 +212,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -243,7 +243,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -273,7 +273,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -304,7 +304,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -362,7 +362,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "BeanWithDuration")
       .save()
@@ -393,7 +393,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "BeanWithDuration")
       .save()
@@ -425,7 +425,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person: Customer")
       .save()
@@ -471,7 +471,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     try {
       ds.write
         .format(classOf[DefaultSource].getName)
-        .mode(SaveMode.ErrorIfExists)
+        .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
         .save()
@@ -534,7 +534,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Person")
       .save()
@@ -576,7 +576,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person:Customer")
       .option("batch.size", "11")
@@ -657,6 +657,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     musicDf.write
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("relationship", "PLAYS")
       .option("relationship.save.strategy", "keys")
       .option("relationship.source.labels", ":Musician")
@@ -720,9 +721,9 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
         .option("relationship", "PLAYS")
         .option("relationship.save.strategy", "NATIVE")
         .option("relationship.source.labels", ":Person")
-        .option("relationship.source.save.mode", "ErrorIfExists")
+        .option("relationship.source.save.mode", "Overwrite")
         .option("relationship.target.labels", ":Instrument")
-        .option("relationship.target.save.mode", "ErrorIfExists")
+        .option("relationship.target.save.mode", "Overwrite")
         .save()
     } catch {
       case sparkException: SparkException => {
@@ -746,10 +747,11 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     musicDf.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
-      .option("relationship.source.save.mode", "ErrorIfExists")
-      .option("relationship.target.save.mode", "ErrorIfExists")
+      .option("relationship.source.save.mode", "Overwrite")
+      .option("relationship.target.save.mode", "Overwrite")
       .option("relationship.save.strategy", "keys")
       .option("relationship.source.labels", ":Musician")
       .option("relationship.source.node.keys", "name:name")
@@ -789,10 +791,11 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     df.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
-      .option("relationship.source.save.mode", "ErrorIfExists")
-      .option("relationship.target.save.mode", "ErrorIfExists")
+      .option("relationship.source.save.mode", "Overwrite")
+      .option("relationship.target.save.mode", "Overwrite")
       .option("relationship.save.strategy", "keys")
       .option("relationship.source.labels", ":Musician")
       .option("relationship.source.node.keys", "name:name")
@@ -802,6 +805,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     df.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("transaction.retries", 0)
       .option("partitions", "10")
@@ -827,11 +831,12 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     musicDf.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
       .option("relationship.properties", "experience")
-      .option("relationship.source.save.mode", "ErrorIfExists")
-      .option("relationship.target.save.mode", "ErrorIfExists")
+      .option("relationship.source.save.mode", "Overwrite")
+      .option("relationship.target.save.mode", "Overwrite")
       .option("relationship.save.strategy", "keys")
       .option("relationship.source.labels", ":Musician")
       .option("relationship.source.node.properties", "name")
@@ -909,6 +914,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     musicDf.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship.nodes.map", "false")
       .option("relationship.source.save.mode", "Overwrite")
@@ -1091,6 +1097,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "CREATE (n:MyNode{fullName: event.name + event.surname, age: event.age - 10})")
       .option("batch.size", "11")
@@ -1123,7 +1130,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.ErrorIfExists)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "CREATE (n:Person{fullName: event.name + ' ' + event.surname, age: scriptResult[0].age[event.name]})")
       .option("script",
@@ -1186,11 +1193,12 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     val musicDf = data.toDF("experience", "name", "instrument")
 
     musicDf.write
-      .format("org.neo4j.spark.DataSource")
+      .mode(SaveMode.Overwrite)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
       .option("relationship.save.strategy", "keys")
-      .option("relationship.source.save.mode", "ErrorIfExists")
+      .option("relationship.source.save.mode", "Overwrite")
       .option("relationship.source.labels", ":Musician")
       .option("relationship.source.node.keys", "name")
       .option("relationship.target.save.mode", "match")
@@ -1225,7 +1233,8 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     val musicDf = data.toDF("experience", "name", "instrument")
 
     musicDf.write
-      .format("org.neo4j.spark.DataSource")
+      .mode(SaveMode.Overwrite)
+      .format(classOf[DefaultSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
       .option("relationship.save.strategy", "keys")

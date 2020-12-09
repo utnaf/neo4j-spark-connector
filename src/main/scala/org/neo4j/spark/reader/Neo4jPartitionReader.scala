@@ -8,8 +8,7 @@ import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.{Record, Session, Transaction, Values}
 import org.neo4j.spark.service.{MappingService, Neo4jQueryReadStrategy, Neo4jQueryService, Neo4jQueryStrategy, Neo4jReadMappingStrategy, PartitionSkipLimit}
 import org.neo4j.spark.util.Neo4jImplicits.StructTypeImplicit
-import org.neo4j.spark.util.Neo4jUtil
-import org.neo4j.spark.{DriverCache, Neo4jOptions}
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil}
 
 import scala.collection.JavaConverters._
 

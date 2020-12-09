@@ -4,7 +4,7 @@ import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, DataWriterFactory, PhysicalWriteInfo}
 import org.apache.spark.sql.types.StructType
-import org.neo4j.spark.Neo4jOptions
+import org.neo4j.spark.util.Neo4jOptions
 
 class Neo4jDataWriterFactory(jobId: String,
                              structType: StructType,

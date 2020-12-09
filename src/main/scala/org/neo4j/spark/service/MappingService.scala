@@ -3,15 +3,13 @@ package org.neo4j.spark.service
 import java.util
 import java.util.function
 import java.util.function.BiConsumer
-
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.types.Node
 import org.neo4j.driver.{Record, Value, Values}
 import org.neo4j.spark.service.Neo4jWriteMappingStrategy.{KEYS, PROPERTIES}
-import org.neo4j.spark.util.{Neo4jUtil, Validations}
-import org.neo4j.spark.{Neo4jNodeMetadata, Neo4jOptions, QueryType, RelationshipSaveStrategy}
+import org.neo4j.spark.util.{Neo4jNodeMetadata, Neo4jOptions, Neo4jUtil, QueryType, RelationshipSaveStrategy, Validations}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

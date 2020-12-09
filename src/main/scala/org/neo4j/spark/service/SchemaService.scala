@@ -2,7 +2,6 @@ package org.neo4j.spark.service
 
 import java.util
 import java.util.Collections
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.{DataType, DataTypes, StructField, StructType}
@@ -11,8 +10,7 @@ import org.neo4j.driver.types.Entity
 import org.neo4j.driver.{Record, Session, Transaction, TransactionWork, Value}
 import org.neo4j.spark.service.SchemaService.{cypherToSparkType, normalizedClassName, normalizedClassNameFromGraphEntity}
 import org.neo4j.spark.util.Neo4jImplicits.{CypherImplicits, EntityImplicits}
-import org.neo4j.spark.util.{Neo4jUtil, ValidationUtil}
-import org.neo4j.spark.{DriverCache, Neo4jOptions, OptimizationType, QueryType, SchemaStrategy}
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil, OptimizationType, QueryType, SchemaStrategy, ValidationUtil}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

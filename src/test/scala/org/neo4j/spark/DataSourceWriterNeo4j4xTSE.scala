@@ -304,6 +304,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
 
     dfOriginal.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db2")
       .option("relationship", "SOLD")
@@ -383,6 +384,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
 
     dfOriginal.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db2")
       .option("relationship", "SOLD")
@@ -443,6 +445,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
 
     musicDf.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db1")
       .option("relationship.nodes.map", "false")
@@ -483,6 +486,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
     try {
       musicDf.write
         .format(classOf[DefaultSource].getName)
+        .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")
         .option("relationship", "PLAYS")
@@ -519,6 +523,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
     try {
       musicDf.write
         .format(classOf[DefaultSource].getName)
+        .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")
         .option("relationship", "PLAYS")
@@ -556,6 +561,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
     try {
       musicDf.write
         .format(classOf[DefaultSource].getName)
+        .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")
         .option("labels", "Person")

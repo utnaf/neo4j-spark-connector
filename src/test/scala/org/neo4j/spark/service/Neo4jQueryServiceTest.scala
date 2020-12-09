@@ -4,7 +4,7 @@ import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.sources._
 import org.junit.Assert._
 import org.junit.Test
-import org.neo4j.spark.{Neo4jOptions, QueryType}
+import org.neo4j.spark.util.{Neo4jOptions, QueryType}
 
 class Neo4jQueryServiceTest {
 

@@ -1,7 +1,6 @@
 package org.neo4j.spark.writer
 import java.util
 import java.util.concurrent.CountDownLatch
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.catalyst.InternalRow
@@ -10,9 +9,8 @@ import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.exceptions.{ClientException, Neo4jException, ServiceUnavailableException, SessionExpiredException}
 import org.neo4j.driver.{Session, Transaction, Values}
 import org.neo4j.spark.service.{MappingService, Neo4jQueryService, Neo4jQueryStrategy, Neo4jQueryWriteStrategy, Neo4jWriteMappingStrategy}
-import org.neo4j.spark.util.Neo4jUtil
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil}
 import org.neo4j.spark.util.Neo4jUtil.closeSafety
-import org.neo4j.spark.{DriverCache, Neo4jOptions}
 
 import scala.collection.JavaConverters._
 

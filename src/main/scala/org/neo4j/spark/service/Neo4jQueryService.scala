@@ -6,8 +6,7 @@ import org.neo4j.cypherdsl.core.StatementBuilder.{BuildableStatement, TerminalEx
 import org.neo4j.cypherdsl.core._
 import org.neo4j.cypherdsl.core.renderer.Renderer
 import org.neo4j.spark.util.Neo4jImplicits._
-import org.neo4j.spark.util.Neo4jUtil
-import org.neo4j.spark.{Neo4jOptions, NodeSaveMode, QueryType}
+import org.neo4j.spark.util.{Neo4jOptions, Neo4jUtil, NodeSaveMode, QueryType}
 
 import scala.collection.JavaConverters._
 
@@ -74,7 +73,7 @@ class Neo4jQueryWriteStrategy(private val saveMode: SaveMode) extends Neo4jQuery
     s"""UNWIND ${"$"}events AS ${Neo4jQueryStrategy.VARIABLE_EVENT}
        |$sourceQueryPart$withQueryPart
        |$targetQueryPart
-       |$relationshipKeyword (${Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS})-[${Neo4jUtil.RELATIONSHIP_ALIAS}:${relationship}]->(${Neo4jUtil.RELATIONSHIP_TARGET_ALIAS})
+       |$relationshipKeyword (${Neo4jUtil.RELATIONSHIP_SOURCE_ALIAS})-[${Neo4jUtil.RELATIONSHIP_ALIAS}:$relationship]->(${Neo4jUtil.RELATIONSHIP_TARGET_ALIAS})
        |SET ${Neo4jUtil.RELATIONSHIP_ALIAS} += ${Neo4jQueryStrategy.VARIABLE_EVENT}.${Neo4jUtil.RELATIONSHIP_ALIAS}.${Neo4jWriteMappingStrategy.PROPERTIES}
        |""".stripMargin
   }
@@ -148,7 +147,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
           targetNode
         }
         else {
-          throw new IllegalArgumentException(s"`${column}` is not a valid column.`")
+          throw new IllegalArgumentException(s"`$column` is not a valid column.`")
         }
 
         if (splatColumn.length == 1) {

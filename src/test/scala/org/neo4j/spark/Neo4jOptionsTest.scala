@@ -3,6 +3,7 @@ package org.neo4j.spark
 import org.junit.Assert._
 import org.junit.Test
 import org.neo4j.driver.AccessMode
+import org.neo4j.spark.util.{Neo4jOptions, NodeSaveMode, QueryType, RelationshipSaveStrategy}
 
 import scala.collection.JavaConverters._
 

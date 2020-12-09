@@ -3,8 +3,8 @@ package org.neo4j.spark.reader
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory, Scan}
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.StructType
-import org.neo4j.spark.{DriverCache, Neo4jOptions}
 import org.neo4j.spark.service.{PartitionSkipLimit, SchemaService}
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions}
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 

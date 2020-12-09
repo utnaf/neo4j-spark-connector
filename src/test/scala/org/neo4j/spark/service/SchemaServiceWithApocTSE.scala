@@ -2,14 +2,13 @@ package org.neo4j.spark.service
 
 import java.util
 import java.util.UUID
-
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 import org.junit.Assert._
 import org.junit.{Before, Test}
 import org.neo4j.driver.summary.ResultSummary
 import org.neo4j.driver.{Transaction, TransactionWork}
 import org.neo4j.spark._
-import org.neo4j.spark.util.Neo4jUtil
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil, QueryType}
 
 class SchemaServiceWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
 

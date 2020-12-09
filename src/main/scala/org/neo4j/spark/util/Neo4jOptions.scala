@@ -1,15 +1,12 @@
-package org.neo4j.spark
+package org.neo4j.spark.util
+
+import org.apache.spark.sql.SaveMode
+import org.neo4j.driver.Config.TrustStrategy
+import org.neo4j.driver._
 
 import java.io.File
 import java.net.URI
 import java.util.concurrent.TimeUnit
-
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.apache.spark.sql.SaveMode
-import org.neo4j.driver.Config.TrustStrategy
-import org.neo4j.driver._
-import org.neo4j.spark.util.{Neo4jUtil, Validations}
-
 import scala.collection.JavaConverters._
 
 
