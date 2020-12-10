@@ -16,8 +16,7 @@ import scala.collection.JavaConverters._
 
 class Neo4jTable(neo4jOptions: Neo4jOptions, jobId: String) extends Table
   with SupportsRead
-  with SupportsWrite
-  with SupportsOverwrite {
+  with SupportsWrite{
 
   val validOptions: Neo4jOptions = neo4jOptions.validate(options => Validations.read(options, jobId))
 
@@ -50,7 +49,8 @@ class Neo4jTable(neo4jOptions: Neo4jOptions, jobId: String) extends Table
     TableCapability.BATCH_READ,
     TableCapability.BATCH_WRITE,
     TableCapability.ACCEPT_ANY_SCHEMA,
-    TableCapability.OVERWRITE_BY_FILTER
+    TableCapability.OVERWRITE_BY_FILTER,
+    TableCapability.OVERWRITE_DYNAMIC
   ).asJava
 
   override def newScanBuilder(options: CaseInsensitiveStringMap): SimpleScanBuilder = new SimpleScanBuilder(validOptions, jobId, schema())
@@ -58,6 +58,4 @@ class Neo4jTable(neo4jOptions: Neo4jOptions, jobId: String) extends Table
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {
     new Neo4jWriterBuilder(jobId, info.schema(), SaveMode.Append, validOptions)
   }
-
-  override def overwrite(filters: Array[Filter]): WriteBuilder = new Neo4jWriterBuilder(jobId, schema(), SaveMode.Append, validOptions)
 }

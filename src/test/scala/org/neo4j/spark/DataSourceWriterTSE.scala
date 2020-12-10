@@ -79,7 +79,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
   private def testArray[T](ds: DataFrame): Unit = {
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -212,7 +212,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -243,7 +243,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -273,7 +273,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -304,7 +304,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -334,7 +334,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
       .save()
@@ -362,7 +362,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "BeanWithDuration")
       .save()
@@ -393,7 +393,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "BeanWithDuration")
       .save()
@@ -425,7 +425,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person: Customer")
       .save()
@@ -534,7 +534,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Person")
       .save()
@@ -576,7 +576,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person:Customer")
       .option("batch.size", "11")
@@ -624,6 +624,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "CREATE (n:MyNode{fullName: event.name + event.surname, age: event.age - 10})")
       .option("batch.size", "11")
@@ -1097,7 +1098,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "CREATE (n:MyNode{fullName: event.name + event.surname, age: event.age - 10})")
       .option("batch.size", "11")
@@ -1130,7 +1131,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     ds.write
       .format(classOf[DefaultSource].getName)
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "CREATE (n:Person{fullName: event.name + ' ' + event.surname, age: scriptResult[0].age[event.name]})")
       .option("script",

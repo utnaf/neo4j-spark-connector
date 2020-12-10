@@ -56,7 +56,7 @@ object Validations extends Logging {
       neo4jOptions.schemaMetadata.optimizationType match {
         case OptimizationType.NONE => // skip it
         case _ => neo4jOptions.query.queryType match {
-          case QueryType.LABELS => ValidationUtil.isTrue(saveMode == SaveMode.Overwrite, "This works only with `mode` `SaveMode.Overwrite`")
+          case QueryType.LABELS => //
           case QueryType.RELATIONSHIP => {
             ValidationUtil.isTrue(neo4jOptions.relationshipMetadata.sourceSaveMode == NodeSaveMode.Overwrite,
               s"This works only with `${Neo4jOptions.RELATIONSHIP_SOURCE_SAVE_MODE}` `Overwrite`")
