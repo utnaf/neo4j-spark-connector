@@ -91,9 +91,18 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
       })
   }
 
+  private def isWriteQuery(query: String): Boolean = {
+    query.contains("event.")
+  }
+
   private def retrieveSchema(query: String,
                              params: java.util.Map[String, AnyRef],
                              extractFunction: Record => Map[String, AnyRef]): mutable.Buffer[StructField] = {
+
+    if(isWriteQuery(query)) {
+      return mutable.Buffer.empty
+    }
+
     session.run(query, params).list.asScala
       .flatMap(extractFunction)
       .groupBy(_._1)
@@ -221,7 +230,7 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
   }
 
   private def getReturnedColumns(query: String): Array[String] = {
-    val plan = session.run(s"EXPLAIN $query").consume().plan()
+    val plan = session.run(s"EXPLAIN WITH {} AS event $query").consume().plan()
 
     if (plan.arguments().containsKey("Details")) {
       plan.arguments()

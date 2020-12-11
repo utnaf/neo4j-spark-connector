@@ -10,7 +10,7 @@ import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
 class Neo4jBatchWriter(jobId: String,
                        structType: StructType,
                        saveMode: SaveMode,
-                       options: Neo4jOptions) extends BatchWrite{
+                       neo4jOptions: Neo4jOptions) extends BatchWrite{
   override def createBatchWriterFactory(physicalWriteInfo: PhysicalWriteInfo): DataWriterFactory = {
     val schemaService = new SchemaService(neo4jOptions, driverCache)
     schemaService.createOptimizations()
@@ -21,14 +21,9 @@ class Neo4jBatchWriter(jobId: String,
       jobId,
       structType,
       saveMode,
-      options,
+      neo4jOptions,
       scriptResult
     )
-  }
-
-  private val neo4jOptions: Neo4jOptions = {
-    options.session.accessMode = AccessMode.WRITE
-    options.validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode))
   }
 
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)

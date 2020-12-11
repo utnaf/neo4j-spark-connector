@@ -16,20 +16,16 @@ import scala.collection.JavaConverters._
 
 class Neo4jTable(neo4jOptions: Neo4jOptions, jobId: String) extends Table
   with SupportsRead
-  with SupportsWrite{
-
-  val validOptions: Neo4jOptions = neo4jOptions.validate(options => Validations.read(options, jobId))
+  with SupportsWrite {
 
   override def name(): String = this.getClass.toString
 
-  override def schema(): StructType = structType
-
-  private val structType = callSchemaService { schemaService => schemaService
+  override def schema(): StructType = callSchemaService { schemaService => schemaService
     .struct() }
 
   private def callSchemaService[T](function: SchemaService => T): T = {
-    val driverCache = new DriverCache(validOptions.connection, jobId)
-    val schemaService = new SchemaService(validOptions, driverCache)
+    val driverCache = new DriverCache(neo4jOptions.connection, jobId)
+    val schemaService = new SchemaService(neo4jOptions, driverCache)
     var hasError = false
     try {
       function(schemaService)
@@ -53,9 +49,11 @@ class Neo4jTable(neo4jOptions: Neo4jOptions, jobId: String) extends Table
     TableCapability.OVERWRITE_DYNAMIC
   ).asJava
 
-  override def newScanBuilder(options: CaseInsensitiveStringMap): SimpleScanBuilder = new SimpleScanBuilder(validOptions, jobId, schema())
+  override def newScanBuilder(options: CaseInsensitiveStringMap): SimpleScanBuilder = {
+    new SimpleScanBuilder(neo4jOptions, jobId, schema())
+  }
 
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {
-    new Neo4jWriterBuilder(jobId, info.schema(), SaveMode.Append, validOptions)
+    new Neo4jWriterBuilder(jobId, info.schema(), SaveMode.Append, neo4jOptions)
   }
 }
