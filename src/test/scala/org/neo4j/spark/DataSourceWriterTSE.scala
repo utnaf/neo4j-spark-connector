@@ -1271,8 +1271,6 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
                     |}""".stripMargin
     val df = ss.read.json(Seq(jsonStr).toDS)
 
-    df.show()
-
     df.write
       .format(classOf[DataSource].getName)
       .format("org.neo4j.spark.DataSource")
