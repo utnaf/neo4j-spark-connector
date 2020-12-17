@@ -14,7 +14,6 @@ class DefaultSource extends TableProvider with DataSourceRegister {
   private val jobId: String = UUID.randomUUID().toString
 
   override def inferSchema(caseInsensitiveStringMap: CaseInsensitiveStringMap): StructType = {
-    // getTable(null, Array.empty[Transform], caseInsensitiveStringMap).schema()
     new StructType()
   }
 

@@ -10,7 +10,13 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 
 case class Neo4jPartition(partitionSkipLimit: PartitionSkipLimit) extends InputPartition
 
-class SimpleScan(neo4jOptions: Neo4jOptions, jobId: String, schema: StructType) extends Scan with Batch {
+class SimpleScan(
+                  neo4jOptions: Neo4jOptions,
+                  jobId: String,
+                  schema: StructType,
+                  filters: Array[Filter],
+                  requiredColumns: StructType
+                ) extends Scan with Batch {
 
   override def toBatch: Batch = this
 
@@ -37,7 +43,8 @@ class SimpleScan(neo4jOptions: Neo4jOptions, jobId: String, schema: StructType) 
   private def createPartitions() = {
     // we get the skip/limit for each partition and execute the "script"
     val (partitionSkipLimitList, scriptResult) = callSchemaService { schemaService =>
-      (schemaService.skipLimitFromPartition(), schemaService.execute(neo4jOptions.script)) }
+      (schemaService.skipLimitFromPartition(), schemaService.execute(neo4jOptions.script))
+    }
     // we generate a partition for each element
     this.scriptResult = scriptResult
     partitionSkipLimitList
@@ -48,9 +55,12 @@ class SimpleScan(neo4jOptions: Neo4jOptions, jobId: String, schema: StructType) 
     val neo4jPartitions: Seq[Neo4jPartition] = createPartitions()
     neo4jPartitions.toArray
   }
-  override def createReaderFactory(): PartitionReaderFactory = new SimplePartitionReaderFactory(
-    neo4jOptions, Array.empty[Filter], schema, jobId, scriptResult, new StructType()
-  )
+
+  override def createReaderFactory(): PartitionReaderFactory = {
+    new SimplePartitionReaderFactory(
+      neo4jOptions, filters, schema, jobId, scriptResult, requiredColumns
+    )
+  }
 
   override def readSchema(): StructType = schema
 }
