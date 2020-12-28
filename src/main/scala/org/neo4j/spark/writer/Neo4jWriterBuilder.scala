@@ -24,6 +24,6 @@ class Neo4jWriterBuilder(jobId: String,
     validOptions)
 
   override def overwrite(filters: Array[Filter]): WriteBuilder = {
-    new Neo4jWriterBuilder(jobId, structType, SaveMode.Overwrite, neo4jOptions)
+    new Neo4jWriterBuilder(jobId, structType, SaveMode.Overwrite, validOptions)
   }
 }

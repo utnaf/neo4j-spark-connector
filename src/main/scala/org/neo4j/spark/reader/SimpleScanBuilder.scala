@@ -9,16 +9,12 @@ class SimpleScanBuilder(neo4jOptions: Neo4jOptions, jobId: String, schema: Struc
   with SupportsPushDownFilters
   with SupportsPushDownRequiredColumns {
 
-  val validOptions: Neo4jOptions = {
-    neo4jOptions.validate(neo4jOptions => Validations.read(neo4jOptions, jobId))
-  }
-
   private var filters: Array[Filter] = Array[Filter]()
 
   private var requiredColumns: StructType = new StructType()
 
   override def build(): Scan = {
-    new SimpleScan(validOptions, jobId, schema, filters, requiredColumns)
+    new SimpleScan(neo4jOptions, jobId, schema, filters, requiredColumns)
   }
 
   override def pushFilters(filtersArray: Array[Filter]): Array[Filter] = {

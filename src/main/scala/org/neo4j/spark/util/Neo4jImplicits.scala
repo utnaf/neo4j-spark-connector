@@ -17,6 +17,8 @@ object Neo4jImplicits {
 
     def quote(): String = if (!isValidCypherIdentifier() && !str.trim.startsWith("`") && !str.trim.endsWith("`")) s"`$str`" else str
 
+    def unquote(): String = str.replaceAll("`", "");
+
     def removeAlias(): String = {
       val splatString = str.split('.')
 
@@ -91,10 +93,10 @@ object Neo4jImplicits {
     })
 
     def isAttribute(entityType: String): Boolean = {
-      getAttribute.exists(_.startsWith(entityType))
+      getAttribute.exists(_.contains(s"$entityType."))
     }
 
-    def getAttributeWithoutEntityName: Option[String] = filter.getAttribute.map(_.split('.').tail.mkString("."))
+    def getAttributeWithoutEntityName: Option[String] = filter.getAttribute.map(_.unquote().split('.').tail.mkString("."))
   }
 
   implicit class StructTypeImplicit(structType: StructType) {

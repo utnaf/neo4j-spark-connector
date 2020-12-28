@@ -12,12 +12,12 @@ import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, ArrayData, DateTim
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.neo4j.cypherdsl.core.{Condition, Cypher, Expression, Functions, Property, PropertyContainer}
+import org.neo4j.cypherdsl.core.{Condition, Cypher, Expression, Functions, Node, Property, PropertyContainer, Relationship}
 import org.neo4j.driver.internal._
 import org.neo4j.driver.types.{Entity, Path}
 import org.neo4j.driver.{Session, Transaction, Value, Values}
 import org.neo4j.spark.service.SchemaService
-import org.neo4j.spark.util.Neo4jImplicits.EntityImplicits
+import org.neo4j.spark.util.Neo4jImplicits.{CypherImplicits, EntityImplicits}
 import org.slf4j.Logger
 
 import scala.collection.JavaConverters._
@@ -279,4 +279,16 @@ object Neo4jUtil {
       case not: Not => mapSparkFiltersToCypher(not.child, container, attributeAlias).not()
       case filter@(_: Filter) => throw new IllegalArgumentException(s"Filter of type `${filter}` is not supported.")
     }
+
+  def getCorrectProperty(column: String, entity: PropertyContainer): Expression = {
+    column match {
+      case Neo4jUtil.INTERNAL_ID_FIELD => Functions.id(entity.asInstanceOf[Node]).as(Neo4jUtil.INTERNAL_ID_FIELD)
+      case Neo4jUtil.INTERNAL_REL_ID_FIELD => Functions.id(entity.asInstanceOf[Relationship]).as(Neo4jUtil.INTERNAL_REL_ID_FIELD)
+      case Neo4jUtil.INTERNAL_REL_SOURCE_ID_FIELD => Functions.id(entity.asInstanceOf[Node]).as(Neo4jUtil.INTERNAL_REL_SOURCE_ID_FIELD)
+      case Neo4jUtil.INTERNAL_REL_TARGET_ID_FIELD => Functions.id(entity.asInstanceOf[Node]).as(Neo4jUtil.INTERNAL_REL_TARGET_ID_FIELD)
+      case Neo4jUtil.INTERNAL_REL_TYPE_FIELD => Functions.`type`(entity.asInstanceOf[Relationship]).as(Neo4jUtil.INTERNAL_REL_TYPE_FIELD)
+      case Neo4jUtil.INTERNAL_LABELS_FIELD => Functions.labels(entity.asInstanceOf[Node]).as(Neo4jUtil.INTERNAL_LABELS_FIELD)
+      case name => entity.property(name.removeAlias()).as(name)
+    }
+  }
 }

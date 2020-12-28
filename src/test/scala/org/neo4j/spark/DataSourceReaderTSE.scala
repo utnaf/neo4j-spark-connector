@@ -1107,7 +1107,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
     assertEquals(100, countRel)
   }
 
-  @Test(expected = classOf[IllegalArgumentException])
+  @Test()
   def testThrowsExceptionOnWriteQuery(): Unit = {
     try {
       ss.read.format(classOf[DefaultSource].getName)
@@ -1119,7 +1119,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         assertTrue(iae.getMessage.endsWith("Please provide a valid READ query"))
         throw iae
       }
-      case _ => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}")
+      case e => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}, e: ${e.getMessage}")
     }
   }
 
