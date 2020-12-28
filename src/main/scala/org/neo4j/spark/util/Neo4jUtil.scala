@@ -12,7 +12,7 @@ import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, ArrayData, DateTim
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.neo4j.cypherdsl.core.{Condition, Cypher}
+import org.neo4j.cypherdsl.core.{Condition, Cypher, Expression, Functions, Property, PropertyContainer}
 import org.neo4j.driver.internal._
 import org.neo4j.driver.types.{Entity, Path}
 import org.neo4j.driver.{Session, Transaction, Value, Values}
@@ -244,32 +244,38 @@ object Neo4jUtil {
 
   def connectorVersion: String = properties.getOrDefault("version", "UNKNOWN").toString
 
-  def mapSparkFiltersToCypher(filter: Filter, container: org.neo4j.cypherdsl.core.PropertyContainer, attributeAlias: Option[String] = None): Condition =
+  def valueToCypherExpression(value: Any): Expression = {
+    value match {
+      case date: java.sql.Date => Functions.date(date.toString)
+      case _ => Cypher.literalOf(value)
+    }
+  }
+
+  def mapSparkFiltersToCypher(filter: Filter, container: PropertyContainer, attributeAlias: Option[String] = None): Condition =
     filter match {
       case eqns: EqualNullSafe => container.property(attributeAlias.getOrElse(eqns.attribute))
-        .isNull.and(Cypher.literalOf(eqns.value).isNull).or(container.property(attributeAlias.getOrElse(eqns.attribute)).isEqualTo(Cypher.literalOf(eqns.value)))
+        .isNull.and(valueToCypherExpression(eqns.value).isNull).or(container.property(attributeAlias.getOrElse(eqns.attribute)).isEqualTo(Cypher.literalOf(eqns.value)))
       case eq: EqualTo => container.property(attributeAlias.getOrElse(eq.attribute))
-        .isEqualTo(Cypher.literalOf(eq.value))
+        .isEqualTo(valueToCypherExpression(eq.value))
       case gt: GreaterThan => container.property(attributeAlias.getOrElse(gt.attribute))
-        .gt(Cypher.literalOf(gt.value))
+        .gt(valueToCypherExpression(gt.value))
       case gte: GreaterThanOrEqual => container.property(attributeAlias.getOrElse(gte.attribute))
-        .gte(Cypher.literalOf(gte.value))
+        .gte(valueToCypherExpression(gte.value))
       case lt: LessThan => container.property(attributeAlias.getOrElse(lt.attribute))
-        .lt(Cypher.literalOf(lt.value))
+        .lt(valueToCypherExpression(lt.value))
       case lte: LessThanOrEqual => container.property(attributeAlias.getOrElse(lte.attribute))
-        .lte(Cypher.literalOf(lte.value))
-      case in: In => {
-        val values = in.values.map(Cypher.literalOf)
-        container.property(attributeAlias.getOrElse(in.attribute)).in(Cypher.literalOf(values.toIterable.asJava))
-      }
+        .lte(valueToCypherExpression(lte.value))
+      case in: In =>
+        val values = in.values.map(valueToCypherExpression)
+        container.property(attributeAlias.getOrElse(in.attribute)).in(valueToCypherExpression(values.toIterable.asJava))
       case notNull: IsNotNull => container.property(attributeAlias.getOrElse(notNull.attribute)).isNotNull
       case isNull: IsNull => container.property(attributeAlias.getOrElse(isNull.attribute)).isNull
       case startWith: StringStartsWith => container.property(attributeAlias.getOrElse(startWith.attribute))
-        .startsWith(Cypher.literalOf(startWith.value))
+        .startsWith(valueToCypherExpression(startWith.value))
       case endsWith: StringEndsWith => container.property(attributeAlias.getOrElse(endsWith.attribute))
-        .endsWith(Cypher.literalOf(endsWith.value))
+        .endsWith(valueToCypherExpression(endsWith.value))
       case contains: StringContains => container.property(attributeAlias.getOrElse(contains.attribute))
-        .contains(Cypher.literalOf(contains.value))
+        .contains(valueToCypherExpression(contains.value))
       case not: Not => mapSparkFiltersToCypher(not.child, container, attributeAlias).not()
       case filter@(_: Filter) => throw new IllegalArgumentException(s"Filter of type `${filter}` is not supported.")
     }
