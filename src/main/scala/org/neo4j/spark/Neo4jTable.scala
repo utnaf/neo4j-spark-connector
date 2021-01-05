@@ -2,16 +2,13 @@ package org.neo4j.spark
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SaveMode
-import org.apache.spark.sql.catalyst.plans.logical.OverwriteByExpression
 import org.apache.spark.sql.connector.catalog.{SupportsRead, SupportsWrite, Table, TableCapability}
-import org.apache.spark.sql.connector.write.{LogicalWriteInfo, SupportsOverwrite, WriteBuilder}
-import org.apache.spark.sql.sources.Filter
-import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
+import org.apache.spark.sql.connector.write.{LogicalWriteInfo, WriteBuilder}
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
-import org.neo4j.driver.AccessMode
 import org.neo4j.spark.reader.SimpleScanBuilder
 import org.neo4j.spark.service.SchemaService
-import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil, Validations}
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
 import org.neo4j.spark.writer.Neo4jWriterBuilder
 
 import scala.collection.JavaConverters._

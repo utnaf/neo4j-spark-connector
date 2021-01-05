@@ -1,7 +1,7 @@
 package org.neo4j.spark.writer
 
 import org.apache.spark.sql.SaveMode
-import org.apache.spark.sql.connector.write.{BatchWrite, SupportsOverwrite, WriteBuilder}
+import org.apache.spark.sql.connector.write.{BatchWrite, SupportsOverwrite, SupportsTruncate, WriteBuilder}
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.AccessMode
@@ -11,7 +11,8 @@ class Neo4jWriterBuilder(jobId: String,
                          structType: StructType,
                          saveMode: SaveMode,
                          neo4jOptions: Neo4jOptions) extends WriteBuilder
-  with SupportsOverwrite {
+  with SupportsOverwrite
+  with SupportsTruncate {
 
   val validOptions: Neo4jOptions = {
     neo4jOptions.session.accessMode = AccessMode.WRITE

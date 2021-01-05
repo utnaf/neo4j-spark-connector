@@ -561,7 +561,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
     try {
       musicDf.write
         .format(classOf[DefaultSource].getName)
-        .mode(SaveMode.Overwrite)
+        .mode(SaveMode.Append)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")
         .option("labels", "Person")
@@ -576,7 +576,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
             |
             |The option key and value might be inverted.""".stripMargin))
       }
-      case generic => fail(s"should be thrown a ${classOf[SparkException].getName}, got ${generic.getClass} instead")
+      case generic => fail(s"should be thrown a ${classOf[SparkException].getName}, got ${generic.getClass} instead: ${generic.getMessage}")
     }
   }
 
