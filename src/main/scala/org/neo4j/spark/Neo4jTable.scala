@@ -13,44 +13,14 @@ import org.neo4j.spark.writer.Neo4jWriterBuilder
 
 import scala.collection.JavaConverters._
 
-class Neo4jTable(neo4jOptions: Neo4jOptions, jobId: String) extends Table
+class Neo4jTable(schema: StructType, neo4jOptions: Neo4jOptions, jobId: String) extends Table
   with SupportsRead
   with SupportsWrite
   with Logging {
 
-  val isRead: Boolean = try {
-    Validations.read(neo4jOptions, jobId)
-    true
-  } catch {
-    case _ => logInfo("Options for read are failing, assuming is a Write query")
-      false
-  }
-
   override def name(): String = this.getClass.toString
 
-  override def schema(): StructType = if (isRead) {
-    callSchemaService { schemaService => schemaService.struct() }
-  } else {
-    new StructType()
-  }
-
-  private def callSchemaService[T](function: SchemaService => T): T = {
-    val driverCache = new DriverCache(neo4jOptions.connection, jobId)
-    val schemaService = new SchemaService(neo4jOptions, driverCache)
-    var hasError = false
-    try {
-      function(schemaService)
-    } catch {
-      case e: Throwable =>
-        hasError = true
-        throw e
-    } finally {
-      schemaService.close()
-      if (hasError) {
-        driverCache.close()
-      }
-    }
-  }
+  override def schema(): StructType = schema
 
   override def capabilities(): java.util.Set[TableCapability] = Set(
     TableCapability.BATCH_READ,
@@ -68,5 +38,4 @@ class Neo4jTable(neo4jOptions: Neo4jOptions, jobId: String) extends Table
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {
     new Neo4jWriterBuilder(jobId, info.schema(), SaveMode.Append, neo4jOptions)
   }
-
 }

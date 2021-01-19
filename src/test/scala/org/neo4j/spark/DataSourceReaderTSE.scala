@@ -20,6 +20,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       ss.read.format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .load()
+        .show()
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("No valid option found. One of `query`, `labels`, `relationship` is required", e.getMessage)
@@ -35,6 +36,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .option("labels", "Person")
         .option("relationship", "KNOWS")
         .load()
+        .show()
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("You need to specify just one of these options: 'labels', 'query', 'relationship'", e.getMessage)
@@ -51,6 +53,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .option("relationship", "KNOWS")
         .option("query", "MATCH (n) RETURN n")
         .load()
+        .show()
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("You need to specify just one of these options: 'labels', 'query', 'relationship'", e.getMessage)
@@ -1114,10 +1117,10 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("query", "CREATE (p:Person)")
         .load()
+        .show()
     } catch {
       case iae: IllegalArgumentException => {
         assertTrue(iae.getMessage.endsWith("Please provide a valid READ query"))
-        throw iae
       }
       case e => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}, e: ${e.getMessage}")
     }

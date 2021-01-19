@@ -103,6 +103,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       ss.read.format(classOf[DefaultSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .load()
+        .show()
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("No valid option found. One of `query`, `labels`, `relationship` is required", e.getMessage)

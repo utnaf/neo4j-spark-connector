@@ -5,9 +5,11 @@ import java.util.Collections
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.{DataType, DataTypes, StructField, StructType}
+import org.mortbay.util.SingletonList
 import org.neo4j.driver.exceptions.ClientException
+import org.neo4j.driver.summary.Plan
 import org.neo4j.driver.types.Entity
-import org.neo4j.driver.{Record, Session, Transaction, TransactionWork, Value}
+import org.neo4j.driver.{Record, Session, Transaction, TransactionWork, Value, summary}
 import org.neo4j.spark.service.SchemaService.{cypherToSparkType, normalizedClassName, normalizedClassNameFromGraphEntity}
 import org.neo4j.spark.util.Neo4jImplicits.{CypherImplicits, EntityImplicits}
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil, OptimizationType, QueryType, SchemaStrategy, ValidationUtil}
@@ -91,17 +93,9 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
       })
   }
 
-  private def isWriteQuery(query: String): Boolean = {
-    query.contains("event.")
-  }
-
   private def retrieveSchema(query: String,
                              params: java.util.Map[String, AnyRef],
                              extractFunction: Record => Map[String, AnyRef]): mutable.Buffer[StructField] = {
-
-    if(isWriteQuery(query)) {
-      return mutable.Buffer.empty
-    }
 
     session.run(query, params).list.asScala
       .flatMap(extractFunction)
@@ -200,11 +194,15 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
 
   def structForQuery(): StructType = {
     val query = queryReadStrategy.createStatementForQuery(options)
+
+    if(!isValidQuery(query, summary.QueryType.READ_ONLY)) {
+      return new StructType()
+    }
+
     val params = Collections.singletonMap[String, AnyRef](Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT, Collections.emptyList())
     val structFields = retrieveSchema(query, params, { record => record.asMap.asScala.toMap })
 
     val columns = getReturnedColumns(query)
-
     if (columns.isEmpty && structFields.isEmpty) {
       throw new ClientException("Unable to compute the resulting schema; this may mean your result set is empty or your version of Neo4j does not permit schema inference for empty sets")
     }
@@ -229,8 +227,29 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
     StructType(sortedStructFields)
   }
 
+  private def checkIfPlanHasWriteOperators(plan: Plan): Boolean = {
+    val writeKeywords = Set("merge", "create")
+
+    if(writeKeywords.contains(plan.operatorType().toLowerCase)) {
+      return true;
+    }
+
+    if(plan.children().size() >= 0) {
+      return plan.children().toArray[Plan](Array[Plan]()).count(checkIfPlanHasWriteOperators) > 0
+    }
+
+    false;
+  }
+
+  private def isWriteQuery(query: String): Boolean = {
+    val plan = session.run(s"EXPLAIN ${query.replace("WITH", "WITH {} AS event, ")}")
+      .consume().plan()
+
+    checkIfPlanHasWriteOperators(plan)
+  }
+
   private def getReturnedColumns(query: String): Array[String] = {
-    val plan = session.run(s"EXPLAIN WITH {} AS event $query").consume().plan()
+    val plan = session.run(s"EXPLAIN $query").consume().plan()
 
     if (plan.arguments().containsKey("Details")) {
       plan.arguments()
@@ -267,9 +286,10 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
       case QueryType.RELATIONSHIP => structForRelationship()
       case QueryType.QUERY => structForQuery()
     }
-    ValidationUtil.isNotEmpty(struct,
-      """Cannot compute the StructType for the provided query type,
-        |please check the params or the query""".stripMargin)
+
+//    ValidationUtil.isNotEmpty(struct,
+//      """Cannot compute the StructType for the provided query type,
+//        |please check the params or the query""".stripMargin)
     struct
   }
 
@@ -604,7 +624,7 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
   }
 
   override def close(): Unit = {
-    Neo4jUtil.closeSafety(session)
+    Neo4jUtil.closeSafety(session, log)
   }
 }
 
