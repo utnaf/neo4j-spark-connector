@@ -40,13 +40,13 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
       """).consume()
         })
 
-    val df1 = ss.read.format(classOf[Neo4jSource].getName)
+    val df1 = ss.read.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db1")
       .option("labels", "Person")
       .load()
 
-    val df2 = ss.read.format(classOf[Neo4jSource].getName)
+    val df2 = ss.read.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db2")
       .option("labels", "Person")
@@ -87,7 +87,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureProduct2Query).consume()
         })
 
-    val partitionedDf = ss.read.format(classOf[Neo4jSource].getName)
+    val partitionedDf = ss.read.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
         """
@@ -105,7 +105,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testCallShouldReturnCorrectSchema(): Unit = {
-    val callDf: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
+    val callDf: DataFrame = ss.read.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "CALL db.info() YIELD id, name RETURN *")
       .load()
@@ -133,7 +133,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Product")
       .load
@@ -160,7 +160,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Product")
       .load
@@ -189,7 +189,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
       .option("relationship.source.labels", "Product")
@@ -220,7 +220,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
       .option("relationship.source.labels", "Person")
@@ -251,7 +251,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (p:Product) RETURN p.name as name")
       .option("partitions", 2)
@@ -280,7 +280,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Product")
       .load
@@ -309,7 +309,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
       .option("relationship.source.labels", "Person")
@@ -326,7 +326,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testShouldThrowClearErrorIfAWrongDbIsSpecified(): Unit = {
     try {
-      ss.read.format(classOf[Neo4jSource].getName)
+      ss.read.format(classOf[DataSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "not_existing_db")
         .option("labels", "MATCH (h:Household) RETURN id(h)")

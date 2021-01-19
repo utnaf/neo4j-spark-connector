@@ -16,7 +16,7 @@ class DataSourceReaderNeo4j35xTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testShouldThrowClearErrorIfADbIsSpecified(): Unit = {
     try {
-      ss.read.format(classOf[Neo4jSource].getName)
+      ss.read.format(classOf[DataSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")
         .option("labels", "MATCH (h:Household) RETURN id(h)")

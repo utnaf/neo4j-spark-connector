@@ -272,7 +272,7 @@ public class DataSourceReaderTypesTSE extends SparkConnectorScalaBaseTSE {
 
     @Test
     public void testReadNodeWithMap() {
-        Dataset<Row> df = ss().read().format(Neo4jSource.class.getName())
+        Dataset<Row> df = ss().read().format(DataSource.class.getName())
                 .option("url", SparkConnectorScalaSuiteIT.server().getBoltUrl())
                 .option("query", "RETURN {a: 1, b: '3'} AS map")
                 .load();
@@ -289,7 +289,7 @@ public class DataSourceReaderTypesTSE extends SparkConnectorScalaBaseTSE {
         SparkConnectorScalaSuiteIT.session()
                 .writeTransaction(transaction -> transaction.run(query).consume());
 
-        return ss().read().format(Neo4jSource.class.getName())
+        return ss().read().format(DataSource.class.getName())
                 .option("url", SparkConnectorScalaSuiteIT.server().getBoltUrl())
                 .option("labels", "Person")
                 .load();

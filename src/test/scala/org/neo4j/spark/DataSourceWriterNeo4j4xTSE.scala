@@ -59,7 +59,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     try {
-      val dfOriginal: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
+      val dfOriginal: DataFrame = ss.read.format(classOf[DataSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")
         .option("relationship", "BOUGHT")
@@ -69,7 +69,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         .load()
 
       dfOriginal.write
-        .format(classOf[Neo4jSource].getName)
+        .format(classOf[DataSource].getName)
         .mode(SaveMode.Append)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db2")
@@ -84,7 +84,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
 
       // let's write again to prove that 2 relationship are being added
       dfOriginal.write
-        .format(classOf[Neo4jSource].getName)
+        .format(classOf[DataSource].getName)
         .mode(SaveMode.Append)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db2")
@@ -99,7 +99,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         .option("batch.size", "11")
         .save()
 
-      val dfCopy = ss.read.format(classOf[Neo4jSource].getName)
+      val dfCopy = ss.read.format(classOf[DataSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db2")
         .option("relationship", "SOLD")
@@ -180,7 +180,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     try {
-      val dfOriginal: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
+      val dfOriginal: DataFrame = ss.read.format(classOf[DataSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")
         .option("relationship", "BOUGHT")
@@ -191,7 +191,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         .orderBy("`source.id`", "`target.id`")
 
       dfOriginal.write
-        .format(classOf[Neo4jSource].getName)
+        .format(classOf[DataSource].getName)
         .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db2")
@@ -206,7 +206,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
 
       // let's write the same thing again to prove there will be just one relation
       dfOriginal.write
-        .format(classOf[Neo4jSource].getName)
+        .format(classOf[DataSource].getName)
         .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db2")
@@ -221,7 +221,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         .option("batch.size", "11")
         .save()
 
-      val dfCopy = ss.read.format(classOf[Neo4jSource].getName)
+      val dfCopy = ss.read.format(classOf[DataSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db2")
         .option("relationship", "SOLD")
@@ -292,7 +292,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
           }
         })
 
-    val dfOriginal: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
+    val dfOriginal: DataFrame = ss.read.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db1")
       .option("relationship", "BOUGHT")
@@ -303,7 +303,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
       .orderBy("`source.id`", "`target.id`")
 
     dfOriginal.write
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db2")
@@ -318,7 +318,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
       .option("batch.size", "11")
       .save()
 
-    val dfCopy = ss.read.format(classOf[Neo4jSource].getName)
+    val dfCopy = ss.read.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db2")
       .option("relationship", "SOLD")
@@ -372,7 +372,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run("MATCH (n) DETACH DELETE n").consume()
         })
 
-    val dfOriginal: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
+    val dfOriginal: DataFrame = ss.read.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db1")
       .option("relationship", "BOUGHT")
@@ -383,7 +383,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
       .orderBy("`source.id`", "`target.id`")
 
     dfOriginal.write
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db2")
@@ -398,7 +398,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
       .option("batch.size", "11")
       .save()
 
-    val dfCopy = ss.read.format(classOf[Neo4jSource].getName)
+    val dfCopy = ss.read.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db2")
       .option("relationship", "SOLD")
@@ -444,7 +444,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
     ).toDF("experience", "age", "name", "instrument")
 
     musicDf.write
-      .format(classOf[Neo4jSource].getName)
+      .format(classOf[DataSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db1")
@@ -459,7 +459,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
       .option("relationship.target.node.keys", "instrument:name")
       .save()
 
-    val df2 = ss.read.format(classOf[Neo4jSource].getName)
+    val df2 = ss.read.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("database", "db1")
       .option("relationship.nodes.map", "false")
@@ -485,7 +485,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
 
     try {
       musicDf.write
-        .format(classOf[Neo4jSource].getName)
+        .format(classOf[DataSource].getName)
         .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")
@@ -522,7 +522,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
 
     try {
       musicDf.write
-        .format(classOf[Neo4jSource].getName)
+        .format(classOf[DataSource].getName)
         .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")
@@ -560,7 +560,7 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
 
     try {
       musicDf.write
-        .format(classOf[Neo4jSource].getName)
+        .format(classOf[DataSource].getName)
         .mode(SaveMode.Append)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("database", "db1")

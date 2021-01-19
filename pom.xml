@@ -46,7 +46,7 @@
         <neo4j.version>4.0.8</neo4j.version>
         <driver.version>4.1.1</driver.version>
         <spark.version>3.0.1</spark.version>
-        <testcontainers.version>1.15.0</testcontainers.version>
+        <testcontainers.version>1.15.1</testcontainers.version>
         <xbean.version>4.10</xbean.version>
         <cypherdsl.version>2020.1.4</cypherdsl.version>
         <node.version>v12.16.0</node.version>
