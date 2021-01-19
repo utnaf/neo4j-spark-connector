@@ -287,9 +287,6 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
       case QueryType.QUERY => structForQuery()
     }
 
-//    ValidationUtil.isNotEmpty(struct,
-//      """Cannot compute the StructType for the provided query type,
-//        |please check the params or the query""".stripMargin)
     struct
   }
 

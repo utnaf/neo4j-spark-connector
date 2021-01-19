@@ -19,7 +19,7 @@ class DataSourceReaderNeo4j41xTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testEmptyDataset(): Unit = {
     val df = ss.read
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (e:ID_DO_NOT_EXIST) RETURN id(e) as f, 1 as g")
       .load
@@ -37,7 +37,7 @@ class DataSourceReaderNeo4j41xTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val df = ss.read
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (i:Instrument) RETURN id(i) as internal_id, i.id as id, i.name as name, i.name")
       .load
@@ -65,7 +65,7 @@ class DataSourceReaderNeo4j41xTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df = ss.read.format(classOf[DefaultSource].getName)
+    val df = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
         """MATCH (p:Person)-[b:BOUGHT]->(pr:Product)
@@ -79,7 +79,7 @@ class DataSourceReaderNeo4j41xTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testComplexReturnStatementNoValues(): Unit = {
-    val df = ss.read.format(classOf[DefaultSource].getName)
+    val df = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
         """MATCH (p:Person)-[b:BOUGHT]->(pr:Product)

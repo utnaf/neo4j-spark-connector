@@ -32,7 +32,6 @@ class Neo4jPartitionReader(private val options: Neo4jOptions,
 
   private val mappingService = new MappingService(new Neo4jReadMappingStrategy(options, requiredColumns), options)
 
-  @transient
   def next: Boolean = {
     if (result == null) {
       session = driverCache.getOrCreate().session(options.session.toNeo4jSession)

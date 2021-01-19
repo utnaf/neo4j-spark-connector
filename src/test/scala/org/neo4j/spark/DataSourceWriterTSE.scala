@@ -48,7 +48,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
   private def testType[T](ds: DataFrame, neo4jType: Type): Unit = {
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
@@ -78,7 +78,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
   private def testArray[T](ds: DataFrame): Unit = {
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
@@ -100,7 +100,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testThrowsExceptionIfNoValidReadOptionIsSet(): Unit = {
     try {
-      ss.read.format(classOf[DefaultSource].getName)
+      ss.read.format(classOf[Neo4jSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .load()
         .show()
@@ -114,7 +114,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testThrowsExceptionIfTwoValidReadOptionAreSet(): Unit = {
     try {
-      ss.read.format(classOf[DefaultSource].getName)
+      ss.read.format(classOf[Neo4jSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
         .option("relationship", "KNOWS")
@@ -129,7 +129,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testThrowsExceptionIfThreeValidReadOptionAreSet(): Unit = {
     try {
-      ss.read.format(classOf[DefaultSource].getName)
+      ss.read.format(classOf[Neo4jSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
         .option("relationship", "KNOWS")
@@ -212,7 +212,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
@@ -243,7 +243,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
@@ -273,7 +273,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
@@ -304,7 +304,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
@@ -334,7 +334,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDF("foo")
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":MyNode:MyLabel")
@@ -362,7 +362,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "BeanWithDuration")
@@ -393,7 +393,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "BeanWithDuration")
@@ -425,7 +425,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
         Point3d(srid = 4979, x = 12.5811776, y = 41.9579492, z = 1.3))).toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person: Customer")
@@ -471,7 +471,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     try {
       ds.write
-        .format(classOf[DefaultSource].getName)
+        .format(classOf[Neo4jSource].getName)
         .mode(SaveMode.Append)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
@@ -505,7 +505,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     val ds = Seq(SimplePerson("Andrea", "Santurbano")).toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Person")
@@ -534,7 +534,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     val ds = Seq(SimplePerson("Andrea", null)).toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Person")
@@ -557,7 +557,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     val ds = Seq(SimplePerson("Andrea", "Santurbano")).toDS()
     try {
       ds.write
-        .format(classOf[DefaultSource].getName)
+        .format(classOf[Neo4jSource].getName)
         .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
@@ -576,7 +576,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .repartition(10)
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person:Customer")
@@ -610,7 +610,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     try {
       ds.write
         .mode(SaveMode.Overwrite)
-        .format(classOf[DefaultSource].getName)
+        .format(classOf[Neo4jSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("query", "MATCH (r:Read) RETURN r")
         .option("batch.size", "11")
@@ -626,7 +626,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     val ds = (1 to 100).map(i => Person("Andrea " + i, "Santurbano " + i, 36, null)).toDS()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "CREATE (n:MyNode{fullName: event.name + event.surname, age: event.age - 10})")
@@ -660,7 +660,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     musicDf.write
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("relationship", "PLAYS")
       .option("relationship.save.strategy", "keys")
@@ -678,7 +678,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
         override def execute(transaction: Transaction): Result = transaction.run("DROP CONSTRAINT ON (i:Instrument) ASSERT i.name IS UNIQUE")
       })
 
-    val musicDfCheck = ss.read.format(classOf[DefaultSource].getName)
+    val musicDfCheck = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
       .option("relationship.nodes.map", "false")
@@ -719,7 +719,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     try {
       musicDf.write
-        .format(classOf[DefaultSource].getName)
+        .format(classOf[Neo4jSource].getName)
         .mode(SaveMode.Append)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("relationship", "PLAYS")
@@ -750,7 +750,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     ).toDF("experience", "name", "instrument")
 
     musicDf.repartition(1).write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
@@ -763,7 +763,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .option("relationship.target.node.keys", "instrument:name")
       .save()
 
-    val df2 = ss.read.format(classOf[DefaultSource].getName)
+    val df2 = ss.read.format(classOf[Neo4jSource].getName)
       .option("batch.size", 100)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship.nodes.map", "false")
@@ -795,7 +795,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     val df = List.fill(200)(("John Bonham", "Drums")).toDF("name", "instrument")
 
     df.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
@@ -809,7 +809,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .save()
 
     df.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("transaction.retries", 0)
@@ -835,7 +835,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     ).toDF("experience", "name", "instrument")
 
     musicDf.repartition(1).write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
@@ -849,7 +849,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .option("relationship.target.node.keys", "instrument:name")
       .save()
 
-    val df2 = ss.read.format(classOf[DefaultSource].getName)
+    val df2 = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship.nodes.map", "false")
       .option("relationship", "PLAYS")
@@ -918,7 +918,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
     ).toDF("id", "experience", "name", "instrument")
 
     musicDf.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship.nodes.map", "false")
@@ -934,7 +934,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .option("relationship.target.node.keys", "instrument:name")
       .save()
 
-    val df2 = ss.read.format(classOf[DefaultSource].getName)
+    val df2 = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship.nodes.map", "false")
       .option("relationship", "PLAYS")
@@ -957,7 +957,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDF("surname")
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person:Customer")
@@ -1021,7 +1021,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDF("surname")
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person:Customer")
@@ -1057,7 +1057,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDF("surname")
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person:Customer")
@@ -1092,7 +1092,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .toDF("surname")
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Overwrite)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", ":Person:Customer")
@@ -1101,7 +1101,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .save()
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "CREATE (n:MyNode{fullName: event.name + event.surname, age: event.age - 10})")
@@ -1134,7 +1134,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       .repartition(2)
 
     ds.write
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .mode(SaveMode.Append)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "CREATE (n:Person{fullName: event.name + ' ' + event.surname, age: scriptResult[0].age[event.name]})")
@@ -1199,7 +1199,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     musicDf.write
       .mode(SaveMode.Overwrite)
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
       .option("relationship.save.strategy", "keys")
@@ -1239,7 +1239,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     musicDf.repartition(1).write
       .mode(SaveMode.Overwrite)
-      .format(classOf[DefaultSource].getName)
+      .format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "PLAYS")
       .option("relationship.save.strategy", "keys")

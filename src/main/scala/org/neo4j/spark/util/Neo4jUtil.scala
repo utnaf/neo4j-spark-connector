@@ -251,29 +251,8 @@ object Neo4jUtil {
     }
   }
 
-  def getCorrectProperty(container: PropertyContainer, attribute: String, baseProperty: Property = null): Property = {
-    val attributeParts = attribute.split('.');
-
-    if (attributeParts.length > 1) {
-      getCorrectProperty(
-        container,
-        attributeParts.slice(1, attributeParts.length).mkString("."),
-        if(baseProperty != null) {
-          baseProperty
-        }
-        else {
-          container.property(attributeParts(0))
-        }
-      )
-    }
-    else {
-      if(baseProperty != null) {
-        Cypher.property(baseProperty, attributeParts(0))
-      }
-      else {
-        container.property(attributeParts(0))
-      }
-    }
+  def getCorrectProperty(container: PropertyContainer, attribute: String): Property = {
+    container.property(attribute.split('.') : _*)
   }
 
   def mapSparkFiltersToCypher(filter: Filter, container: PropertyContainer, attributeAlias: Option[String] = None): Condition =

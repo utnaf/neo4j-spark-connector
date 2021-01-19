@@ -7,8 +7,7 @@ import org.apache.spark.sql.connector.write.{LogicalWriteInfo, WriteBuilder}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import org.neo4j.spark.reader.SimpleScanBuilder
-import org.neo4j.spark.service.SchemaService
-import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
+import org.neo4j.spark.util.{Neo4jOptions, Validations}
 import org.neo4j.spark.writer.Neo4jWriterBuilder
 
 import scala.collection.JavaConverters._
@@ -18,7 +17,13 @@ class Neo4jTable(schema: StructType, neo4jOptions: Neo4jOptions, jobId: String) 
   with SupportsWrite
   with Logging {
 
-  override def name(): String = this.getClass.toString
+  /**
+   * @todo make the name better based on what we are going to read/write
+   *       ex:
+   *       * table_User-Admin
+   *       * table_User_BOUGHT_Product
+   */
+  override def name(): String = "neo4j"
 
   override def schema(): StructType = schema
 

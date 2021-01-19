@@ -585,7 +585,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df = ss.read.format(classOf[DefaultSource].getName)
+    val df = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("relationship.nodes.map", "true")
       .option("relationship", "KNOWS")
@@ -614,7 +614,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df = ss.read.format(classOf[DefaultSource].getName)
+    val df = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("relationship", "KNOWS")
       .option("relationship.nodes.map", "false")
@@ -662,7 +662,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df: DataFrame = ss.read.format(classOf[DefaultSource].getName)
+    val df: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
       .option("relationship.nodes.map", "false")
@@ -705,7 +705,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df: DataFrame = ss.read.format(classOf[DefaultSource].getName)
+    val df: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("relationship", "BOUGHT")
       .option("relationship.nodes.map", "true")
@@ -752,7 +752,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df: DataFrame = ss.read.format(classOf[DefaultSource].getName)
+    val df: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("relationship.nodes.map", "false")
       .option("relationship", "BOUGHT")
@@ -782,7 +782,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df: DataFrame = ss.read.format(classOf[DefaultSource].getName)
+    val df: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("labels", "Person")
       .load()
@@ -824,7 +824,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val df: DataFrame = ss.read.format(classOf[DefaultSource].getName)
+    val df: DataFrame = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("labels", "Person")
       .load()
@@ -874,7 +874,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixture2Query).consume()
         })
 
-    val partitionedDf = ss.read.format(classOf[DefaultSource].getName)
+    val partitionedDf = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("labels", ":Person:Customer")
       .option("partitions", "5")
@@ -897,7 +897,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(fixtureQuery).consume()
         })
 
-    val partitionedDf = ss.read.format(classOf[DefaultSource].getName)
+    val partitionedDf = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("relationship.nodes.map", "true")
       .option("relationship", "BOUGHT")
@@ -933,7 +933,7 @@ class DataSourceReaderWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run(query).consume()
         })
 
-    ss.read.format(classOf[DefaultSource].getName)
+    ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("labels", "Person")
       .load()

@@ -37,13 +37,13 @@ class DataSourceReaderNeo4j4xWithApocTSE extends SparkConnectorScalaBaseWithApoc
       """).consume()
         })
 
-    val df1 = ss.read.format(classOf[DefaultSource].getName)
+    val df1 = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("database", "db1")
       .option("labels", "Person")
       .load()
 
-    val df2 = ss.read.format(classOf[DefaultSource].getName)
+    val df2 = ss.read.format(classOf[Neo4jSource].getName)
       .option("url", SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
       .option("database", "db2")
       .option("labels", "Person")

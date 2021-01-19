@@ -11,7 +11,7 @@ import org.neo4j.spark.service.SchemaService
 import org.neo4j.spark.util.Validations.validateConnection
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions}
 
-class DefaultSource extends TableProvider with DataSourceRegister {
+class Neo4jSource extends TableProvider with DataSourceRegister {
 
   private val jobId: String = UUID.randomUUID().toString
 
