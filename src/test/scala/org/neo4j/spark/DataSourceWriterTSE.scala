@@ -103,7 +103,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
       ss.read.format(classOf[DataSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .load()
-        .show()
+        .show()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("No valid option found. One of `query`, `labels`, `relationship` is required", e.getMessage)
@@ -118,7 +118,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
         .option("relationship", "KNOWS")
-        .load()
+        .load()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("You need to specify just one of these options: 'labels', 'query', 'relationship'", e.getMessage)
@@ -134,7 +134,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
         .option("labels", "Person")
         .option("relationship", "KNOWS")
         .option("query", "MATCH (n) RETURN n")
-        .load()
+        .load()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("You need to specify just one of these options: 'labels', 'query', 'relationship'", e.getMessage)
@@ -475,7 +475,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
         .mode(SaveMode.Append)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
-        .save()
+        .save()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case sparkException: SparkException => {
         val clientException = ExceptionUtils.getRootCause(sparkException)
@@ -561,7 +561,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
         .mode(SaveMode.Overwrite)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("labels", "Person")
-        .save()
+        .save()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case illegalArgumentException: IllegalArgumentException => {
         assertTrue(illegalArgumentException.getMessage.equals(s"${Neo4jOptions.NODE_KEYS} is required when Save Mode is Overwrite"))
@@ -614,7 +614,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("query", "MATCH (r:Read) RETURN r")
         .option("batch.size", "11")
-        .save()
+        .save() // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case illegalArgumentException: IllegalArgumentException => assertTrue(illegalArgumentException.getMessage.equals("Please provide a valid WRITE query"))
       case t: Throwable => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}, but it's ${t.getClass.getSimpleName}: ${t.getMessage}")
@@ -728,7 +728,7 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
         .option("relationship.source.save.mode", "Overwrite")
         .option("relationship.target.labels", ":Instrument")
         .option("relationship.target.save.mode", "Overwrite")
-        .save()
+        .save()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case sparkException: SparkException => {
         val clientException = ExceptionUtils.getRootCause(sparkException)

@@ -20,7 +20,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
       ss.read.format(classOf[DataSource].getName)
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .load()
-        .show()
+        .show() // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("No valid option found. One of `query`, `labels`, `relationship` is required", e.getMessage)
@@ -36,7 +36,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .option("labels", "Person")
         .option("relationship", "KNOWS")
         .load()
-        .show()
+        .show()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("You need to specify just one of these options: 'labels', 'query', 'relationship'", e.getMessage)
@@ -53,7 +53,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .option("relationship", "KNOWS")
         .option("query", "MATCH (n) RETURN n")
         .load()
-        .show()
+        .show()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case e: IllegalArgumentException =>
         assertEquals("You need to specify just one of these options: 'labels', 'query', 'relationship'", e.getMessage)
@@ -1117,7 +1117,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
         .option("query", "CREATE (p:Person)")
         .load()
-        .show()
+        .show()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     } catch {
       case iae: IllegalArgumentException => {
         assertTrue(iae.getMessage.endsWith("Please provide a valid READ query"))
@@ -1247,8 +1247,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .option("query", "MATCH (n:Label) RETURN id(n) as id LIMIT 100")
         .option("partitions", 2)
         .option("query.count", 2)
-        .load
-        .show()
+        .load()
+        .show()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     }
     catch {
       case iae: IllegalArgumentException => {
@@ -1267,8 +1267,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .option("query", "MATCH (n:Label) RETURN id(n) as id limit 100 skip 2")
         .option("partitions", 2)
         .option("query.count", 2)
-        .load
-        .show()
+        .load()
+        .show()  // we need the action to be able to trigger the exception because of the changes in Spark 3
     }
     catch {
       case iae: IllegalArgumentException => {
@@ -1287,8 +1287,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
         .option("query", "MATCH (n:Label) RETURN id(n) as id LiMIt 100 skIp 2")
         .option("partitions", 2)
         .option("query.count", 2)
-        .load
-        .show()
+        .load()
+        .show() // we need the action to be able to trigger the exception because of the changes in Spark 3
     }
     catch {
       case iae: IllegalArgumentException => {
@@ -1309,8 +1309,8 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
           "LIMIT 100")
         .option("partitions", 2)
         .option("query.count", 2)
-        .load
-        .show()
+        .load()
+        .show() // we need the action to be able to trigger the exception because of the changes in Spark 3
     }
     catch {
       case iae: IllegalArgumentException => {
