@@ -253,7 +253,7 @@ properties.
 
 === Tune your Neo4j Memory Configuration
 
-In the link:https://neo4j.com/developer/guide-performance-tuning/[Neo4j Performance Tuning Guide], important
+In the link:https://org.neo4j.neo4j.com/developer/guide-performance-tuning/[Neo4j Performance Tuning Guide], important
 advice is given on how to size the heap and page cache of the server.  What's important for Spark is this:
 
 * Heap affects how big transactions can get.  The bigger the heap, the larger the batch size you can use.
@@ -349,7 +349,7 @@ property set across all nodes of a label, or investigate tuning the sampling app
 
 ==== Tune parameters
 
-You can tune the configuration parameters of the https://neo4j.com/labs/apoc/4.1/database-introspection/meta/[two APOC procedures]
+You can tune the configuration parameters of the https://org.neo4j.neo4j.com/labs/apoc/4.1/database-introspection/meta/[two APOC procedures]
 via the `option` method as it follows:
 
 ```scala

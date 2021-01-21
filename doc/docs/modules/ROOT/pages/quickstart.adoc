@@ -16,10 +16,10 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-val df = spark.read.format("org.neo4j.spark.DataSource")
+val df = spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
-  .option("authentication.basic.username", "neo4j")
-  .option("authentication.basic.password", "neo4j")
+  .option("authentication.basic.username", "org.neo4j.neo4j")
+  .option("authentication.basic.password", "org.neo4j.neo4j")
   .option("labels", "Person")
   .load()
 ----
@@ -39,11 +39,11 @@ val df = Seq(
   ("Jane Doe")
 ).toDF("name")
 
-df.write.format("org.neo4j.spark.DataSource")
+df.write.format("org.spark.DataSource")
   .mode(SaveMode.ErrorIfExists)
   .option("url", "bolt://localhost:7687")
-  .option("authentication.basic.username", "neo4j")
-  .option("authentication.basic.password", "neo4j")
+  .option("authentication.basic.username", "org.neo4j.neo4j")
+  .option("authentication.basic.password", "org.neo4j.neo4j")
   .option("labels", ":Person")
   .save()
 ----
@@ -116,10 +116,10 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-val df = spark.read.format("org.neo4j.spark.DataSource")
+val df = spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
-  .option("authentication.basic.username", "neo4j")
-  .option("authentication.basic.password", "neo4j")
+  .option("authentication.basic.username", "org.neo4j.neo4j")
+  .option("authentication.basic.password", "org.neo4j.neo4j")
   .option("labels", ":Person")
   .load()
 
@@ -158,10 +158,10 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
-  .option("authentication.basic.username", "neo4j")
-  .option("authentication.basic.password", "neo4j")
+  .option("authentication.basic.username", "org.neo4j.neo4j")
+  .option("authentication.basic.password", "org.neo4j.neo4j")
   .option("query", "MATCH (n:Person) WITH n LIMIT 2 RETURN id(n) as id, n.name as name")
   .load()
   .show()
@@ -183,7 +183,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("query", "MATCH (n:Person) WITH n WITH n LIMIT 2 RETURN id(n) as id, n.name as name")
   .option("schema.strategy", "string")
   .load()
@@ -229,8 +229,8 @@ APOC will cause every value of attributes affected by this problem to be cast to
 
 [NOTE]
 This solution is not error-proof, you might still get the errors. Behind the scenes the Connector
-uses link:https://neo4j.com/labs/apoc/4.1/overview/apoc.meta/apoc.meta.nodeTypeProperties/[apoc.meta.nodeTypeProperties]
-and link:https://neo4j.com/labs/apoc/4.1/overview/apoc.meta/apoc.meta.relTypeProperties/[apoc.meta.relTypeProperties]
+uses link:https://org.neo4j.neo4j.com/labs/apoc/4.1/overview/apoc.meta/apoc.meta.nodeTypeProperties/[apoc.meta.nodeTypeProperties]
+and link:https://org.neo4j.neo4j.com/labs/apoc/4.1/overview/apoc.meta/apoc.meta.relTypeProperties/[apoc.meta.relTypeProperties]
 to sample the data.
 
 When the casting operation happens, you will prompted this warning in your log letting you know what happened:
@@ -258,10 +258,10 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-val df = spark.read.format("org.neo4j.spark.DataSource")
+val df = spark.read.format("org.spark.DataSource")
         .option("url", "bolt://localhost:7687")
-        .option("authentication.basic.username", "neo4j")
-        .option("authentication.basic.password", "neo4j")
+        .option("authentication.basic.username", "org.neo4j.neo4j")
+        .option("authentication.basic.password", "org.neo4j.neo4j")
         .option("labels", "Person")
         .option("partitions", "5")
         .load()

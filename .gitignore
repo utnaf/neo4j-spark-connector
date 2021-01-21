@@ -1,4 +1,4 @@
-neo4j-home
+org.neo4j.neo4j-home
 .gradle
 gradle/
 build/

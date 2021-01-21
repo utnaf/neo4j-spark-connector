@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>org.neo4j.neo4j-connector-apache-spark_${scala.binary.version}_common</artifactId>
+    <name>org.neo4j.neo4j-connector-apache-spark-common</name>
+    <description>Common Services for Neo4j Connector for Apache Spark using the binary Bolt Driver</description>
+
+    <version>4.0.0</version>
+    <packaging>jar</packaging>
+
+    <parent>
+        <groupId>org.neo4j.neo4j-contrib</groupId>
+        <artifactId>org.neo4j.neo4j-connector-apache-spark</artifactId>
+        <version>4.0.0</version>
+    </parent>
+
+    <properties>
+        <spark.version>2.4.3</spark.version>
+        <scala.version>2.12.12</scala.version>
+        <org.neo4j.neo4j.version>4.0.8</org.neo4j.neo4j.version>
+        <driver.version>4.1.1</driver.version>
+        <testcontainers.version>1.15.1</testcontainers.version>
+        <cypherdsl.version>2020.1.4</cypherdsl.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>${scala.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.org.neo4j.neo4j.driver</groupId>
+            <artifactId>org.neo4j.neo4j-java-driver</artifactId>
+            <version>${driver.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.org.neo4j.neo4j</groupId>
+            <artifactId>org.neo4j.neo4j-cypher-dsl</artifactId>
+            <version>${cypherdsl.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+</project>

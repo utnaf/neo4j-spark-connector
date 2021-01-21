@@ -14,7 +14,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("labels", "Person")
   .load()
@@ -138,7 +138,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("query", "MATCH (n:Person) WITH n LIMIT 2 RETURN id(n) as id, n.name as name")
   .load()
@@ -178,7 +178,7 @@ import org.apache.spark.sql.SparkSession
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("script", "RETURN 'foo' AS val")
   .option("query", "UNWIND range(1,2) as id RETURN id AS val, scriptResult[0].val AS script")
@@ -274,7 +274,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("labels", "Person")
   .load()
@@ -287,7 +287,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("labels", "Person:Customer:Confirmed")
   .load()
@@ -308,7 +308,7 @@ plus 2 additional columns.
 ==== Schema
 
 If APOC are available, the schema will be created with
-link:https://neo4j.com/labs/apoc/4.1/overview/apoc.meta/apoc.meta.nodeTypeProperties/[apoc.meta.nodeTypeProperties, window=_blank].
+link:https://org.neo4j.neo4j.com/labs/apoc/4.1/overview/apoc.meta/apoc.meta.nodeTypeProperties/[apoc.meta.nodeTypeProperties, window=_blank].
 Otherwise, we'll execute the following Cypher query:
 
 [source,cypher]
@@ -360,7 +360,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("relationship", "BOUGHT")
   .option("relationship.source.labels", "Person")
@@ -392,7 +392,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("relationship", "BOUGHT")
   .option("relationship.nodes.map", "false")
@@ -417,7 +417,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("relationship", "BOUGHT")
   .option("relationship.nodes.map", "true")
@@ -518,7 +518,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-val df = spark.read.format("org.neo4j.spark.DataSource")
+val df = spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("relationship", "BOUGHT")
   .option("relationship.nodes.map", "false")
@@ -543,7 +543,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-val df = spark.read.format("org.neo4j.spark.DataSource")
+val df = spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("relationship", "BOUGHT")
   .option("relationship.nodes.map", "true")
@@ -557,7 +557,7 @@ df.where("`<source>`.`id` = '14' AND `<target>`.`id` = '16'")
 ==== Schema
 
 In case you're extracting a relationship from Neo4j
-we try as first step to invoke the link:https://neo4j.com/labs/apoc/4.1/overview/apoc.meta/apoc.meta.relTypeProperties/[apoc.meta.relTypeProperties, window=_blank] procedure,
+we try as first step to invoke the link:https://org.neo4j.neo4j.com/labs/apoc/4.1/overview/apoc.meta/apoc.meta.relTypeProperties/[apoc.meta.relTypeProperties, window=_blank] procedure,
 in case the procedure is not installed we'll execute the following Cypher query:
 
 [source,cypher]

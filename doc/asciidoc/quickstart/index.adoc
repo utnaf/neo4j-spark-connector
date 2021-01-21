@@ -12,7 +12,7 @@ endif::env-docs[]
 
 ==== Install the Plugin
 
-* Download the latest release jar from https://github.com/neo4j-contrib/neo4j-spark-connector/releases
+* Download the latest release jar from https://github.com/org.neo4j.neo4j-contrib/org.neo4j.neo4j-spark-connector/releases
 * (Installation instructions here)
 
 ==== Spark Settings

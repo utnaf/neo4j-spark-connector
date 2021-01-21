@@ -22,7 +22,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-spark.read.format("org.neo4j.spark.DataSource")
+spark.read.format("org.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("labels", "Person:Customer:Confirmed")
   .load()
@@ -32,7 +32,7 @@ Here is the same program in Python:
 
 [source,python]
 ----
-spark.read.format("org.neo4j.spark.DataSource") \
+spark.read.format("org.spark.DataSource") \
   .option("url", "bolt://localhost:7687") \
   .option("labels", "Person:Customer:Confirmed") \
   .load()
@@ -51,7 +51,7 @@ focusing on the `SaveMode`.
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
 df.write
-  .format("org.neo4j.spark.DataSource")
+  .format("org.spark.DataSource")
   .mode(SaveMode.ErrorIfExists)
   .option("url", "bolt://localhost:7687")
   .option("labels", ":Person")
@@ -65,7 +65,7 @@ The same program in python is very similar, again just with language syntax diff
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
 df.write \
-  .format("org.neo4j.spark.DataSource") \
+  .format("org.spark.DataSource") \
   .mode("ErrorIfExists") \
   .option("url", "bolt://localhost:7687") \
   .option("labels", ":Person") \
