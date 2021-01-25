@@ -3,11 +3,16 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>neo4j-contrib</groupId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <version>4.0.0</version>
-    <artifactId>neo4j-connector-apache-spark_${scala.binary.version}</artifactId>
+    <artifactId>neo4j-connector-apache-spark</artifactId>
     <name>neo4j-connector-apache-spark</name>
     <description>Neo4j Connector for Apache Spark using the binary Bolt Driver</description>
+
+    <modules>
+        <module>common</module>
+        <module>spark-2.4</module>
+    </modules>
 
     <organization>
         <name>Neo4j, Inc.</name>
@@ -23,7 +28,7 @@
             <name>Andrea Santurbano</name>
         </developer>
     </developers>
-	
+
     <url>https://github.com/neo4j-contrib/neo4j-spark-connector</url>
     <scm>
         <url>https://github.com/neo4j-contrib/neo4j-spark-connector</url>
