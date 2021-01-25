@@ -12,6 +12,7 @@
     <modules>
         <module>common</module>
         <module>spark-2.4</module>
+        <module>doc</module>
     </modules>
 
     <organization>
@@ -238,31 +239,6 @@
                     <sourceFileIncludes>
                         <include>src/main/scala</include>
                     </sourceFileIncludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>install node and npm</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <configuration>
-                            <nodeVersion>${node.version}</nodeVersion>
-                            <npmVersion>${npm.version}</npmVersion>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm install</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <workingDirectory>doc</workingDirectory>
                 </configuration>
             </plugin>
         </plugins>
