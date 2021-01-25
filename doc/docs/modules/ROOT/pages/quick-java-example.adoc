@@ -20,8 +20,8 @@ you need to add Spark Packages repository and the dependency.
     <dependencies>
       <!-- list of dependencies -->
       <dependency>
-        <groupId>org.neo4j.neo4j-contrib</groupId>
-        <artifactId>org.neo4j.neo4j-connector-apache-spark_${scala.version}</artifactId>
+        <groupId>neo4j-contrib</groupId>
+        <artifactId>neo4j-connector-apache-spark_${scala.version}</artifactId>
         <version>4.0.0</version>
       </dependency>
     </dependencies>
@@ -41,7 +41,7 @@ you need to add Spark Packages repository and the dependency.
 [source,`build.sbt`]
 ----
 resolvers += "Spark Packages Repo" at "http://dl.bintray.com/spark-packages/maven"
-libraryDependencies += "org.neo4j.neo4j-contrib" % "org.neo4j.neo4j-spark-connector" % "4.0.0"
+libraryDependencies += "neo4j-contrib" % "neo4j-spark-connector" % "4.0.0"
 ----
 
 === Gradle
@@ -51,7 +51,7 @@ libraryDependencies += "org.neo4j.neo4j-contrib" % "org.neo4j.neo4j-spark-connec
 
 dependencies{
     // list of dependencies
-    compile "org.neo4j.neo4j-contrib:org.neo4j.neo4j-spark-connector:4.0.0"
+    compile "neo4j-contrib:neo4j-spark-connector:4.0.0"
 }
 
 repositories {
@@ -64,7 +64,7 @@ repositories {
 
 == Code
 
-Let's say you have a Neo4j instance with link:https://org.neo4j.neo4j.com/developer/example-data/#built-in-examples[the movie graph] running on `localhost`.
+Let's say you have a Neo4j instance with link:https://neo4j.com/developer/example-data/#built-in-examples[the movie graph] running on `localhost`.
 
 [source,java]
 ----
@@ -81,9 +81,9 @@ public class SparkApp {
                 .config("spark.master", "local")
                 .getOrCreate();
 
-        Dataset<Row> ds = spark.read().format("org.spark.DataSource")
+        Dataset<Row> ds = spark.read().format("org.neo4j.spark.DataSource")
                 .option("url", "bolt://localhost:7687")
-                .option("authentication.basic.username", "org.neo4j.neo4j")
+                .option("authentication.basic.username", "neo4j")
                 .option("authentication.basic.password", "password")
                 .option("labels", "Person")
                 .load();

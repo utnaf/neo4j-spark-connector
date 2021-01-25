@@ -31,7 +31,7 @@ val ds = (1 to total)
   }).toDS()
 
 ds.write
-  .format("org.spark.DataSource")
+  .format("org.neo4j.spark.DataSource")
   .mode(SaveMode.ErrorIfExists)
   .option("url", "bolt://localhost:7687")
   .option("labels", ":Person:Customer")
@@ -193,7 +193,7 @@ import spark.implicits._
 
 val df = (1 to 10)/*...*/.toDF()
 df.write
-  .format("org.spark.DataSource")
+  .format("org.neo4j.spark.DataSource")
   .option("url", "bolt://localhost:7687")
   .option("query", "CREATE (n:Person {fullName: event.name + event.surname})")
   .save()
@@ -247,7 +247,7 @@ val df = (1 to total)
   }).toDF()
 
 df.write
-  .format("org.spark.DataSource")
+  .format("org.neo4j.spark.DataSource")
   .mode(SaveMode.ErrorIfExists)
   .option("url", "bolt://localhost:7687")
   .option("labels", ":Person:Customer")
@@ -274,7 +274,7 @@ import spark.implicits._
 val df = (1 to 10)/*...*/.toDF()
 
 df.write
-  .format("org.spark.DataSource")
+  .format("org.neo4j.spark.DataSource")
   .mode(SaveMode.Overwrite)
   .option("url", "bolt://localhost:7687")
   .option("labels", ":Person:Customer")
@@ -301,7 +301,7 @@ For example, say you have `.option("node.keys", "name:name,email:email")`, you c
 `.option("node.keys", "name,email")`.
 
 In case the column value is a Map<String, `Value`> (where `Value` can be any supported
-link:https://org.neo4j.neo4j.com/docs/cypher-manual/current/syntax/values/[Neo4j Type]) the Connector will
+link:https://neo4j.com/docs/cypher-manual/current/syntax/values/[Neo4j Type]) the Connector will
 automatically try to flatten it.
 
 Let's say you have the following Dataset:
@@ -396,7 +396,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 val spark = SparkSession.builder().getOrCreate()
 
-val originalDf = spark.read.format("org.spark.DataSource")
+val originalDf = spark.read.format("org.neo4j.spark.DataSource")
   .option("url", "bolt://allprod.host.com:7687")
   .option("relationship", "BOUGHT")
   .option("relationship.nodes.map", "false")
@@ -407,7 +407,7 @@ val originalDf = spark.read.format("org.spark.DataSource")
 originalDf
     .where("`target.price` > 2000")
     .write
-    .format("org.spark.DataSource")
+    .format("org.neo4j.spark.DataSource")
     .option("url", "bolt://expensiveprod.host.com:7687")
     .option("relationship", "SOLD")
     .option("relationship.source.labels", ":Person:Rich")
@@ -455,7 +455,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 val spark = SparkSession.builder().getOrCreate()
 
 // we read our DF from Neo4j using the relationship method
-val df = spark.read.format("org.spark.DataSource")
+val df = spark.read.format("org.neo4j.spark.DataSource")
   .option("url", "bolt://first.host.com:7687")
   .option("relationship", "BOUGHT")
   .option("relationship.nodes.map", "false")
@@ -464,7 +464,7 @@ val df = spark.read.format("org.spark.DataSource")
   .load()
 
 df.write
-  .format("org.spark.DataSource")
+  .format("org.neo4j.spark.DataSource")
   .option("url", "bolt://second.host.com:7687")
   .option("relationship", "SOLD")
   .option("relationship.source.labels", ":Person:Rich")
@@ -524,7 +524,7 @@ val musicDf = Seq(
     ).toDF("experience", "name", "instrument")
 
 musicDf.write
-    .format("org.spark.DataSource")
+    .format("org.neo4j.spark.DataSource")
     .option("url", "bolt://localhost:7687")
     .option("relationship", "PLAYS")
     .option("relationship.save.strategy", "keys")
@@ -570,7 +570,7 @@ val musicDf = Seq(
     ).toDF("experience", "name", "instrument_color", "instrument")
 
 musicDf.write
-    .format("org.spark.DataSource")
+    .format("org.neo4j.spark.DataSource")
     .option("url", "bolt://localhost:7687")
     .option("relationship", "PLAYS")
     .option("relationship.save.strategy", "keys")

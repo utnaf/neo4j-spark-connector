@@ -2,16 +2,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.neo4j.neo4j-contrib</groupId>
+    <groupId>neo4j-contrib</groupId>
     <packaging>pom</packaging>
     <version>4.0.0</version>
-    <artifactId>org.neo4j.neo4j-connector-apache-spark</artifactId>
-    <name>org.neo4j.neo4j-connector-apache-spark</name>
+    <artifactId>neo4j-connector-apache-spark</artifactId>
+    <name>neo4j-connector-apache-spark</name>
     <description>Neo4j Connector for Apache Spark using the binary Bolt Driver</description>
 
     <organization>
         <name>Neo4j, Inc.</name>
-        <url>http://org.neo4j.neo4j.com/</url>
+        <url>http://neo4j.com/</url>
     </organization>
     <developers>
         <developer>
@@ -24,9 +24,9 @@
         </developer>
     </developers>
 	
-    <url>https://github.com/org.neo4j.neo4j-contrib/org.neo4j.neo4j-spark-connector</url>
+    <url>https://github.com/neo4j-contrib/neo4j-spark-connector</url>
     <scm>
-        <url>https://github.com/org.neo4j.neo4j-contrib/org.neo4j.neo4j-spark-connector</url>
+        <url>https://github.com/neo4j-contrib/neo4j-spark-connector</url>
     </scm>
     <licenses>
         <license>
@@ -49,15 +49,15 @@
     <properties>
         <scala.version>2.12.12</scala.version>
         <scala.binary.version>2.12</scala.binary.version>
-        <org.neo4j.neo4j.version>4.0.8</org.neo4j.neo4j.version>
+        <neo4j.version>4.0.8</neo4j.version>
         <driver.version>4.1.1</driver.version>
-        <spark.version>3.0.1</spark.version>
+        <spark.version>2.4.5</spark.version>
         <testcontainers.version>1.15.1</testcontainers.version>
         <xbean.version>4.10</xbean.version>
         <cypherdsl.version>2020.1.4</cypherdsl.version>
         <node.version>v12.16.0</node.version>
         <npm.version>6.13.7</npm.version>
-        <org.neo4j.neo4j.experimental>false</org.neo4j.neo4j.experimental>
+        <neo4j.experimental>false</neo4j.experimental>
     </properties>
 
     <profiles>
@@ -71,7 +71,7 @@
         <profile>
             <id>scala-2.12</id>
             <properties>
-                <scala.version>2.12.12</scala.version>
+                <scala.version>2.12.13</scala.version>
                 <scala.binary.version>2.12</scala.binary.version>
             </properties>
             <activation>
@@ -79,41 +79,56 @@
             </activation>
         </profile>
         <profile>
-            <id>org.neo4j.neo4j-4.0</id>
+            <id>scala-2.13</id>
             <properties>
-                <org.neo4j.neo4j.version>4.0.8</org.neo4j.neo4j.version>
-                <org.neo4j.neo4j.experimental>false</org.neo4j.neo4j.experimental>
+                <scala.version>2.13.4</scala.version>
+                <scala.binary.version>2.13</scala.binary.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-2.4</id>
+            <properties>
+                <spark.version>2.4.5</spark.version>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
         <profile>
-            <id>org.neo4j.neo4j-3.5</id>
+            <id>spark-3.0</id>
             <properties>
-                <org.neo4j.neo4j.version>3.5.22</org.neo4j.neo4j.version>
-                <org.neo4j.neo4j.experimental>false</org.neo4j.neo4j.experimental>
+                <spark.version>3.0.1</spark.version>
             </properties>
         </profile>
         <profile>
-            <id>org.neo4j.neo4j-4.1</id>
+            <id>neo4j-4.0</id>
             <properties>
-                <org.neo4j.neo4j.version>4.1.4</org.neo4j.neo4j.version>
-                <org.neo4j.neo4j.experimental>false</org.neo4j.neo4j.experimental>
+                <neo4j.version>4.0.8</neo4j.version>
+                <neo4j.experimental>false</neo4j.experimental>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>neo4j-3.5</id>
+            <properties>
+                <neo4j.version>3.5.22</neo4j.version>
+                <neo4j.experimental>false</neo4j.experimental>
             </properties>
         </profile>
         <profile>
-            <id>org.neo4j.neo4j-4.2</id>
+            <id>neo4j-4.1</id>
             <properties>
-                <org.neo4j.neo4j.version>4.2.0</org.neo4j.neo4j.version>
-                <org.neo4j.neo4j.experimental>false</org.neo4j.neo4j.experimental>
+                <neo4j.version>4.1.4</neo4j.version>
+                <neo4j.experimental>false</neo4j.experimental>
             </properties>
         </profile>
         <profile>
-            <id>scala-2.13</id>
+            <id>neo4j-4.2</id>
             <properties>
-                <scala.version>2.12.4</scala.version>
-                <scala.binary.version>2.13</scala.binary.version>
+                <neo4j.version>4.2.0</neo4j.version>
+                <neo4j.experimental>false</neo4j.experimental>
             </properties>
         </profile>
     </profiles>
@@ -269,6 +284,63 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>${scala.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.neo4j.driver</groupId>
+            <artifactId>neo4j-java-driver</artifactId>
+            <version>${driver.version}</version>
+        </dependency>
+
+        <!-- this is necessary because the version bundled with Apache spark does not support Java 11 -->
+        <dependency>
+            <groupId>org.apache.xbean</groupId>
+            <artifactId>xbean-asm6-shaded</artifactId>
+            <version>${xbean.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.xbean</groupId>
+                    <artifactId>xbean-asm6-shaded</artifactId>
+                </exclusion>
+                <!-- uncomment for debug -->
+                <!--                <exclusion>-->
+                <!--                    <groupId>org.slf4j</groupId>-->
+                <!--                    <artifactId>slf4j-log4j12</artifactId>-->
+                <!--                </exclusion>-->
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-cypher-dsl</artifactId>
+            <version>${cypherdsl.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
@@ -283,14 +355,26 @@
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>org.neo4j.neo4j</artifactId>
+            <artifactId>neo4j</artifactId>
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>1.3</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- uncomment for debug -->
+        <!--        <dependency>-->
+        <!--            <groupId>org.slf4j</groupId>-->
+        <!--            <artifactId>slf4j-simple</artifactId>-->
+        <!--            <version>1.7.30</version>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>

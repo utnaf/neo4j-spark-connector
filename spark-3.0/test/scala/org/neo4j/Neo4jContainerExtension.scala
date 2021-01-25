@@ -63,7 +63,7 @@ class DatabasesWaitStrategy(private val auth: AuthToken) extends AbstractWaitStr
   }
 }
 
-// docker pull org.neo4j.neo4j/org.neo4j.neo4j-experimental:4.0.0-rc01-enterprise
+// docker pull neo4j/neo4j-experimental:4.0.0-rc01-enterprise
 class Neo4jContainerExtension(imageName: String = s"neo4j${if (TestUtil.experimental()) "/neo4j-experimental" else ""}:${TestUtil.neo4jVersion()}-enterprise")
   extends Neo4jContainer[Neo4jContainerExtension](imageName) {
   private var databases = Seq.empty[String]

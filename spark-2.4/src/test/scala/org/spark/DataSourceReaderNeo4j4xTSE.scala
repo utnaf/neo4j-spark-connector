@@ -115,7 +115,7 @@ class DataSourceReaderNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
       .collectAsList()
       .get(0)
 
-    assertEquals(res.getString(0), "org/neo4j")
+    assertEquals(res.getString(0), "neo4j")
   }
 
   @Test

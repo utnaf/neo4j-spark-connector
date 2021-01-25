@@ -30,7 +30,7 @@ include::overview/index.adoc[]
 
 include::quickstart/index.adoc[]
 
-include::org.neo4j.neo4j-cluster/index.adoc[]
+include::neo4j-cluster/index.adoc[]
 
 include::cloud/index.adoc[]
 

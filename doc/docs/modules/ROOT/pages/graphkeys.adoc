@@ -27,7 +27,7 @@ the node will receive a property of the same name.
 
 ```
 my_person_dataframe.write
-  .format("org.spark.DataSource")
+  .format("org.neo4j.spark.DataSource")
   .mode(SaveMode.Overwrite)
   .option("url", "bolt://localhost:7687")
   .option("labels", ":Person")
@@ -58,7 +58,7 @@ In order to do this, we would use the Graph Key expression of `"LocationName:nam
 
 ```
 locations_dataframe.write
-  .format("org.spark.DataSource")
+  .format("org.neo4j.spark.DataSource")
   .mode(SaveMode.Overwrite)
   .option("url", "bolt://localhost:7687")
   .option("labels", ":Location")

@@ -5,7 +5,7 @@
 This chapter provides an information on using the Neo4j Connector for Apache Spark with Neo4j's Graph Data Science Library.
 --
 
-link:https://org.neo4j.neo4j.com/graph-data-science-library/[Neo4j's Graph Data Science (GDS) Library] lets data scientists benefit from powerful graph algorithms.  It provides unsupervised machine learning methods and heuristics that learn and describe the topology of your graph. The GDS Library includes hardened graph algorithms with enterprise features, like deterministic seeding for consistent results and reproducible machine learning workflows.
+link:https://neo4j.com/graph-data-science-library/[Neo4j's Graph Data Science (GDS) Library] lets data scientists benefit from powerful graph algorithms.  It provides unsupervised machine learning methods and heuristics that learn and describe the topology of your graph. The GDS Library includes hardened graph algorithms with enterprise features, like deterministic seeding for consistent results and reproducible machine learning workflows.
 
 GDS Algorithms are bucketed into 5 "families":
 
@@ -17,7 +17,7 @@ GDS Algorithms are bucketed into 5 "families":
 
 == GDS Operates via Cypher
 
-All of the link:https://org.neo4j.neo4j.com/docs/graph-data-science/current/[functionality of GDS] is used by issuing cypher queries.  As such, it is easily
+All of the link:https://neo4j.com/docs/graph-data-science/current/[functionality of GDS] is used by issuing cypher queries.  As such, it is easily
 accessible via Spark, because the Neo4j Connector for Apache Spark can issue Cypher queries and read their results back.  This combination means
 that you can use Neo4j & GDS as a graph co-processor in an existing ML workflow that you may implement in Apache Spark.
 
@@ -28,7 +28,7 @@ a Neo4j Sandbox, showing how to use the two together.
 
 === Create a Virtual Graph in GDS Using Spark
 
-This is very simple, straightforward code; it just constructs the right Cypher statement to link:https://org.neo4j.neo4j.com/docs/graph-data-science/current/common-usage/creating-graphs/[create a virtual graph in GDS], and returns the results.
+This is very simple, straightforward code; it just constructs the right Cypher statement to link:https://neo4j.com/docs/graph-data-science/current/common-usage/creating-graphs/[create a virtual graph in GDS], and returns the results.
 
 [source,python]
 ----
@@ -43,7 +43,7 @@ query = """
     RETURN graphName, nodeCount, relationshipCount, createMillis
 """
 
-df = spark.read.format("org.spark.DataSource") \
+df = spark.read.format("org.neo4j.spark.DataSource") \
     .option("url", host) \
     .option("authentication.type", "basic") \
     .option("authentication.basic.username", user) \
@@ -74,7 +74,7 @@ query = """
     RETURN gds.util.asNode(nodeId).name AS name, score
 """
 
-df = spark.read.format("org.spark.DataSource") \
+df = spark.read.format("org.neo4j.spark.DataSource") \
     .option("url", host) \
     .option("authentication.type", "basic") \
     .option("authentication.basic.username", user) \
@@ -91,7 +91,7 @@ df.show()
 
 === Streaming versus Persisting GDS Results
 
-When link:https://org.neo4j.neo4j.com/docs/graph-data-science/current/common-usage/running-algos/[running GDS algorithms] the library gives you the choice
+When link:https://neo4j.com/docs/graph-data-science/current/common-usage/running-algos/[running GDS algorithms] the library gives you the choice
 of either streaming the results of the algorithm back the caller, or mutating the underlying graph. Using GDS together with spark provides an 
 additional option of transforming or otherwise using a GDS result.   Ultimately, either modality will work with the Neo4j Connector for Apache
 Spark, and it is left up to your option what's best for your use case.

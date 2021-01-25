@@ -64,7 +64,7 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
     /**
      * utnaf: Since we can't be sure we are in total isolation, and the id is generated
-     * internally by org.neo4j.neo4j, we just check that the <id> field is an integer and is greater
+     * internally by neo4j, we just check that the <id> field is an integer and is greater
      * than -1
      */
     assertTrue(df.select("<id>").collectAsList().get(0).getLong(0) > -1)
