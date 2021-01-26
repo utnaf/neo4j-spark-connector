@@ -16,7 +16,7 @@ jobs:
         - 2.11.12
       dist: trusty
       install:
-        - ./mvnw clean install -D skipTests --no-transfer-progress
+        - ./mvnw clean install -pl '!spark-3.0' -D skipTests -P scala-2.11 --no-transfer-progress
       script:
         - echo '*** Executing tests with Scala 2.11 and Neo4j 3.5'
         - ./mvnw verify -P neo4j-3.5
@@ -31,9 +31,9 @@ jobs:
       dist: trusty
       language: scala
       scala:
-        - 2.12.12
+        - 2.12.13
       install:
-        - ./mvnw clean install -P scala-2.12 -D skipTests --no-transfer-progress
+        - ./mvnw clean install -D skipTests --no-transfer-progress
       script:
         - echo '*** Executing tests with Scala 2.12 and Neo4j 3.5'
         - ./mvnw verify -P neo4j-3.5
@@ -42,4 +42,21 @@ jobs:
         - echo '*** Executing tests with Scala 2.12 and Neo4j 4.1'
         - ./mvnw verify -P neo4j-4.1 --no-transfer-progress
         - echo '*** Executing tests with Scala 2.12 and Neo4j 4.2'
+        - ./mvnw verify -P neo4j-4.2 --no-transfer-progress
+    - name: "Test for Scala 2.13"
+      jdk: "openjdk8"
+      dist: trusty
+      language: scala
+      scala:
+        - 2.13.4
+      install:
+        - ./mvnw clean install -pl '!spark-2.4' -D skipTests -P scala-2.13 --no-transfer-progress
+      script:
+        - echo '*** Executing tests with Scala 2.13 and Neo4j 3.5'
+        - ./mvnw verify -P neo4j-3.5
+        - echo '*** Executing tests with Scala 2.13 and Neo4j 4.0'
+        - ./mvnw verify -P neo4j-4.0 --no-transfer-progress
+        - echo '*** Executing tests with Scala 2.13 and Neo4j 4.1'
+        - ./mvnw verify -P neo4j-4.1 --no-transfer-progress
+        - echo '*** Executing tests with Scala 2.13 and Neo4j 4.2'
         - ./mvnw verify -P neo4j-4.2 --no-transfer-progress
