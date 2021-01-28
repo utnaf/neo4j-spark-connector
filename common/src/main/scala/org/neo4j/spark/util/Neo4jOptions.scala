@@ -6,12 +6,12 @@ import org.neo4j.driver._
 
 import java.io.File
 import java.net.URI
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 
 
 class Neo4jOptions(private val parameters: java.util.Map[String, String]) extends Serializable {
-
   import Neo4jOptions._
   import QueryType._
 
@@ -166,6 +166,14 @@ class Neo4jOptions(private val parameters: java.util.Map[String, String]) extend
   def validate(validationFunction: Neo4jOptions => Unit): Neo4jOptions = {
     validationFunction(this)
     this
+  }
+
+  def getTableName: String = query.queryType match {
+    case QueryType.LABELS => s"table_${nodeMetadata.labels.mkString("-")}"
+    case QueryType.RELATIONSHIP => s"table_${relationshipMetadata.source.labels.mkString("-")}" +
+      s"_${relationshipMetadata.relationshipType}" +
+      s"_${relationshipMetadata.target.labels.mkString("-")}"
+    case _ => s"table_query_${UUID.randomUUID()}"
   }
 }
 

@@ -1,8 +1,7 @@
 package org.neo4j.spark
 
 import java.util.UUID
-import org.apache.spark.sql.connector.catalog.Table
-import org.apache.spark.sql.connector.catalog.TableProvider
+import org.apache.spark.sql.connector.catalog.{Table, TableProvider}
 import org.apache.spark.sql.connector.expressions.Transform
 import org.apache.spark.sql.sources.DataSourceRegister
 import org.apache.spark.sql.types.StructType
@@ -11,7 +10,8 @@ import org.neo4j.spark.service.SchemaService
 import org.neo4j.spark.util.Validations.validateConnection
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions}
 
-class DataSource extends TableProvider with DataSourceRegister {
+class DataSource extends TableProvider
+  with DataSourceRegister {
 
   private val jobId: String = UUID.randomUUID().toString
 

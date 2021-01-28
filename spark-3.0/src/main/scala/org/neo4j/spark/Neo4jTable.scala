@@ -23,7 +23,7 @@ class Neo4jTable(schema: StructType, neo4jOptions: Neo4jOptions, jobId: String) 
    *       * table_User-Admin
    *       * table_User_BOUGHT_Product
    */
-  override def name(): String = "neo4j"
+  override def name(): String = neo4jOptions.getTableName
 
   override def schema(): StructType = schema
 
