@@ -67,6 +67,9 @@ For <<bookmark-write-rel,Relationship>> type
 * `SaveMode.Append`: this will build a `MERGE` query
 
 [NOTE]
+*ATTENTION*: If you are using *Spark 3.0* the default Save Mode *ErrorIfExists* won't work.
+
+[NOTE]
 For `SaveMode.Append` mode you *need to have unique constrains on the keys*.
 
 In both cases the default SaveMode is `ErrorIfExists`.
