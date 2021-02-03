@@ -5,7 +5,7 @@ import org.apache.spark.sql.connector.write.{BatchWrite, SupportsOverwrite, Supp
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.AccessMode
-import org.neo4j.spark.util.{Neo4jOptions, Validations}
+import org.neo4j.spark.util.{Neo4jOptions, NodeSaveMode, ValidationUtil, Validations}
 
 class Neo4jWriterBuilder(jobId: String,
                          structType: StructType,
@@ -16,7 +16,12 @@ class Neo4jWriterBuilder(jobId: String,
 
   def validOptions(): Neo4jOptions = {
     neo4jOptions.session.accessMode = AccessMode.WRITE
-    neo4jOptions.validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode))
+    neo4jOptions.validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode, o => {
+      ValidationUtil.isFalse(
+        o.relationshipMetadata.sourceSaveMode.equals(NodeSaveMode.ErrorIfExists)
+          && o.relationshipMetadata.targetSaveMode.equals(NodeSaveMode.ErrorIfExists),
+        "Save mode 'ErrorIfExists' is not supported on Spark 3.0")
+    }))
   }
 
   override def buildForBatch(): BatchWrite = new Neo4jBatchWriter(jobId,

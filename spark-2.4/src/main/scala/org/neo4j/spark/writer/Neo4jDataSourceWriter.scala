@@ -7,8 +7,7 @@ import org.apache.spark.sql.sources.v2.writer.{DataSourceWriter, DataWriterFacto
 import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.AccessMode
 import org.neo4j.spark.service.SchemaService
-import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
-import org.neo4j.spark.util.NodeSaveMode
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, NodeSaveMode, ValidationUtil, Validations}
 
 class Neo4jDataSourceWriter(jobId: String,
                             structType: StructType,
@@ -19,7 +18,12 @@ class Neo4jDataSourceWriter(jobId: String,
   optionsMap.put(Neo4jOptions.ACCESS_MODE, AccessMode.WRITE.toString)
 
   private val neo4jOptions: Neo4jOptions = new Neo4jOptions(optionsMap)
-    .validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode))
+    .validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode, o => {
+      ValidationUtil.isFalse(
+        o.relationshipMetadata.sourceSaveMode.equals(NodeSaveMode.ErrorIfExists)
+          && o.relationshipMetadata.targetSaveMode.equals(NodeSaveMode.ErrorIfExists),
+        "Save mode 'ErrorIfExists' is not supported on Spark 3.0, use 'Append' instead")
+    }))
 
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)
 

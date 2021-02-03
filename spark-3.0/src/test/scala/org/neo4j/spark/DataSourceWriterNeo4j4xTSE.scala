@@ -77,9 +77,9 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         .option("relationship", "SOLD")
         .option("relationship.save.strategy", "NATIVE")
         .option("relationship.source.labels", ":Person")
-        .option("relationship.source.save.mode", "ErrorIfExists")
+        .option("relationship.source.save.mode", "Append")
         .option("relationship.target.labels", ":Product")
-        .option("relationship.target.save.mode", "ErrorIfExists")
+        .option("relationship.target.save.mode", "Append")
         .option("batch.size", "11")
         .save()
 
@@ -199,9 +199,9 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
         .option("relationship", "SOLD")
         .option("relationship.save.strategy", "NATIVE")
         .option("relationship.source.labels", ":Person")
-        .option("relationship.source.save.mode", "ErrorIfExists")
+        .option("relationship.source.save.mode", "Overwrite")
         .option("relationship.target.labels", ":Product")
-        .option("relationship.target.save.mode", "ErrorIfExists")
+        .option("relationship.target.save.mode", "Overwrite")
         .option("batch.size", "11")
         .save()
 

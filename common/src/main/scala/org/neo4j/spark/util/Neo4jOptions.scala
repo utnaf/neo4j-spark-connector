@@ -381,6 +381,7 @@ object NodeSaveMode extends CaseInsensitiveEnumeration {
     saveMode match {
       case SaveMode.Overwrite => Overwrite
       case SaveMode.ErrorIfExists => ErrorIfExists
+      case SaveMode.Append => Append
       case _ => throw new IllegalArgumentException(s"SaveMode $saveMode not supported")
     }
   }

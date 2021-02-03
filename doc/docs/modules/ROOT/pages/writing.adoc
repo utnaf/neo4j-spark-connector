@@ -593,7 +593,8 @@ musicDf.write
 You can specify 3 different modes to use for saving the nodes:
 
 * `Overwrite`: will perform a `MERGE` on that node
-* `ErrorIfExists`: will perform a `CREATE`
+* `ErrorIfExists`: will perform a `CREATE` (not available for Spark 3.0)
+* `Append`: will perform a `CREATE` (not available for Spark 2.4)
 * `Match`: will perform a `MATCH`
 
 [NOTE]
