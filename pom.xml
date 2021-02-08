@@ -13,6 +13,7 @@
         <module>common</module>
         <module>spark-2.4</module>
         <module>doc</module>
+        <module>test-support</module>
     </modules>
 
     <organization>
