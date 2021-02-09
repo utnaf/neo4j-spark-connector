@@ -12,7 +12,7 @@ import java.util.concurrent.Callable
 
 object Validations extends Logging {
 
-  val writer: (Neo4jOptions, String, SaveMode, Neo4jOptions => Unit) => Unit = { (neo4jOptions, jobId, saveMode, customValidation) =>
+  val writer: (Neo4jOptions, String, SaveMode, Option[Neo4jOptions => Unit]) => Unit = { (neo4jOptions, jobId, saveMode, customValidation) =>
     ValidationUtil.isFalse(neo4jOptions.session.accessMode == AccessMode.READ,
       s"Mode READ not supported for Data Source writer")
     val cache = new DriverCache(neo4jOptions.connection, jobId)
@@ -70,7 +70,9 @@ object Validations extends Logging {
       neo4jOptions.script.foreach(query => ValidationUtil.isTrue(schemaService.isValidQuery(query),
         s"The following query inside the `${Neo4jOptions.SCRIPT}` is not valid, please check the syntax: $query"))
 
-      customValidation(neo4jOptions)
+      if(customValidation.isDefined) {
+        customValidation.get(neo4jOptions)
+      }
     } finally {
       schemaService.close()
       cache.close()
