@@ -18,7 +18,7 @@ class Neo4jDataSourceWriter(jobId: String,
   optionsMap.put(Neo4jOptions.ACCESS_MODE, AccessMode.WRITE.toString)
 
   private val neo4jOptions: Neo4jOptions = new Neo4jOptions(optionsMap)
-    .validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode, Option.empty))
+    .validate((neo4jOptions: Neo4jOptions) => Validations.writer(neo4jOptions, jobId, saveMode, _ => Unit))
 
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)
 
