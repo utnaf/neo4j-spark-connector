@@ -18,12 +18,7 @@ class Neo4jDataSourceWriter(jobId: String,
   optionsMap.put(Neo4jOptions.ACCESS_MODE, AccessMode.WRITE.toString)
 
   private val neo4jOptions: Neo4jOptions = new Neo4jOptions(optionsMap)
-    .validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode, o => {
-      ValidationUtil.isFalse(
-        o.relationshipMetadata.sourceSaveMode.equals(NodeSaveMode.ErrorIfExists)
-          && o.relationshipMetadata.targetSaveMode.equals(NodeSaveMode.ErrorIfExists),
-        "Save mode 'ErrorIfExists' is not supported on Spark 3.0, use 'Append' instead")
-    }))
+    .validate(neo4jOptions => Validations.writer(neo4jOptions, jobId, saveMode, _))
 
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)
 

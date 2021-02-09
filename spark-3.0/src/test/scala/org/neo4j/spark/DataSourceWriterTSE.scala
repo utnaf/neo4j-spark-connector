@@ -791,6 +791,37 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
+  def `should fail validating options if ErrorIfExists is used`(): Unit = {
+    val musicDf = Seq(
+      (12, "John Bonham", "Drums"),
+      (19, "John Mayer", "Guitar"),
+      (32, "John Scofield", "Guitar"),
+      (15, "John Butler", "Guitar")
+    ).toDF("experience", "name", "instrument")
+
+    try {
+      musicDf.repartition(1).write
+        .format(classOf[DataSource].getName)
+        .mode(SaveMode.Overwrite)
+        .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+        .option("relationship", "PLAYS")
+        .option("relationship.source.save.mode", "ErrorIfExists")
+        .option("relationship.target.save.mode", "Overwrite")
+        .option("relationship.save.strategy", "keys")
+        .option("relationship.source.labels", ":Musician")
+        .option("relationship.source.node.keys", "name:name")
+        .option("relationship.target.labels", ":Instrument")
+        .option("relationship.target.node.keys", "instrument:name")
+        .save()
+    }
+    catch {
+      case e: IllegalArgumentException =>
+        assertEquals("Save mode 'ErrorIfExists' is not supported on Spark 3.0, use 'Append' instead.", e.getMessage)
+      case _ => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}")
+    }
+  }
+
+  @Test
   @Ignore("trying to recreate the deadlock issue")
   def `should give better errors if transaction fails`(): Unit = {
     val df = List.fill(200)(("John Bonham", "Drums")).toDF("name", "instrument")
