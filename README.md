@@ -52,7 +52,7 @@ This will generate `spark-3.0/target/neo4j-connector-apache-spark_2.12_3.0-4.0.0
 
 `$SPARK_HOME/bin/spark-shell --jars neo4j-connector-apache-spark_2.12_3.0-4.0.0.jar`
 
-`$SPARK_HOME/bin/spark-shell --packages neo4j-contrib:neo4j-connector-apache-spark_2.11_3.0:4.0.0`
+`$SPARK_HOME/bin/spark-shell --packages neo4j-contrib:neo4j-connector-apache-spark_2.12_3.0:4.0.0`
 
 **sbt**
 
@@ -64,7 +64,14 @@ Otherwise,
 
 ```scala
 resolvers += "Spark Packages Repo" at "http://dl.bintray.com/spark-packages/maven"
-libraryDependencies += "neo4j-contrib" % "neo4j-connector-apache-spark_2.11_3.0" % "4.0.0"
+libraryDependencies += "neo4j-contrib" % "neo4j-connector-apache-spark_2.11_2.4" % "4.0.0"
+```
+
+Or, for Spark 3.0
+
+```scala
+resolvers += "Spark Packages Repo" at "http://dl.bintray.com/spark-packages/maven"
+libraryDependencies += "neo4j-contrib" % "neo4j-connector-apache-spark_2.12_3.0" % "4.0.0"
 ```  
 
 **maven**  
@@ -75,7 +82,7 @@ In your pom.xml, add:
   <!-- list of dependencies -->
   <dependency>
     <groupId>neo4j-contrib</groupId>
-    <artifactId>neo4j-connector-apache-spark_2.11_3.0</artifactId>
+    <artifactId>neo4j-connector-apache-spark_2.11_2.4</artifactId>
     <version>4.0.0</version>
   </dependency>
 </dependencies>
@@ -87,3 +94,25 @@ In your pom.xml, add:
   </repository>
 </repositories>
 ```
+
+In case of Spark 3.0
+
+```xml
+<dependencies>
+  <!-- list of dependencies -->
+  <dependency>
+    <groupId>neo4j-contrib</groupId>
+    <artifactId>neo4j-connector-apache-spark_2.12_3.0</artifactId>
+    <version>4.0.0</version>
+  </dependency>
+</dependencies>
+<repositories>
+  <!-- list of other repositories -->
+  <repository>
+    <id>SparkPackagesRepo</id>
+    <url>http://dl.bintray.com/spark-packages/maven</url>
+  </repository>
+</repositories>
+```
+
+For more info about the available version visit https://neo4j.com/developer/spark/overview/#_compatibility

@@ -216,7 +216,7 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
       columns.map(StructField(_, DataTypes.StringType))
     } else {
       try {
-        columns.map(c => structFields.find(_.name.quote().equals(c.quote())).orNull).filter(_!= null)
+        columns.map(column => structFields.find(_.name.quote() == column.quote()).orNull).filter(_ != null)
       } catch {
         case _: Throwable => structFields.toArray
       }

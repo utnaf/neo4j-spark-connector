@@ -413,6 +413,22 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
+  def testReadNodeWithEqualToTimestampFilter(): Unit = {
+    val localDateTime = "2007-12-03T10:15:30"
+    val df: DataFrame = initTest(
+      s"""
+     CREATE (p1:Person {birth: localdatetime('$localDateTime')}),
+      (p2:Person {birth: localdatetime('$localDateTime')})
+     """)
+
+    df.printSchema()
+    df.show()
+
+    val result = df.select("birth").where(s"birth >= '$localDateTime'").collectAsList()
+    assertEquals(2, result.size())
+  }
+
+  @Test
   def testReadNodeWithNotEqualToFilter(): Unit = {
     val df: DataFrame = initTest(
       s"""

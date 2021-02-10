@@ -247,6 +247,7 @@ object Neo4jUtil {
   def valueToCypherExpression(value: Any): Expression = {
     value match {
       case date: java.sql.Date => Functions.date(date.toString)
+      case timestamp: java.sql.Timestamp => Functions.localdatetime(Cypher.literalOf(timestamp.toLocalDateTime.toString))
       case _ => Cypher.literalOf(value)
     }
   }
