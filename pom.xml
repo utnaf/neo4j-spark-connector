@@ -49,7 +49,7 @@
     </licenses>
 
     <properties>
-        <scala.version>2.12.12</scala.version>
+        <scala.version>2.12.13</scala.version>
         <scala.binary.version>2.12</scala.binary.version>
         <neo4j.version>4.0.8</neo4j.version>
         <driver.version>4.1.1</driver.version>
@@ -105,7 +105,7 @@
         <profile>
             <id>neo4j-4.0</id>
             <properties>
-                <neo4j.version>4.0.8</neo4j.version>
+                <neo4j.version>4.0.11</neo4j.version>
                 <neo4j.experimental>false</neo4j.experimental>
             </properties>
             <activation>
@@ -122,14 +122,14 @@
         <profile>
             <id>neo4j-4.1</id>
             <properties>
-                <neo4j.version>4.1.4</neo4j.version>
+                <neo4j.version>4.1.6</neo4j.version>
                 <neo4j.experimental>false</neo4j.experimental>
             </properties>
         </profile>
         <profile>
             <id>neo4j-4.2</id>
             <properties>
-                <neo4j.version>4.2.0</neo4j.version>
+                <neo4j.version>4.2.3</neo4j.version>
                 <neo4j.experimental>false</neo4j.experimental>
             </properties>
         </profile>
