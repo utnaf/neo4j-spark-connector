@@ -11,8 +11,6 @@
 
     <modules>
         <module>common</module>
-        <module>spark-2.4</module>
-        <module>spark-3.0</module>
         <module>doc</module>
         <module>test-support</module>
     </modules>
@@ -95,12 +93,18 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <modules>
+                <module>spark-2.4</module>
+            </modules>
         </profile>
         <profile>
             <id>spark-3.0</id>
             <properties>
                 <spark.version>3.0.1</spark.version>
             </properties>
+            <modules>
+                <module>spark-3.0</module>
+            </modules>
         </profile>
         <profile>
             <id>neo4j-4.0</id>
@@ -240,19 +244,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.1.1</version>
                 <executions>
@@ -311,10 +302,10 @@
                     <artifactId>xbean-asm6-shaded</artifactId>
                 </exclusion>
                 <!-- uncomment for debug -->
-<!--                <exclusion>-->
-<!--                    <groupId>org.slf4j</groupId>-->
-<!--                    <artifactId>slf4j-log4j12</artifactId>-->
-<!--                </exclusion>-->
+                <!--                <exclusion>-->
+                <!--                    <groupId>org.slf4j</groupId>-->
+                <!--                    <artifactId>slf4j-log4j12</artifactId>-->
+                <!--                </exclusion>-->
             </exclusions>
         </dependency>
 
@@ -345,12 +336,12 @@
             <scope>test</scope>
         </dependency>
         <!-- uncomment for debug -->
-<!--        <dependency>-->
-<!--            <groupId>org.slf4j</groupId>-->
-<!--            <artifactId>slf4j-simple</artifactId>-->
-<!--            <version>1.7.30</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.slf4j</groupId>-->
+        <!--            <artifactId>slf4j-simple</artifactId>-->
+        <!--            <version>1.7.30</version>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
     </dependencies>
 
     <repositories>
