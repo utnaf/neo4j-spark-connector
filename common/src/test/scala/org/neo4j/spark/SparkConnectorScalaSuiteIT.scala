@@ -83,6 +83,6 @@ object SparkConnectorScalaSuiteIT {
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
-  classOf[SchemaServiceTSE],
+  classOf[SchemaServiceTSE]
 ))
 class SparkConnectorScalaSuiteIT {}
