@@ -8,8 +8,8 @@ import org.junit.{AfterClass, Assume, BeforeClass}
 import org.neo4j.Neo4jContainerExtension
 import org.neo4j.driver._
 import org.neo4j.driver.summary.ResultSummary
+import org.neo4j.spark.service.SchemaServiceWithApocTSE
 import org.neo4j.spark.util.Neo4jUtil
-
 
 object SparkConnectorScalaSuiteWithApocIT {
   val server: Neo4jContainerExtension = new Neo4jContainerExtension()
@@ -83,7 +83,6 @@ object SparkConnectorScalaSuiteWithApocIT {
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
-  classOf[DataSourceReaderWithApocTSE],
-  classOf[DataSourceReaderNeo4j4xWithApocTSE]
+  classOf[SchemaServiceWithApocTSE]
 ))
 class SparkConnectorScalaSuiteWithApocIT {}

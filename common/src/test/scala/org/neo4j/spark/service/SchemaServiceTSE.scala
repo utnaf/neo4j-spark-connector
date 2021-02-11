@@ -5,17 +5,17 @@ import org.junit.Assert._
 import org.junit.{Before, Test}
 import org.neo4j.driver.summary.ResultSummary
 import org.neo4j.driver.{Transaction, TransactionWork}
-import org.neo4j.spark._
+import org.neo4j.spark.{SparkConnectorScalaBaseTSE, SparkConnectorScalaSuiteIT}
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil, QueryType}
 
 import java.util
 import java.util.UUID
 
-class SchemaServiceWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
+class SchemaServiceTSE extends SparkConnectorScalaBaseTSE {
 
   @Before
   def beforeEach(): Unit = {
-    SparkConnectorScalaSuiteWithApocIT.session()
+    SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
         new TransactionWork[ResultSummary] {
           override def execute(tx: Transaction): ResultSummary = tx.run("MATCH (n) DETACH DELETE n").consume()
@@ -195,7 +195,7 @@ class SchemaServiceWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
   }
 
   private def initTest(query: String): Unit = {
-    SparkConnectorScalaSuiteWithApocIT.session()
+    SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
         new TransactionWork[ResultSummary] {
           override def execute(tx: Transaction): ResultSummary = tx.run(query).consume()
@@ -203,17 +203,16 @@ class SchemaServiceWithApocTSE extends SparkConnectorScalaBaseWithApocTSE {
   }
 
   private def getSchema(options: java.util.Map[String, String]): StructType = {
-    options.put(Neo4jOptions.URL, SparkConnectorScalaSuiteWithApocIT.server.getBoltUrl)
+    options.put(Neo4jOptions.URL, SparkConnectorScalaSuiteIT.server.getBoltUrl)
     val neo4jOptions: Neo4jOptions = new Neo4jOptions(options)
     val uuid: String = UUID.randomUUID().toString
 
-    val driverCache = new DriverCache(neo4jOptions.connection, uuid)
-    val schemaService: SchemaService = new SchemaService(neo4jOptions, driverCache)
+    val schemaService: SchemaService = new SchemaService(neo4jOptions, new DriverCache(neo4jOptions.connection, uuid))
 
     val schema: StructType = schemaService.struct()
     schemaService.close()
-    driverCache.close()
 
+    new DriverCache(neo4jOptions.connection, uuid).close()
 
     schema
   }

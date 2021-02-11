@@ -5,7 +5,7 @@ import org.apache.spark.sql.SparkSession
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 import org.junit.{AfterClass, Assume, BeforeClass}
-import org.neo4j.{Neo4jContainerExtension, TestUtil}
+import org.neo4j.Neo4jContainerExtension
 import org.neo4j.driver._
 import org.neo4j.driver.summary.ResultSummary
 import org.neo4j.spark.util.Neo4jUtil
