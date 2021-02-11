@@ -1,11 +1,9 @@
 package org.neo4j.spark
 
-import org.apache.spark.sql.DataFrame
 import org.junit.Assert.assertEquals
 import org.junit.{Assume, BeforeClass, Test}
-import org.neo4j.TestUtil
 import org.neo4j.driver.summary.ResultSummary
-import org.neo4j.driver.{SessionConfig, Transaction, TransactionWork}
+import org.neo4j.driver.{Transaction, TransactionWork}
 
 object DataSourceReaderNeo4j41xTSE {
   @BeforeClass

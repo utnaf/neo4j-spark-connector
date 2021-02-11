@@ -3,7 +3,6 @@ package org.neo4j.spark
 import org.apache.spark.SparkException
 import org.junit.Assert.{assertTrue, fail}
 import org.junit.{Assume, BeforeClass, Test}
-import org.neo4j.TestUtil
 import org.neo4j.driver.exceptions.ClientException
 
 object DataSourceReaderNeo4j35xTSE {

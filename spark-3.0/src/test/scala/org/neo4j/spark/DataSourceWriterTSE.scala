@@ -6,7 +6,6 @@ import org.apache.spark.SparkException
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.junit.Assert._
 import org.junit.{Ignore, Test}
-import org.neo4j.TestUtil
 import org.neo4j.driver.internal.types.InternalTypeSystem
 import org.neo4j.driver.internal.{InternalPoint2D, InternalPoint3D}
 import org.neo4j.driver.summary.ResultSummary

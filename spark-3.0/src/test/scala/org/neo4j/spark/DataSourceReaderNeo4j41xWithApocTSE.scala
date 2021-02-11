@@ -2,7 +2,6 @@ package org.neo4j.spark
 
 import org.junit.Assert.assertEquals
 import org.junit.{Assume, BeforeClass, Test}
-import org.neo4j.TestUtil
 
 object DataSourceReaderNeo4j41xWithApocTSE {
   @BeforeClass

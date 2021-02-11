@@ -5,7 +5,6 @@ import org.apache.spark.SparkException
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.junit.Assert.{assertEquals, assertTrue, fail}
 import org.junit.{Assume, BeforeClass, Test}
-import org.neo4j.TestUtil
 import org.neo4j.driver.summary.ResultSummary
 import org.neo4j.driver.{Result, SessionConfig, Transaction, TransactionWork}
 
