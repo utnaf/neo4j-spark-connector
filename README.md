@@ -27,8 +27,8 @@ This will open http://localhost:8000/ which will serve development docs.
 You can build for Spark 2.4 with both Scala 2.11 and Scala 2.12
 
 ```
-./mvnw clean package -pl '!spark-3.0' -P spark-2.4 -P scala-2.11
-./mvnw clean package -pl '!spark-3.0' -P spark-2.4 -P scala-2.11
+./mvnw clean package -P spark-2.4 -P scala-2.11
+./mvnw clean package -P spark-2.4 -P scala-2.12
 ```
 
 These commands will generate the corresponding targets
@@ -41,7 +41,7 @@ These commands will generate the corresponding targets
 You can build for Spark 3.0 by running
 
 ```
-./mvnw clean package -pl '!spark-2.4' -P spark-3.0
+./mvnw clean package -P spark-3.0 -P scala-2.12
 ```
 
 This will generate `spark-3.0/target/neo4j-connector-apache-spark_2.12_3.0-4.0.0.jar`
