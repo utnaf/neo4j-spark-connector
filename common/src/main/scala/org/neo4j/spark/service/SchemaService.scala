@@ -6,7 +6,6 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.{DataType, DataTypes, StructField, StructType}
 import org.neo4j.driver.exceptions.ClientException
-import org.neo4j.driver.summary.Plan
 import org.neo4j.driver.types.Entity
 import org.neo4j.driver.{Record, Session, Transaction, TransactionWork, Value, summary}
 import org.neo4j.spark.service.SchemaService.{cypherToSparkType, normalizedClassName, normalizedClassNameFromGraphEntity}

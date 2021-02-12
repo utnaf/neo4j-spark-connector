@@ -15,7 +15,6 @@ class Neo4jWriterBuilder(jobId: String,
   with SupportsTruncate {
 
   def validOptions(): Neo4jOptions = {
-    neo4jOptions.session.accessMode = AccessMode.WRITE
     neo4jOptions.validate(neo4jOptions =>
       Validations.writer(neo4jOptions, jobId, saveMode, (o: Neo4jOptions) => {
         ValidationUtil.isFalse(

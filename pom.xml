@@ -53,7 +53,7 @@
         <driver.version>4.1.1</driver.version>
         <spark.version>2.4.5</spark.version>
         <neo4j.experimental>false</neo4j.experimental>
-        <testcontainers.version>1.15.1</testcontainers.version>
+        <testcontainers.version>1.15.2</testcontainers.version>
         <xbean.version>4.10</xbean.version>
         <cypherdsl.version>2020.1.4</cypherdsl.version>
         <node.version>v12.16.0</node.version>

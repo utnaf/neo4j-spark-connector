@@ -6,23 +6,20 @@ import org.apache.spark.sql.connector.catalog.{SupportsRead, SupportsWrite, Tabl
 import org.apache.spark.sql.connector.write.{LogicalWriteInfo, WriteBuilder}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
+import org.neo4j.driver.AccessMode
 import org.neo4j.spark.reader.SimpleScanBuilder
 import org.neo4j.spark.util.{Neo4jOptions, Validations}
 import org.neo4j.spark.writer.Neo4jWriterBuilder
 
 import scala.collection.JavaConverters._
 
-class Neo4jTable(schema: StructType, neo4jOptions: Neo4jOptions, jobId: String) extends Table
+class Neo4jTable(schema: StructType, options: java.util.Map[String, String], jobId: String) extends Table
   with SupportsRead
   with SupportsWrite
   with Logging {
 
-  /**
-   * @todo make the name better based on what we are going to read/write
-   *       ex:
-   *       * table_User-Admin
-   *       * table_User_BOUGHT_Product
-   */
+  private val neo4jOptions = new Neo4jOptions(options)
+
   override def name(): String = neo4jOptions.getTableName
 
   override def schema(): StructType = schema
@@ -41,6 +38,9 @@ class Neo4jTable(schema: StructType, neo4jOptions: Neo4jOptions, jobId: String) 
   }
 
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {
-    new Neo4jWriterBuilder(jobId, info.schema(), SaveMode.Append, neo4jOptions)
+    val mapOptions = new java.util.HashMap[String, String](options)
+    mapOptions.put(Neo4jOptions.ACCESS_MODE, AccessMode.WRITE.toString)
+    val writeNeo4jOptions = new Neo4jOptions(mapOptions)
+    new Neo4jWriterBuilder(jobId, info.schema(), SaveMode.Append, writeNeo4jOptions)
   }
 }
