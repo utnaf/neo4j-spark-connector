@@ -13,7 +13,7 @@ import org.neo4j.spark.util.Neo4jOptions;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.sparkproject.guava.io.BaseEncoding;
+import org.testcontainers.shaded.com.google.common.io.BaseEncoding;
 
 import java.util.HashMap;
 import java.util.Map;
