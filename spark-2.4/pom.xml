@@ -33,6 +33,14 @@
             <version>4.0.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- this is the only way i found to make stuff work in Intellij -->
+        <dependency>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>graal-sdk</artifactId>
+            <version>21.0.0.2</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>
