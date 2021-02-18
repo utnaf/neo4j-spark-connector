@@ -29,7 +29,9 @@ object SparkConnectorAuraTest {
 
   @AfterClass
   def tearDown(): Unit = {
-    neo4j.close()
+    if(neo4j.isInstanceOf[Driver]) {
+      neo4j.close()
+    }
   }
 }
 
