@@ -14,15 +14,17 @@ object SparkConnectorAuraTest {
   private val password: Option[String] = Option[String](System.getenv("AURA_PASSWORD"))
   private val url: Option[String] = Option[String](System.getenv("AURA_URI"))
 
-  val sparkSession = SparkSession.builder()
-    .config(new SparkConf().setAppName("neoTest").setMaster("local[*]"))
-    .getOrCreate()
+  var sparkSession: SparkSession = _
 
   @BeforeClass
   def setUpClass(): Unit = {
     assumeTrue(username.isDefined)
     assumeTrue(password.isDefined)
     assumeTrue(url.isDefined)
+
+    sparkSession = SparkSession.builder()
+      .config(new SparkConf().setAppName("neoTest").setMaster("local[*]"))
+      .getOrCreate()
 
     neo4j = GraphDatabase.driver(url.get, AuthTokens.basic(username.get, password.get))
   }
@@ -32,13 +34,18 @@ object SparkConnectorAuraTest {
     if(neo4j.isInstanceOf[Driver]) {
       neo4j.close()
     }
+
+    if(sparkSession.isInstanceOf[SparkSession]) {
+      sparkSession.close()
+    }
   }
 }
 
 class SparkConnectorAuraTest {
 
-  import sparkSession.implicits._
+  val ss: SparkSession = SparkSession.builder().getOrCreate()
 
+  import ss.implicits._
 
   @Before
   def setUp() {

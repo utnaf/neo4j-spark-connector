@@ -289,7 +289,6 @@ public class DataSourceReaderTypesTSE extends SparkConnectorScalaBaseTSE {
         SparkConnectorScalaSuiteIT.session()
                 .writeTransaction(transaction -> transaction.run(query).consume());
 
-
         return ss().read().format(DataSource.class.getName())
                 .option("url", SparkConnectorScalaSuiteIT.server().getBoltUrl())
                 .option("labels", "Person")
