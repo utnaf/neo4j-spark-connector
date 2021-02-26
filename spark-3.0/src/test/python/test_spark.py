@@ -12,7 +12,7 @@ with Neo4jContainer('neo4j:4.2') as neo4j_container:
                 .master('local[*]') \
                 .config(
                     "spark.jars",
-                    "../spark-3.0/target/neo4j-connector-apache-spark_2.12_3.0-4.0.0.jar"
+                    "../../../target/neo4j-connector-apache-spark_2.12_3.0-4.0.0.jar"
                 ) \
                 .getOrCreate()
 
@@ -65,17 +65,6 @@ with Neo4jContainer('neo4j:4.2') as neo4j_container:
                 assert "local-time" == timeResult.type
                 assert str(time) == timeResult.value
 
-            def test_localdatetime():
-                dtString = "2007-12-03T10:15:30"
-                df = init_test(
-                    "CREATE (p:Person {datetime: localdatetime($datetime)})",
-                    {"datetime": dtString})
-
-                dt = datetime.datetime(2007, 12, 3, 10, 15, 30)
-                dtResult = df.select("datetime").collect()[0].datetime
-
-                assert dt == dtResult
-
             def test_datetime():
                 dtString = "2015-06-24T12:50:35+00:00"
                 df = init_test(
@@ -85,9 +74,6 @@ with Neo4jContainer('neo4j:4.2') as neo4j_container:
                     2015, 6, 24, 12, 50, 35, 0, datetime.timezone.utc)
                 dtResult = df.select("datetime").collect()[
                     0].datetime.astimezone(datetime.timezone.utc)
-
-                print(dt)
-                print(dtResult)
 
                 assert dt == dtResult
 
@@ -200,15 +186,15 @@ with Neo4jContainer('neo4j:4.2') as neo4j_container:
 
             def test_datetime_array():
                 df = init_test(
-                    "CREATE (p:Person {result: [datetime('2007-12-03T10:15:30'), datetime('2008-12-03T10:15:30')]})"
+                    "CREATE (p:Person {result: [datetime('2007-12-03T10:15:30+00:00'), datetime('2008-12-03T10:15:30+00:00')]})"
                 )
 
-                dt1 = datetime.datetime(2007, 12, 3, 10, 15, 30)
-                dt2 = datetime.datetime(2008, 12, 3, 10, 15, 30)
+                dt1 = datetime.datetime(2007, 12, 3, 10, 15, 30, 0, datetime.timezone.utc)
+                dt2 = datetime.datetime(2008, 12, 3, 10, 15, 30, 0, datetime.timezone.utc)
                 dtResult = df.select("result").collect()[0].result
 
-                assert dt1 == dtResult[0]
-                assert dt2 == dtResult[1]
+                assert dt1 == dtResult[0].astimezone(datetime.timezone.utc)
+                assert dt2 == dtResult[1].astimezone(datetime.timezone.utc)
 
             def test_date_array():
                 df = init_test(
@@ -290,26 +276,25 @@ with Neo4jContainer('neo4j:4.2') as neo4j_container:
                 assert 58320 == durationResult[1][3]
                 assert 0 == durationResult[1][4]
 
-            # test_string()
-            # test_int()
-            # test_double()
-            # test_boolean()
-            # test_time()
-            # test_localdatetime()
+            test_string()
+            test_int()
+            test_double()
+            test_boolean()
+            test_time()
             test_datetime()
-            # test_date()
-            # test_point()
-            # test_point3d()
-            # test_geopoint()
-            # test_duration()
-            # test_string_array()
-            # test_int_array()
-            # test_double_array()
-            # test_boolean_array()
-            # test_time_array()
-            # test_datetime_array()
-            # test_date_array()
-            # test_point_array()
-            # test_point3d_array()
-            # test_geopoint_array()
-            # test_duration_array()
+            test_date()
+            test_point()
+            test_point3d()
+            test_geopoint()
+            test_duration()
+            test_string_array()
+            test_int_array()
+            test_double_array()
+            test_boolean_array()
+            test_time_array()
+            test_datetime_array()
+            test_date_array()
+            test_point_array()
+            test_point3d_array()
+            test_geopoint_array()
+            test_duration_array()
