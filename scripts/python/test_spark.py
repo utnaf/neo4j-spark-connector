@@ -5,20 +5,30 @@ from testcontainers.neo4j import Neo4jContainer
 from pyspark.sql.types import TimestampType, DateType
 
 import unittest
+import sys
 
 
 class SparkTest(unittest.TestCase):
     neo4j_session = None
     neo4j_container = None
+    spark_version = None
+    scala_version = None
 
-    spark = SparkSession.builder \
-        .appName("Neo4jConnectorTests") \
-        .master('local[*]') \
-        .config(
-        "spark.jars",
-        "../../../target/neo4j-connector-apache-spark_2.12_2.4-4.0.0.jar"
-    ) \
-        .getOrCreate()
+    spark = None
+
+    def get_spark(self):
+        if self.spark == None:
+            self.spark = SparkSession.builder \
+                .appName("Neo4jConnectorTests") \
+                .master('local[*]') \
+                .config(
+                    "spark.jars",
+                    "../../spark-"+self.spark_version+"/target/neo4j-connector-apache-spark_" +
+                    self.scala_version+"_"+self.spark_version+"-4.0.0.jar"
+                ) \
+                .getOrCreate()
+
+        return self.spark
 
     def __del__(self):
         neo4j_session.close()
@@ -26,7 +36,7 @@ class SparkTest(unittest.TestCase):
     def init_test(self, query, parameters=None):
         self.neo4_session.run("MATCH (n) DETACH DELETE n;")
         self.neo4_session.run(query, parameters)
-        return self.spark.read.format("org.neo4j.spark.DataSource") \
+        return self.get_spark().read.format("org.neo4j.spark.DataSource") \
             .option("url", self.neo4j_container.get_connection_url()) \
             .option("authentication.type", "basic") \
             .option("authentication.basic.username", "neo4j") \
@@ -278,10 +288,19 @@ class SparkTest(unittest.TestCase):
         assert 0 == durationResult[1][4]
 
 
+if len(sys.argv) != 3:
+    print("Not enough arguments")
+    sys.exit()
+
+scala_version = str(sys.argv.pop())
+spark_version = str(sys.argv.pop())
+
 if __name__ == "__main__":
     with Neo4jContainer('neo4j:4.2') as neo4j_container:
         with neo4j_container.get_driver() as neo4j_driver:
             with neo4j_driver.session() as neo4j_session:
+                SparkTest.spark_version = spark_version
+                SparkTest.scala_version = scala_version
                 SparkTest.neo4_session = neo4j_session
                 SparkTest.neo4j_container = neo4j_container
                 unittest.main()
