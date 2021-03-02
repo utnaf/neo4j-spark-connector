@@ -24,18 +24,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up JDK 8
-        if: ${{ fromJSON(matrix.spark-version).short == 2.4}}
+        if: ${{ matrix.spark-version.short == 2.4}}
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyspark==${{ fromJSON(matrix.spark-version).ext }} "testcontainers[neo4j]"
+          pip install pyspark==${{ matrix.spark-version.ext }} "testcontainers[neo4j]"
       - name: Build artifact
         run: |
           ./mvnw clean package -DskipTests -P spark-${{ matrix.spark-version }} -P scala-2.12 --no-transfer-progress
-      - name: Run tests for Spark ${{ fromJSON(matrix.spark-version).ext }} and Neo4j ${{ matrix.neo4j-version }}
+      - name: Run tests for Spark ${{ matrix.spark-version.ext }} and Neo4j ${{ matrix.neo4j-version }}
         run: |
           cd ./scripts/python
-          python test_spark.py "${{ fromJSON(matrix.spark-version).short }}" "2.12" "${{ matrix.neo4j-version }}"
+          python test_spark.py "${{ matrix.spark-version.short }}" "2.12" "${{ matrix.neo4j-version }}"
