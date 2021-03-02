@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7, 3.8 ]
+        python-version: [ 3.6, 3.7 ]
         neo4j-version: [ 3.5, 4.0, 4.1, 4.2 ]
-        spark-version: [ {short: 2.4, ext: 2.4.5, scala: 2.11 }, {short: 3.0, ext: 3.0.1, scala: 2.12} ]
+        spark-version: [ {short: 2.4, ext: 2.4.5 }, {short: 3.0, ext: 3.0.1} ]
 
     steps:
       - uses: actions/checkout@v2
@@ -35,8 +35,8 @@ jobs:
           pip install pyspark==${{ matrix.spark-version.ext }} "testcontainers[neo4j]"
       - name: Build artifact
         run: |
-          ./mvnw clean package -DskipTests -P spark-${{ matrix.spark-version }} -P scala-${{ matrix.spark-version.scala }} --no-transfer-progress
+          ./mvnw clean package -DskipTests -P spark-${{ matrix.spark-version }} -P scala-2.12 --no-transfer-progress
       - name: Run tests for Spark ${{ matrix.spark-version.ext }} and Neo4j ${{ matrix.neo4j-version }}
         run: |
           cd ./scripts/python
-          python test_spark.py "${{ matrix.spark-version.short }}" "${{ matrix.spark-version.scala }}" "${{ matrix.neo4j-version }}"
+          python test_spark.py "${{ matrix.spark-version.short }}" "2.12" "${{ matrix.neo4j-version }}"
