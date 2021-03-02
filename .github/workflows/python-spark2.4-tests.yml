@@ -32,10 +32,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install pypandoc
           pip install pyspark==2.4.5 "testcontainers[neo4j]"
-      - name: Build artifact for Scala 2.12
+      - name: Build artifact for Scala 2.11
         run: |
-          ./mvnw clean package -DskipTests -P spark-2.4 -P scala-2.12 --no-transfer-progress
-      - name: Run tests for Scala 2.12
+          ./mvnw clean package -DskipTests -P spark-2.4 -P scala-2.11 --no-transfer-progress
+      - name: Run tests for Scala 2.11
         run: |
           cd ./scripts/python
-          python test_spark.py "2.4" "2.12"
+          python test_spark.py "2.4" "2.11"
