@@ -1,4 +1,4 @@
-name: Python Tests
+name: Python Tests for Spark 3.0
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [2.7, 3.4, 3.5, 3.6, 3.7, 3.8]
 
     steps:
       - uses: actions/checkout@v2
@@ -21,14 +21,14 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Build artifact
-        run: |
-          ./mvnw clean package -DskipTests -P spark-3.0 -P scala-2.12 --no-transfer-progress
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyspark==3.0.1 "testcontainers[neo4j]"
-      - name: Test with pytest
+      - name: Build artifact for Scala 2.12
+        run: |
+          ./mvnw clean package -DskipTests -P spark-3.0 -P scala-2.12 --no-transfer-progress
+      - name: Run test for Scala 2.12
         run: |
           cd ./scripts/python
           python test_spark.py "3.0" "2.12"
