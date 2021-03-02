@@ -294,9 +294,10 @@ if len(sys.argv) != 3:
 
 scala_version = str(sys.argv.pop())
 spark_version = str(sys.argv.pop())
+neo4j_version = str(sys.argv.pop())
 
 if __name__ == "__main__":
-    with Neo4jContainer('neo4j:4.2') as neo4j_container:
+    with Neo4jContainer('neo4j:' + neo4j_version) as neo4j_container:
         with neo4j_container.get_driver() as neo4j_driver:
             with neo4j_driver.session() as neo4j_session:
                 SparkTest.spark_version = spark_version
