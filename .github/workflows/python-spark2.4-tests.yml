@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
       - uses: actions/checkout@v2
@@ -28,7 +28,6 @@ jobs:
           pip install pyspark==2.4.5 "testcontainers[neo4j]"
       - name: Build artifact for Scala 2.11
         run: |
-          cd ../../
           ./mvnw clean package -DskipTests -P spark-2.4 -P scala-2.11 --no-transfer-progress
       - name: Run tests for Scala 2.11
         run: |
