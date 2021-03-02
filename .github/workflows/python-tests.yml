@@ -1,7 +1,13 @@
 name: Python Tests
 
-on: [push]
-
+on:
+  push:
+    branches:
+      - '4.0'
+      - 'master'
+  pull_request:
+    branches:
+      - '*'
 jobs:
   build:
     runs-on: ubuntu-latest
