@@ -5,6 +5,7 @@
 
 It's fairly easy to use, although it can be highly customized.
 
+[#_installation_guide]
 == Installation Guide
 
 [#_where_to_get_the_jars]
@@ -66,6 +67,24 @@ libraryDependencies += "neo4j-contrib" % "neo4j-connector-apache-spark_${scala.v
     <url>http://dl.bintray.com/spark-packages/maven</url>
   </repository>
 </repositories>
+----
+
+=== Gradle
+
+[source,`build.gradle`]
+----
+
+dependencies{
+    // list of dependencies
+    compile "neo4j-contrib:neo4j-spark-connector:${connector.version}"
+}
+
+repositories {
+    //  list of other repositories
+    sparkPackages {
+        url "http://dl.bintray.com/spark-packages/maven"
+    }
+}
 ----
 
 == Using the connector on Databricks
