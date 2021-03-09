@@ -17,9 +17,7 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
   import QueryType._
 
   private def parameters: util.Map[String, String] = {
-    val params = new util.HashMap[String, String]()
-
-      params.putAll(SparkSession.getActiveSession
+    val sparkOptions = SparkSession.getActiveSession
       .map { _.conf
         .getAll
         .filterKeys(k => k.startsWith("neo4j."))
@@ -27,10 +25,9 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
         .toMap
       }
       .getOrElse(Map.empty)
-      .asJava)
 
-    params.putAll(options)
-    params
+
+    (sparkOptions ++ options.asScala).asJava
   }
 
   private def getRequiredParameter(parameter: String): String = {
