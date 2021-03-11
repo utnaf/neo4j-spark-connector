@@ -1,16 +1,26 @@
 package org.neo4j.spark.util
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.{AccessMode, Session}
 import org.neo4j.spark.service.{Neo4jQueryStrategy, SchemaService}
 import org.neo4j.spark.util.Neo4jImplicits.StructTypeImplicit
-import org.neo4j.spark._
-
-import java.util.concurrent.Callable
 
 object Validations extends Logging {
+
+  def version(supportedVersions: Seq[String]): Unit = {
+    val sparkVersion = SparkSession.getActiveSession
+      .map { _.version }
+      .getOrElse("UNKNOWN")
+
+    ValidationUtil.isTrue(
+      sparkVersion != "UNKNOWN" && supportedVersions.contains(sparkVersion.split('.').slice(0, 2).mkString(".")),
+      s"""You current Spark version ${sparkVersion} is not supported by the current connector.
+       |Please visit https://neo4j.com/developer/spark/overview/#_spark_compatibility to know which connector version you need.
+       |""".stripMargin
+    )
+  }
 
   val writer: (Neo4jOptions, String, SaveMode, Neo4jOptions => Unit) => Unit = { (neo4jOptions, jobId, saveMode, customValidation) =>
     ValidationUtil.isFalse(neo4jOptions.session.accessMode == AccessMode.READ,
