@@ -15,7 +15,7 @@ object Validations extends Logging {
       .getOrElse("UNKNOWN")
 
     ValidationUtil.isTrue(
-      sparkVersion != "UNKNOWN" && supportedVersions.contains(sparkVersion.split('.').slice(0, 2).mkString(".")),
+      sparkVersion == "UNKNOWN" || supportedVersions.contains(sparkVersion.split('.').slice(0, 2).mkString(".")),
       s"""You current Spark version ${sparkVersion} is not supported by the current connector.
        |Please visit https://neo4j.com/developer/spark/overview/#_spark_compatibility to know which connector version you need.
        |""".stripMargin
