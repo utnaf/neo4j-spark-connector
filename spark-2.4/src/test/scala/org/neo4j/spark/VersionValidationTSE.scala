@@ -9,7 +9,7 @@ class VersionValidationTSE extends SparkConnectorScalaBaseTSE {
   @Test
   def testThrowsExceptionSparkVersionIsNotSupported(): Unit = {
     try {
-      Validations.version(Seq("3.0", "3.1"))
+      Validations.version("3.*")
     } catch {
       case e: IllegalArgumentException =>
         assertEquals(
