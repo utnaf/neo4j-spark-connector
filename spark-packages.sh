@@ -3,6 +3,13 @@ if [[ $# -lt 2 ]] ; then
     exit 1
 fi
 
+JAVA_VER=$(java -version 2>&1 | grep -i version)
+
+if [[ ! $JAVA_VER =~ 1.8 ]] ; then
+    echo "You must use Java 8"
+    exit 1
+fi
+
 ARTIFACT=neo4j-connector-apache-spark_$2
 SPARK_VERSION=$3
 VERSION=$1_for_spark_$SPARK_VERSION
