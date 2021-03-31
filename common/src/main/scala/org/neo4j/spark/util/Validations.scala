@@ -9,14 +9,14 @@ import org.neo4j.spark.util.Neo4jImplicits.StructTypeImplicit
 
 object Validations extends Logging {
 
-  def version(supportedVersions: Seq[String]): Unit = {
+  def version(supportedVersions: String*): Unit = {
     val sparkVersion = SparkSession.getActiveSession
       .map { _.version }
       .getOrElse("UNKNOWN")
 
     ValidationUtil.isTrue(
-      sparkVersion == "UNKNOWN" || supportedVersions.contains(sparkVersion.split('.').slice(0, 2).mkString(".")),
-      s"""You current Spark version ${sparkVersion} is not supported by the current connector.
+      sparkVersion == "UNKNOWN" || supportedVersions.exists(sparkVersion.matches),
+      s"""Your currentSpark version ${sparkVersion} is not supported by the current connector.
        |Please visit https://neo4j.com/developer/spark/overview/#_spark_compatibility to know which connector version you need.
        |""".stripMargin
     )

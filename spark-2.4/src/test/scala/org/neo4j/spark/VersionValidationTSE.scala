@@ -13,7 +13,7 @@ class VersionValidationTSE extends SparkConnectorScalaBaseTSE {
     } catch {
       case e: IllegalArgumentException =>
         assertEquals(
-          """You current Spark version 2.4.5 is not supported by the current connector.
+          """Your currentSpark version 2.4.5 is not supported by the current connector.
             |Please visit https://neo4j.com/developer/spark/overview/#_spark_compatibility to know which connector version you need.
             |""".stripMargin, e.getMessage)
       case _: Throwable => fail(s"should be thrown a ${classOf[IllegalArgumentException].getName}")

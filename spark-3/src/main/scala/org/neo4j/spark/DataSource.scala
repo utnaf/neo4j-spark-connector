@@ -13,7 +13,7 @@ import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
 class DataSource extends TableProvider
   with DataSourceRegister {
 
-  Validations.version(Seq("3.0", "3.1"))
+  Validations.version("3.*")
 
   private val jobId: String = UUID.randomUUID().toString
 
