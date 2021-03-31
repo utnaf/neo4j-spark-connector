@@ -24,8 +24,8 @@ class SparkTest(unittest.TestCase):
                 .master('local[*]') \
                 .config(
                     "spark.jars",
-                    "../../spark-"+self.spark_version+"/target/neo4j-connector-apache-spark_" +
-                    self.scala_version+"_"+self.spark_version+"-"+self.connector_version+".jar"
+                    "../../spark-%s/target/neo4j-connector-apache-spark_%s-%s_for_spark_%s.jar" \
+                    % (self.spark_version, self.scala_version, self.connector_version, self.spark_version)
                 ) \
                 .getOrCreate()
 
@@ -299,7 +299,9 @@ neo4j_version = str(sys.argv.pop())
 scala_version = str(sys.argv.pop())
 spark_version = str(sys.argv.pop())
 
-print("Running tests for Connector "+connector_version+", Neo4j " + neo4j_version + ", Scala " + scala_version + ", Spark " + spark_version)
+print("Running tests for Connector %s,  Neo4j %s, Scala %s, Spark %s"
+    % (connector_version, neo4j_version, scala_version, spark_version))
+
 
 if __name__ == "__main__":
     with Neo4jContainer('neo4j:' + neo4j_version) as neo4j_container:
