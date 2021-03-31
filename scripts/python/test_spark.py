@@ -13,6 +13,7 @@ class SparkTest(unittest.TestCase):
     neo4j_container = None
     spark_version = None
     scala_version = None
+    connector_version = None
 
     spark = None
 
@@ -24,7 +25,7 @@ class SparkTest(unittest.TestCase):
                 .config(
                     "spark.jars",
                     "../../spark-"+self.spark_version+"/target/neo4j-connector-apache-spark_" +
-                    self.scala_version+"_"+self.spark_version+"-4.0.0.jar"
+                    self.scala_version+"_"+self.spark_version+"-"+self.connector_version+".jar"
                 ) \
                 .getOrCreate()
 
@@ -288,18 +289,23 @@ class SparkTest(unittest.TestCase):
         assert 0 == durationResult[1][4]
 
 
-if len(sys.argv) != 3:
-    print("Not enough arguments")
-    sys.exit()
+if len(sys.argv) != 5:
+    print("Wrong arguments count")
+    print(sys.argv)
+    sys.exit(1)
 
+connector_version = str(sys.argv.pop())
+neo4j_version = str(sys.argv.pop())
 scala_version = str(sys.argv.pop())
 spark_version = str(sys.argv.pop())
-neo4j_version = str(sys.argv.pop())
+
+print("Running tests for Connector "+connector_version+", Neo4j " + neo4j_version + ", Scala " + scala_version + ", Spark " + spark_version)
 
 if __name__ == "__main__":
     with Neo4jContainer('neo4j:' + neo4j_version) as neo4j_container:
         with neo4j_container.get_driver() as neo4j_driver:
             with neo4j_driver.session() as neo4j_session:
+                SparkTest.connector_version = connector_version
                 SparkTest.spark_version = spark_version
                 SparkTest.scala_version = scala_version
                 SparkTest.neo4_session = neo4j_session
