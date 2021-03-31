@@ -1,17 +1,27 @@
 package org.neo4j.spark
 
-import java.util.{Optional, UUID}
 import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.sources.DataSourceRegister
+import org.apache.spark.sql.sources.v2._
+import org.apache.spark.sql.sources.v2.reader.streaming.MicroBatchReader
 import org.apache.spark.sql.sources.v2.reader.DataSourceReader
 import org.apache.spark.sql.sources.v2.writer.DataSourceWriter
-import org.apache.spark.sql.sources.v2.{DataSourceOptions, DataSourceV2, ReadSupport, WriteSupport}
+import org.apache.spark.sql.sources.v2.writer.streaming.StreamWriter
+import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.types.StructType
 import org.neo4j.spark.reader.Neo4jDataSourceReader
+import org.neo4j.spark.stream.{Neo4jDataSourceStreamReader, Neo4jDataSourceStreamWriter}
 import org.neo4j.spark.util.{Neo4jOptions, Validations}
 import org.neo4j.spark.writer.Neo4jDataSourceWriter
 
-class DataSource extends DataSourceV2 with ReadSupport with DataSourceRegister with WriteSupport {
+import java.util.{Optional, UUID}
+
+class DataSource extends DataSourceV2
+  with MicroBatchReadSupport
+  with StreamWriteSupport
+  with ReadSupport
+  with DataSourceRegister
+  with WriteSupport {
 
   Validations.version("2.4.*")
 
@@ -32,8 +42,16 @@ class DataSource extends DataSourceV2 with ReadSupport with DataSourceRegister w
     } else {
       throw new IllegalArgumentException(
         s"""Unsupported SaveMode.
-          |You provided $saveMode, supported are:
-          |${Neo4jOptions.SUPPORTED_SAVE_MODES.mkString(",")}
-          |""".stripMargin)
+           |You provided $saveMode, supported are:
+           |${Neo4jOptions.SUPPORTED_SAVE_MODES.mkString(",")}
+           |""".stripMargin)
     }
+
+  override def createMicroBatchReader(optional: Optional[StructType], s: String, dataSourceOptions: DataSourceOptions): MicroBatchReader = {
+    new Neo4jDataSourceStreamReader(dataSourceOptions, jobId)
+  }
+
+  override def createStreamWriter(queryId: String, schema: StructType, mode: OutputMode, options: DataSourceOptions): StreamWriter = {
+    new Neo4jDataSourceStreamWriter(jobId, queryId, schema, options)
+  }
 }
