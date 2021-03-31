@@ -12,7 +12,7 @@ import org.neo4j.spark.writer.Neo4jDataSourceWriter
 
 class DataSource extends DataSourceV2 with ReadSupport with DataSourceRegister with WriteSupport {
 
-  Validations.version("2.4")
+  Validations.version("2.4.*")
 
   private val jobId: String = UUID.randomUUID().toString
 
