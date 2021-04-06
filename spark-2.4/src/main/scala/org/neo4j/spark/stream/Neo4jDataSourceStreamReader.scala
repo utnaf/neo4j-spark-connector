@@ -18,14 +18,12 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   extends MicroBatchReader
     with Logging {
 
-  private val NO_DATA_OFFSET = new Neo4jOffset(-1)
+  private val BATCH_SIZE = 100;
 
   private var startOffset: Neo4jOffset = new Neo4jOffset(-1)
   private var endOffset: Neo4jOffset = new Neo4jOffset(-1)
 
-  private var currentOffset: Neo4jOffset = new Neo4jOffset(-1)
-  private var lastReturnedOffset: Neo4jOffset = new Neo4jOffset(-1)
-  private var lastOffsetCommitted: Neo4jOffset = new Neo4jOffset(-1)
+  private var partitionReader: Neo4jInputPartitionReader = _
 
   private var stopped: Boolean = false
 
@@ -36,6 +34,10 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
     schemaService
       .struct()
   }
+
+  private var lastCommittedOffset = new Neo4jOffset(-1)
+
+  private def countQuery: Long = callSchemaService { schemaService => schemaService.count() }
 
   override def readSchema(): StructType = structType
 
@@ -59,12 +61,11 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   }
 
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
-    this.startOffset = start.orElse(this.lastReturnedOffset).asInstanceOf[Neo4jOffset]
-    this.endOffset = end.orElse(this.startOffset + 1).asInstanceOf[Neo4jOffset]
+    this.startOffset = start.orElse(lastCommittedOffset + 1).asInstanceOf[Neo4jOffset]
+    this.endOffset = end.orElse(new Neo4jOffset(Math.min(countQuery, BATCH_SIZE))).asInstanceOf[Neo4jOffset]
   }
 
   override def getStartOffset: Offset = {
-    logInfo("+++ getStartOffset was called")
     if (startOffset.offset == -1) {
       throw new IllegalStateException("startOffset is -1")
     }
@@ -72,7 +73,6 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   }
 
   override def getEndOffset: Offset = {
-    logInfo("+++ getEndOffset was called")
     if (endOffset.offset == -1) {
       throw new IllegalStateException("endOffset is -1")
     }
@@ -82,36 +82,34 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   override def deserializeOffset(json: String): Offset = new Neo4jOffset(json.toLong)
 
   override def commit(end: Offset): Unit = {
-    // lastOffsetCommitted = end.asInstanceOf[Neo4jOffset]
+    lastCommittedOffset = end.asInstanceOf[Neo4jOffset]
     logInfo(s"+++ committed with offset ${end}")
   }
 
   override def planInputPartitions: util.ArrayList[InputPartition[InternalRow]] = {
-    val startOrdinal = startOffset.offset.toInt + 1
-    val endOrdinal = endOffset.offset.toInt + 1
+    val startOrdinal = startOffset.offset.toInt
+    val endOrdinal = endOffset.offset.toInt - startOrdinal
 
-    logInfo(s"+++ createDataReaderFactories: sOrd: $startOrdinal, eOrd: $endOrdinal, " +
-      s"lastOffsetCommitted: $lastOffsetCommitted")
+    logInfo(s"+++ createDataReaderFactories: sOrd: $startOrdinal, eOrd: $endOrdinal")
 
     val partitionSkipLimit = synchronized {
       val sliceStart = startOrdinal
-      val sliceEnd = endOrdinal
-      assert(sliceStart <= sliceEnd, s"sliceStart: $sliceStart sliceEnd: $sliceEnd")
+      val sliceEnd = endOrdinal + 1
       new PartitionSkipLimit(0, sliceStart, sliceEnd)
     }
 
     val schema = readSchema()
 
-    new util.ArrayList[InputPartition[InternalRow]](Seq(
-      new Neo4jInputPartitionReader(
-        neo4jOptions,
-        Array(),
-        schema,
-        jobId,
-        partitionSkipLimit,
-        java.util.List.of(),
-        new StructType())
-    ).asJava)
+    partitionReader = new Neo4jInputPartitionReader(
+      neo4jOptions,
+      Array(),
+      schema,
+      jobId,
+      partitionSkipLimit,
+      new util.ArrayList[util.Map[String, AnyRef]](),
+      new StructType())
+
+    new util.ArrayList[InputPartition[InternalRow]](Seq(partitionReader).asJava)
   }
 
   override def stop(): Unit = {
