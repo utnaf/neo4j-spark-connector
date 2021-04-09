@@ -19,7 +19,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .option("checkpointLocation", "/tmp/checkpoint/" + UUID.randomUUID().toString)
       .start()
 
-    query.awaitTermination(1000)
+    query.awaitTermination(2000)
     query.processAllAvailable()
     query.stop()
 

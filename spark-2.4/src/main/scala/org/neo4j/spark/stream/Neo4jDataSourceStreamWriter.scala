@@ -25,35 +25,16 @@ class Neo4jDataSourceStreamWriter(private val jobId: String,
 
   var driverCache = new DriverCache(neo4jOptions.connection, jobId)
 
-  private def callSchemaService[T](function: SchemaService => T): T = {
-    val driverCache = new DriverCache(neo4jOptions.connection, jobId)
-    val schemaService = new SchemaService(neo4jOptions, driverCache)
-    var hasError = false
-    try {
-      function(schemaService)
-    } catch {
-      case e: Throwable => {
-        hasError = true
-        throw e
-      }
-    } finally {
-      schemaService.close()
-      if (hasError) {
-        driverCache.close()
-      }
-    }
-  }
-
   override def commit(epochId: Long, messages: Array[WriterCommitMessage]): Unit = driverCache.close()
 
   override def abort(epochId: Long, messages: Array[WriterCommitMessage]): Unit = driverCache.close()
 
   override def createWriterFactory(): DataWriterFactory[InternalRow] = {
       logInfo(s"+++ executing query ${queryId}")
-      val scriptResult = callSchemaService { schemaService => {
-        schemaService.createOptimizations()
-        schemaService.execute(neo4jOptions.script)
-      }}
+      val schemaService = new SchemaService(neo4jOptions, driverCache)
+      schemaService.createOptimizations()
+      val scriptResult = schemaService.execute(neo4jOptions.script)
+      schemaService.close()
       new Neo4jDataWriterFactory(jobId, schema, SaveMode.Append, neo4jOptions, scriptResult)
   }
 }
