@@ -2,8 +2,8 @@ package org.neo4j.spark
 
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.neo4j.driver.{Transaction, TransactionWork}
 import org.neo4j.driver.summary.ResultSummary
+import org.neo4j.driver.{Transaction, TransactionWork}
 
 class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
@@ -15,9 +15,10 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .load()
 
     val query = stream.writeStream.format("console").start()
-    query.awaitTermination(2000)
 
-    val count = stream.count()
+    assertTrue(query.lastProgress == null)
+
+    query.awaitTermination(3000)
 
     SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
@@ -27,7 +28,9 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
     query.stop()
 
-    assertTrue(stream.count() == count + 1)
+    while(query.isActive) {  }
+
+    assertTrue(query.lastProgress.numInputRows == 1)
   }
 }
 

@@ -41,9 +41,11 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   override def readSchema(): StructType = structType
 
+  val driverCache = new DriverCache(neo4jOptions.connection, jobId)
+
   private def callSchemaService[T](function: SchemaService => T): T = {
-    val driverCache = new DriverCache(neo4jOptions.connection, jobId)
-    val schemaService = new SchemaService(neo4jOptions, driverCache)
+    val localDriverCache = new DriverCache(neo4jOptions.connection, jobId)
+    val schemaService = new SchemaService(neo4jOptions, localDriverCache)
     var hasError = false
     try {
       function(schemaService)
@@ -55,7 +57,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
     } finally {
       schemaService.close()
       if (hasError) {
-        driverCache.close()
+        localDriverCache.close()
       }
     }
   }
@@ -83,14 +85,11 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   override def commit(end: Offset): Unit = {
     lastCommittedOffset = end.asInstanceOf[Neo4jOffset]
-    logInfo(s"+++ committed with offset ${end}")
   }
 
   override def planInputPartitions: util.ArrayList[InputPartition[InternalRow]] = {
     val startOrdinal = startOffset.offset.toInt
     val endOrdinal = endOffset.offset.toInt - startOrdinal
-
-    logInfo(s"+++ createDataReaderFactories: sOrd: $startOrdinal, eOrd: $endOrdinal")
 
     val partitionSkipLimit = synchronized {
       val sliceStart = startOrdinal
@@ -113,7 +112,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   }
 
   override def stop(): Unit = {
-    logWarning(s"Stop()")
+    driverCache.close()
     stopped = true
   }
 }
