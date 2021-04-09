@@ -25,7 +25,6 @@ import java.util.{Optional, UUID}
 
 class DataSource extends DataSourceV2
   with MicroBatchReadSupport
-  with StreamWriteSupport
   with ReadSupport
   with DataSourceRegister
   with WriteSupport {
