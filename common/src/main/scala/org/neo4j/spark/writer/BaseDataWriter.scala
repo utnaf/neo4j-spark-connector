@@ -140,7 +140,6 @@ abstract class BaseDataWriter(jobId: String,
   }
 
   protected def close(): Unit = {
-    println(s"+++ ${this.hashCode()} chiudo")
     closeSafety(transaction, log)
     closeSafety(session, log)
   }
