@@ -107,7 +107,9 @@ abstract class BaseDataWriter(jobId: String,
    * any error in this case. The transaction are rolled back automatically.
    */
   private def logAndThrowException(e: Exception): Unit = {
-    if(e.getCause.isInstanceOf[TaskKilledException] && e.isInstanceOf[ServiceUnavailableException] && e.getMessage == STOPPED_THREAD_EXCEPTION_MESSAGE) {
+    if(e.isInstanceOf[ServiceUnavailableException] && e.getMessage == STOPPED_THREAD_EXCEPTION_MESSAGE) {
+      // df: leaving it here so we make sure if the cause is an instance of TaskKilledException
+      logInfo(s"+++ Cause: ${e.getCause.toString}")
       logInfo(e.getMessage)
     }
     else {

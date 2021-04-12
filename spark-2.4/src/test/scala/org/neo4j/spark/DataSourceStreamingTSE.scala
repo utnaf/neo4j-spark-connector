@@ -8,7 +8,7 @@ import java.util.UUID
 class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
-  def testWriteStream(): Unit = {
+  def testSinkStream(): Unit = {
     val rateDf = ss.readStream.format("rate")
       .option("rowsPerSecond", 1)
       .load()
