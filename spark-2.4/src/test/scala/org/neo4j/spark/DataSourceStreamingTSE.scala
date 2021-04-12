@@ -5,7 +5,7 @@ import org.junit.Test
 
 import java.util.UUID
 
-class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
+class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testWriteStream(): Unit = {
