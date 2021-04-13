@@ -1255,7 +1255,6 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
 
     df.write
       .format(classOf[DataSource].getName)
-      .format("org.neo4j.spark.DataSource")
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .mode(SaveMode.Overwrite)
       .option("query",
@@ -1264,5 +1263,36 @@ class DataSourceWriterTSE extends SparkConnectorScalaBaseTSE {
           |MERGE (u:User {id: event.id, firstName: event.firstName, lastName: event.lastName, gender: event.gender, birthday: event.birthday, email: event.email, userProp: obj.objStringField1})
           |""".stripMargin)
       .save()
+  }
+
+  @Test
+  def `test should use property of a map property as value of "node.keys"`(): Unit = {
+    val df = Seq(
+      (1, Map("name" -> "Bonham", "instrument" -> "Drums")),
+      (2, Map("name" -> "Mayer", "instrument" -> "Guitar")),
+      (3, Map("name" -> "Bon Jovi", "instrument" -> "Voice")),
+    ).toDF("id", "<props>")
+
+    df.write
+      .mode("Overwrite")
+      .format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("labels", "Person")
+      .option("node.keys", "<props>.name:name,<props>.instrument:instrument")
+      .save()
+
+    val resultDf = ss.read
+      .format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("labels", "Person")
+      .load()
+
+    val result = resultDf.collectAsList()
+
+    assertEquals(resultDf.columns(0), "<id>")
+    assertEquals(resultDf.columns(1), "<labels>")
+    assertEquals(resultDf.columns(2), "name")
+    assertEquals(resultDf.columns(3), "instrument")
+    assertEquals(resultDf.columns(4), "id")
   }
 }

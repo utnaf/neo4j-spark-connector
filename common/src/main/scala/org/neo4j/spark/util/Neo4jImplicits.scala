@@ -106,7 +106,7 @@ object Neo4jImplicits {
 
     def getMissingFields(fields: Set[String]): Set[String] = {
       val structFieldsNames = structType.getFieldsName
-      fields.filterNot(structFieldsNames.contains(_))
+      fields.filterNot(s => structFieldsNames.contains(s.split('.')(0)))
     }
   }
 

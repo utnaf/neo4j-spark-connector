@@ -20,7 +20,7 @@ class Neo4jQueryWriteStrategy(private val saveMode: SaveMode) extends Neo4jQuery
   private def createPropsList(props: Map[String, String], prefix: String): String = {
     props
       .map(key => {
-        s"${key._2.quote()}: ${Neo4jQueryStrategy.VARIABLE_EVENT}.$prefix.${key._2.quote()}"
+        s"${key._2.quote()}: ${Neo4jQueryStrategy.VARIABLE_EVENT}.$prefix.${key._1.quote()}"
       }).mkString(", ")
   }
 
