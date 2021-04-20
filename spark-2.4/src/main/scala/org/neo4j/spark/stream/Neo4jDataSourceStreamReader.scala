@@ -2,8 +2,9 @@ package org.neo4j.spark.stream
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.sources.v2.DataSourceOptions
-import org.apache.spark.sql.sources.v2.reader.InputPartition
+import org.apache.spark.sql.sources.v2.reader.{InputPartition, SupportsPushDownFilters}
 import org.apache.spark.sql.sources.v2.reader.streaming.{MicroBatchReader, Offset}
 import org.apache.spark.sql.types.StructType
 import org.neo4j.spark.reader.Neo4jInputPartitionReader
@@ -16,7 +17,10 @@ import scala.collection.JavaConverters._
 
 class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, private val jobId: String)
   extends MicroBatchReader
+    with SupportsPushDownFilters
     with Logging {
+
+  private var filters: Array[Filter] = Array[Filter]()
 
   private val BATCH_SIZE = 100;
 
@@ -37,7 +41,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   private var lastCommittedOffset = new Neo4jOffset(-1)
 
-  private def countQuery: Long = callSchemaService { schemaService => schemaService.count() }
+  private def countQuery: Long = callSchemaService { schemaService => schemaService.count(filters) }
 
   override def readSchema(): StructType = structType
 
@@ -101,7 +105,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
     partitionReader = new Neo4jInputPartitionReader(
       neo4jOptions,
-      Array(),
+      filters,
       schema,
       jobId,
       partitionSkipLimit,
@@ -115,4 +119,15 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
     driverCache.close()
     stopped = true
   }
+
+
+  override def pushFilters(filtersArray: Array[Filter]): Array[Filter] = {
+    if (neo4jOptions.pushdownFiltersEnabled) {
+      filters = filtersArray
+    }
+
+    filtersArray
+  }
+
+  override def pushedFilters(): Array[Filter] = filters
 }
