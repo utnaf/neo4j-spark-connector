@@ -1,6 +1,5 @@
 package org.neo4j.spark.writer
 
-import org.apache.spark.TaskKilledException
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.catalyst.InternalRow
@@ -108,12 +107,10 @@ abstract class BaseDataWriter(jobId: String,
    */
   private def logAndThrowException(e: Exception): Unit = {
     if(e.isInstanceOf[ServiceUnavailableException] && e.getMessage == STOPPED_THREAD_EXCEPTION_MESSAGE) {
-      // df: leaving it here so we make sure if the cause is an instance of TaskKilledException
-      logInfo(s"+++ Cause: ${e.getCause.toString}")
-      logInfo(e.getMessage)
+      logWarning(e.getMessage)
     }
     else {
-      if ((e.isInstanceOf[ServiceUnavailableException] && e.getMessage == STOPPED_THREAD_EXCEPTION_MESSAGE) || e.isInstanceOf[ClientException]) {
+      if (e.isInstanceOf[ClientException]) {
         log.error(s"Cannot commit the transaction because: ${e.getMessage}")
       }
       else {
