@@ -30,7 +30,6 @@ class Neo4jDataSourceStreamWriter(private val jobId: String,
   override def abort(epochId: Long, messages: Array[WriterCommitMessage]): Unit = driverCache.close()
 
   override def createWriterFactory(): DataWriterFactory[InternalRow] = {
-      logInfo(s"+++ executing query ${queryId}")
       val schemaService = new SchemaService(neo4jOptions, driverCache)
       schemaService.createOptimizations()
       val scriptResult = schemaService.execute(neo4jOptions.script)
