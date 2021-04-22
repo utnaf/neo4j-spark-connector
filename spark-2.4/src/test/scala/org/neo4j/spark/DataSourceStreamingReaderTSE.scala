@@ -1,8 +1,6 @@
 package org.neo4j.spark
 
-import org.apache.spark.sql.streaming.StreamingQueryProgress
 import org.hamcrest.Matchers
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.neo4j.driver.summary.ResultSummary
 import org.neo4j.driver.{Transaction, TransactionWork}
@@ -19,14 +17,17 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run("CREATE (n:Movie {title: 'My movie 0'})").consume()
         })
 
+    Thread.sleep(1000)
+
     val stream = ss.readStream.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Movie")
       .load()
 
     val query = stream.writeStream.format("console").start()
-    query.awaitTermination(1000)
-    Thread.sleep(1000)
+    query.awaitTermination(20*1000)
+
+    Thread.sleep(3000)
 
     SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
@@ -34,17 +35,13 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run("CREATE (n:Movie {title: 'My movie 1'})").consume()
         })
 
-    var lastProgress: StreamingQueryProgress = null
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
-        lastProgress = query.lastProgress
-        lastProgress != null
+        query.lastProgress != null && query.lastProgress.batchId == 1 && query.lastProgress.numInputRows == 1
       }
-    }, Matchers.equalTo(true), 30, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 10, TimeUnit.SECONDS)
 
     query.stop()
-
-    assertEquals(1, lastProgress.numInputRows)
   }
 
   @Test
