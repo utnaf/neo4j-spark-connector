@@ -20,7 +20,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
       .start()
 
     query.awaitTermination(2000)
-    query.processAllAvailable()
+    Thread.sleep(500)
     query.stop()
 
     val neo4jRateDf = ss.read.format(classOf[DataSource].getName)
