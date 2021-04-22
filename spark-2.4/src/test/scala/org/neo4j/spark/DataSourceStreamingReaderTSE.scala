@@ -23,7 +23,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .load()
 
     val query = stream.writeStream.format("console").start()
-    query.awaitTermination(2000)
+    query.awaitTermination(1000)
 
     SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
@@ -54,7 +54,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .load()
 
     val query = stream.writeStream.format("console").start()
-    query.awaitTermination(2000)
+    query.awaitTermination(1000)
 
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
