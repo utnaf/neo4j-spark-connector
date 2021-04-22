@@ -80,6 +80,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   override def getEndOffset: Offset = {
     if (endOffset.offset == -1) {
+      return new Neo4jOffset(0)
       throw new IllegalStateException("endOffset is -1")
     }
     endOffset
