@@ -15,10 +15,13 @@ import java.util
 import java.util.Optional
 import scala.collection.JavaConverters._
 
-class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, private val jobId: String)
+class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, private val schema: StructType, private val jobId: String)
   extends MicroBatchReader
     with SupportsPushDownFilters
     with Logging {
+
+
+  println("+++ " + this.hashCode())
 
   private var filters: Array[Filter] = Array[Filter]()
 
@@ -34,20 +37,9 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   private val neo4jOptions: Neo4jOptions = new Neo4jOptions(options.asMap())
     .validate(options => Validations.read(options, jobId))
 
-  private val structType = callSchemaService { schemaService =>
-    schemaService
-      .struct()
-  }
-
   private var lastCommittedOffset = new Neo4jOffset(-1)
 
-  private def countQuery: Long = callSchemaService { schemaService => schemaService.count(filters) }
-
-  override def readSchema(): StructType = structType
-
-  val driverCache = new DriverCache(neo4jOptions.connection, jobId)
-
-  private def callSchemaService[T](function: SchemaService => T): T = {
+  protected def callSchemaService[T](function: SchemaService => T): T = {
     val localDriverCache = new DriverCache(neo4jOptions.connection, jobId)
     val schemaService = new SchemaService(neo4jOptions, localDriverCache)
     var hasError = false
@@ -65,6 +57,12 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
       }
     }
   }
+
+  private def countQuery: Long = callSchemaService { schemaService => schemaService.count(filters) }
+
+  override def readSchema(): StructType = schema
+
+  val driverCache = new DriverCache(neo4jOptions.connection, jobId)
 
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
     this.startOffset = start.orElse(lastCommittedOffset + 1).asInstanceOf[Neo4jOffset]
@@ -119,7 +117,6 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
     driverCache.close()
     stopped = true
   }
-
 
   override def pushFilters(filtersArray: Array[Filter]): Array[Filter] = {
     if (neo4jOptions.pushdownFiltersEnabled) {

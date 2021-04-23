@@ -11,25 +11,24 @@ import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.types.StructType
 import org.neo4j.spark.reader.Neo4jDataSourceReader
 import org.neo4j.spark.stream.Neo4jDataSourceStreamWriter
+import org.neo4j.spark.service.SchemaService
 import org.neo4j.spark.stream.Neo4jDataSourceStreamReader
-import org.neo4j.spark.util.{Neo4jOptions, Validations}
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
 import org.neo4j.spark.writer.Neo4jDataSourceWriter
 
-
-class DataSource extends DataSourceV2
-  with StreamWriteSupport
-  with ReadSupport
-  with DataSourceRegister
-  with WriteSupport {
+import java.util.concurrent.ConcurrentHashMap
 import java.util.{Optional, UUID}
 
 class DataSource extends DataSourceV2
+  with StreamWriteSupport
   with MicroBatchReadSupport
   with ReadSupport
   with DataSourceRegister
   with WriteSupport {
 
   Validations.version("2.4.*")
+
+  private val dataSourceStreamReaderCache: ConcurrentHashMap[String, Neo4jDataSourceStreamReader] = new ConcurrentHashMap()
 
   private val jobId: String = UUID.randomUUID().toString
 
@@ -47,8 +46,30 @@ class DataSource extends DataSourceV2
     Optional.of(new Neo4jDataSourceWriter(jobId, structType, saveMode, options))
   }
 
-  override def createMicroBatchReader(optional: Optional[StructType], s: String, dataSourceOptions: DataSourceOptions): MicroBatchReader = {
-    new Neo4jDataSourceStreamReader(dataSourceOptions, jobId)
+  protected def callSchemaService[T](function: SchemaService => T, neo4jOptions: Neo4jOptions): T = {
+    val localDriverCache = new DriverCache(neo4jOptions.connection, jobId)
+    val schemaService = new SchemaService(neo4jOptions, localDriverCache)
+    var hasError = false
+    try {
+      function(schemaService)
+    } catch {
+      case e: Throwable => {
+        hasError = true
+        throw e
+      }
+    } finally {
+      schemaService.close()
+      if (hasError) {
+        localDriverCache.close()
+      }
+    }
+  }
+
+  override def createMicroBatchReader(schema: Optional[StructType], s: String, dataSourceOptions: DataSourceOptions): MicroBatchReader = {
+    new Neo4jDataSourceStreamReader(dataSourceOptions,
+      schema.orElse(
+        callSchemaService({ schemaService => schemaService.struct() }, new Neo4jOptions(dataSourceOptions.asMap()))
+      ), jobId)
   }
 
   @volatile

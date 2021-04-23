@@ -17,17 +17,12 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
           override def execute(tx: Transaction): ResultSummary = tx.run("CREATE (n:Movie {title: 'My movie 0'})").consume()
         })
 
-    Thread.sleep(1000)
-
     val stream = ss.readStream.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Movie")
       .load()
 
     val query = stream.writeStream.format("console").start()
-    query.awaitTermination(20*1000)
-
-    Thread.sleep(3000)
 
     SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
@@ -37,7 +32,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
-        query.lastProgress != null && query.lastProgress.batchId == 1 && query.lastProgress.numInputRows == 1
+        query.lastProgress != null && query.lastProgress.numInputRows > 0
       }
     }, Matchers.equalTo(true), 10, TimeUnit.SECONDS)
 
