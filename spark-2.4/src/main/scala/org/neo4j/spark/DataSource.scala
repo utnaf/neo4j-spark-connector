@@ -46,7 +46,20 @@ class DataSource extends DataSourceV2
            |""".stripMargin)
     }
 
+  @volatile
+  private var streamWriter: Neo4jDataSourceStreamWriter = null
+
+  def isNewInstance(queryId: String,
+                    schema: StructType,
+                    options: DataSourceOptions): Boolean = (streamWriter == null ||
+    streamWriter.queryId != queryId ||
+    streamWriter.schema != schema ||
+    streamWriter.options != options)
+
   override def createStreamWriter(queryId: String, schema: StructType, mode: OutputMode, options: DataSourceOptions): StreamWriter = {
-    new Neo4jDataSourceStreamWriter(jobId, queryId, schema, options)
+    if (isNewInstance(queryId, schema, options)) {
+      streamWriter = new Neo4jDataSourceStreamWriter(queryId, schema, options)
+    }
+    streamWriter
   }
 }

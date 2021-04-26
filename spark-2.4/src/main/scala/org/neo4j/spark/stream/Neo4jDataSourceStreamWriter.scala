@@ -1,39 +1,62 @@
 package org.neo4j.spark.stream
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.sources.v2.DataSourceOptions
 import org.apache.spark.sql.sources.v2.writer.streaming.StreamWriter
 import org.apache.spark.sql.sources.v2.writer.{DataWriterFactory, WriterCommitMessage}
+import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.AccessMode
 import org.neo4j.spark.service.SchemaService
-import org.neo4j.spark.util.{DriverCache, Neo4jOptions}
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil}
 import org.neo4j.spark.writer.Neo4jDataWriterFactory
 
-class Neo4jDataSourceStreamWriter(private val jobId: String,
-                                  private val queryId: String,
-                                  private val schema: StructType,
-                                  private val options: DataSourceOptions)
+class Neo4jDataSourceStreamWriter(val queryId: String,
+                                  val schema: StructType,
+                                  val options: DataSourceOptions)
   extends StreamWriter
     with Logging {
 
-  private val optionsMap = options.asMap()
-  optionsMap.put(Neo4jOptions.ACCESS_MODE, AccessMode.WRITE.toString)
-  val neo4jOptions = new Neo4jOptions(optionsMap)
+  private val self = this
 
-  var driverCache = new DriverCache(neo4jOptions.connection, jobId)
+  private val listener = new StreamingQueryListener {
+    override def onQueryStarted(event: StreamingQueryListener.QueryStartedEvent): Unit = {}
 
-  override def commit(epochId: Long, messages: Array[WriterCommitMessage]): Unit = driverCache.close()
+    override def onQueryProgress(event: StreamingQueryListener.QueryProgressEvent): Unit = {}
 
-  override def abort(epochId: Long, messages: Array[WriterCommitMessage]): Unit = driverCache.close()
-
-  override def createWriterFactory(): DataWriterFactory[InternalRow] = {
-      val schemaService = new SchemaService(neo4jOptions, driverCache)
-      schemaService.createOptimizations()
-      val scriptResult = schemaService.execute(neo4jOptions.script)
-      schemaService.close()
-      new Neo4jDataWriterFactory(jobId, schema, SaveMode.Append, neo4jOptions, scriptResult)
+    override def onQueryTerminated(event: StreamingQueryListener.QueryTerminatedEvent): Unit = {
+      if (event.runId.toString == queryId) {
+        self.close()
+        SparkSession.active.streams.removeListener(this)
+      }
+    }
   }
+  SparkSession.active.streams.addListener(listener)
+
+  private val optionsMap = {
+    val map = options.asMap()
+    map.put(Neo4jOptions.ACCESS_MODE, AccessMode.WRITE.toString)
+    map
+  }
+  private val neo4jOptions = new Neo4jOptions(optionsMap)
+
+  private val driverCache = new DriverCache(neo4jOptions.connection, queryId)
+
+  private lazy val scriptResult = {
+    val schemaService = new SchemaService(neo4jOptions, driverCache)
+    schemaService.createOptimizations()
+    val scriptResult = schemaService.execute(neo4jOptions.script)
+    schemaService.close()
+    scriptResult
+  }
+
+  override def commit(epochId: Long, messages: Array[WriterCommitMessage]): Unit = Unit
+
+  override def abort(epochId: Long, messages: Array[WriterCommitMessage]): Unit = Unit
+
+  override def createWriterFactory(): DataWriterFactory[InternalRow] = new Neo4jDataWriterFactory(queryId, schema, SaveMode.Append, neo4jOptions, scriptResult)
+
+  def close(): Unit = Neo4jUtil.closeSafety(driverCache)
 }
