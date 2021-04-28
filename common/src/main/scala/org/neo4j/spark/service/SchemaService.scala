@@ -337,7 +337,7 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
     }
   } catch {
     case e: ClientException => {
-      log.warn("Switching to query count resolution because of the following exception:", e)
+      log.warn("Switching to query count resolution")
       countForNodeWithQuery(filters)
     }
     case e: Throwable => logExceptionForCount(e)
