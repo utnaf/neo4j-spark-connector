@@ -21,7 +21,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
-  def testSinkStream(): Unit = {
+  def testSinkStreamWithLabels(): Unit = {
     implicit val ctx = ss.sqlContext
     import ss.implicits._
     val memStream = MemoryStream[Int]
@@ -58,6 +58,105 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
           Array.empty[Int]
         }
         data.toList == (1 to (recordSize * partition)).toList
+      }
+    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+  }
+
+  @Test
+  def testSinkStreamWithRelationship(): Unit = {
+    implicit val ctx = ss.sqlContext
+    import ss.implicits._
+    val memStream = MemoryStream[Int]
+    val recordSize = 2000
+    val partition = 5
+    val checkpointLocation = "/tmp/checkpoint/" + UUID.randomUUID().toString
+
+    query = memStream.toDF().writeStream
+      .format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("relationship", "PAIRS")
+      .option("relationship.save.strategy", "keys")
+      .option("relationship.source.labels", ":From")
+      .option("relationship.source.node.keys", "value")
+      .option("relationship.source.save.mode", "ErrorIfExists")
+      .option("relationship.target.labels", ":To")
+      .option("relationship.target.node.keys", "value")
+      .option("relationship.target.save.mode", "ErrorIfExists")
+      .option("checkpointLocation", checkpointLocation)
+      .start()
+
+    (1 to partition).foreach(index => {
+      // we send the total of records in 5 times
+      val start = ((index - 1) * recordSize) + 1
+      val end = index * recordSize
+      memStream.addData((start to end).toArray)
+    })
+
+    Assert.assertEventually(new ThrowingSupplier[Boolean, Exception] {
+      override def get(): Boolean = try {
+        val dataFrame = ss.read.format(classOf[DataSource].getName)
+          .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+          .option("relationship", "PAIRS")
+          .option("relationship.source.labels", ":From")
+          .option("relationship.target.labels", ":To")
+          .load()
+
+        val collect = dataFrame.collect()
+        val data = if (dataFrame.columns.contains("source.value") && dataFrame.columns.contains("target.value")) {
+          collect
+            .map(row => (row.getAs[Long]("source.value").toInt, row.getAs[Long]("target.value").toInt))
+            .sorted
+        } else {
+          Array.empty[(Int, Int)]
+        }
+        data.toList == (1 to (recordSize * partition)).map(v => (v, v)).toList
+      } catch {
+        case _: Throwable => false
+      }
+    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+  }
+
+  @Test
+  def testSinkStreamWithQuery(): Unit = {
+    implicit val ctx = ss.sqlContext
+    import ss.implicits._
+    val memStream = MemoryStream[Int]
+    val recordSize = 2000
+    val partition = 5
+    val checkpointLocation = "/tmp/checkpoint/" + UUID.randomUUID().toString
+
+    query = memStream.toDF().writeStream
+      .format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("query", "MERGE (m:MyNewNode {the_value: event.value})")
+      .option("checkpointLocation", checkpointLocation)
+      .start()
+
+    (1 to partition).foreach(index => {
+      // we send the total of records in 5 times
+      val start = ((index - 1) * recordSize) + 1
+      val end = index * recordSize
+      memStream.addData((start to end).toArray)
+    })
+
+    Assert.assertEventually(new ThrowingSupplier[Boolean, Exception] {
+      override def get(): Boolean = try {
+        val dataFrame = ss.read.format(classOf[DataSource].getName)
+          .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+          .option("labels", "MyNewNode")
+          .load()
+
+        val collect = dataFrame.collect()
+        val data = if (dataFrame.columns.contains("the_value")) {
+          collect
+            .map(row => row.getAs[Long]("the_value").toInt)
+            .sorted
+        } else {
+          Array.empty[Int]
+        }
+        data.toList == (1 to (recordSize * partition)).map(v => v).toList
+      } catch {
+        case _: Throwable => false
       }
     }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
   }
