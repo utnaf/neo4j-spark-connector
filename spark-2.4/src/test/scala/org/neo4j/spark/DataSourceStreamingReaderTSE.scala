@@ -197,7 +197,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
           Array.empty
         } else {
           collect.map(row => Map(
-            "age" -> row.getAs[java.util.List[String]]("age"),
+            "age" -> row.getAs[java.util.List[String]]("age")
           ))
         }
         actual.toList == expected.toList
