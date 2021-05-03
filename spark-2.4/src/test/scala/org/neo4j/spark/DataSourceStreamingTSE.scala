@@ -21,7 +21,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
-  def testSinkStreamWithLabels(): Unit = {
+  def testSinkStreamWithLabelsWithErrorIfExists(): Unit = {
     implicit val ctx = ss.sqlContext
     import ss.implicits._
     val memStream = MemoryStream[Int]
@@ -31,10 +31,12 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
     query = memStream.toDF().writeStream
       .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("streaming.save.mode", "ErrorIfExists")
       .option("labels", "Timestamp")
       .option("checkpointLocation", checkpointLocation)
       .option("node.keys", "value")
       .start()
+
     (1 to partition).foreach(index => {
       // we send the total of records in 5 times
       val start = ((index - 1) * recordSize) + 1
@@ -63,7 +65,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
-  def testSinkStreamWithRelationship(): Unit = {
+  def testSinkStreamWithRelationshipWithErrorIfExists(): Unit = {
     implicit val ctx = ss.sqlContext
     import ss.implicits._
     val memStream = MemoryStream[Int]
@@ -74,6 +76,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
     query = memStream.toDF().writeStream
       .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("streaming.save.mode", "ErrorIfExists")
       .option("relationship", "PAIRS")
       .option("relationship.save.strategy", "keys")
       .option("relationship.source.labels", ":From")
@@ -159,5 +162,104 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
         case _: Throwable => false
       }
     }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+  }
+
+  @Test
+  def testSinkStreamWithLabelsWithOverwrite(): Unit = {
+    implicit val ctx = ss.sqlContext
+    import ss.implicits._
+    val memStream = MemoryStream[Int]
+    val partition = 5
+    val checkpointLocation = "/tmp/checkpoint/" + UUID.randomUUID().toString
+
+    SparkConnectorScalaSuiteIT.session().run("CREATE CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
+
+    query = memStream.toDF().writeStream
+      .format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("streaming.save.mode", "Overwrite")
+      .option("labels", "Timestamp")
+      .option("checkpointLocation", checkpointLocation)
+      .option("node.keys", "value")
+      .start()
+    (1 to partition).foreach(index => {
+      memStream.addData((1 to 500).toArray)
+    })
+
+    Assert.assertEventually(new ThrowingSupplier[Boolean, Exception] {
+      override def get(): Boolean = {
+        val dataFrame = ss.read.format(classOf[DataSource].getName)
+          .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+          .option("labels", "Timestamp")
+          .load()
+
+        val collect = dataFrame.collect()
+        val data = if (dataFrame.columns.contains("value")) {
+          collect
+            .map(row => row.getAs[Long]("value").toInt)
+            .sorted
+        } else {
+          Array.empty[Int]
+        }
+        data.toList == (1 to 500).toList
+      }
+    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+
+    SparkConnectorScalaSuiteIT.session().run("DROP CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
+  }
+
+  @Test
+  def testSinkStreamWithRelationshipWithOverwrite(): Unit = {
+    SparkConnectorScalaSuiteIT.session().run("CREATE CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
+
+    implicit val ctx = ss.sqlContext
+    import ss.implicits._
+    val memStream = MemoryStream[Int]
+    val partition = 5
+    val checkpointLocation = "/tmp/checkpoint/" + UUID.randomUUID().toString
+
+    query = memStream.toDF().writeStream
+      .format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("streaming.save.mode", "Append")
+      .option("relationship", "PAIRS")
+      .option("relationship.save.strategy", "keys")
+      .option("relationship.source.labels", ":From")
+      .option("relationship.source.node.keys", "value")
+      .option("relationship.source.save.mode", "Overwrite")
+      .option("relationship.target.labels", ":To")
+      .option("relationship.target.node.keys", "value")
+      .option("relationship.target.save.mode", "Overwrite")
+      .option("checkpointLocation", checkpointLocation)
+      .start()
+
+    (1 to partition).foreach(index => {
+      memStream.addData((1 to 500).toArray)
+    })
+
+    Assert.assertEventually(new ThrowingSupplier[Boolean, Exception] {
+      override def get(): Boolean = try {
+        val dataFrame = ss.read.format(classOf[DataSource].getName)
+          .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+          .option("relationship", "PAIRS")
+          .option("relationship.source.labels", ":From")
+          .option("relationship.target.labels", ":To")
+          .load()
+
+        val collect = dataFrame.collect()
+        val data = if (dataFrame.columns.contains("source.value") && dataFrame.columns.contains("target.value")) {
+          collect
+            .map(row => (row.getAs[Long]("source.value").toInt, row.getAs[Long]("target.value").toInt))
+            .sorted
+        } else {
+          Array.empty[(Int, Int)]
+        }
+        data.toList == (1 to 500).flatMap(v => (1 to 5).map(_ => (v, v)))
+      } catch {
+        case _: Throwable => false
+      }
+    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+
+    SparkConnectorScalaSuiteIT.session().run("DROP CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
   }
 }

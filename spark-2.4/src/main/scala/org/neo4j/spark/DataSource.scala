@@ -57,8 +57,17 @@ class DataSource extends DataSourceV2
     streamWriter.options != options)
 
   override def createStreamWriter(queryId: String, schema: StructType, mode: OutputMode, options: DataSourceOptions): StreamWriter = {
+    val streamingSaveMode = options.get(Neo4jOptions.STREAMING_SAVE_MODE)
+      .orElse(Neo4jOptions.DEFAULT_STREAMING_SAVE_MODE.toString)
+    if (!Neo4jOptions.SUPPORTED_STREAMING_SAVE_MODES.contains(SaveMode.valueOf(streamingSaveMode))) {
+      throw new IllegalArgumentException(
+        s"""Unsupported StreamingSaveMode.
+           |You provided $streamingSaveMode, supported are:
+           |${Neo4jOptions.SUPPORTED_STREAMING_SAVE_MODES.mkString(",")}
+           |""".stripMargin)
+    }
     if (isNewInstance(queryId, schema, options)) {
-      streamWriter = new Neo4jDataSourceStreamWriter(queryId, schema, options)
+      streamWriter = new Neo4jDataSourceStreamWriter(queryId, schema, options, SaveMode.valueOf(streamingSaveMode))
     }
     streamWriter
   }

@@ -46,6 +46,7 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
     parameters.get(parameter).trim()
   }
 
+  val streamingSaveMode = getParameter(STREAMING_SAVE_MODE, DEFAULT_STREAMING_SAVE_MODE.toString)
   val pushdownFiltersEnabled: Boolean = getParameter(PUSHDOWN_FILTERS_ENABLED, DEFAULT_PUSHDOWN_FILTERS_ENABLED.toString).toBoolean
   val pushdownColumnsEnabled: Boolean = getParameter(PUSHDOWN_COLUMNS_ENABLED, DEFAULT_PUSHDOWN_COLUMNS_ENABLED.toString).toBoolean
 
@@ -331,6 +332,7 @@ object Neo4jOptions {
 
   val BATCH_SIZE = "batch.size"
   val SUPPORTED_SAVE_MODES = Seq(SaveMode.Overwrite, SaveMode.ErrorIfExists, SaveMode.Append)
+  val SUPPORTED_STREAMING_SAVE_MODES = Seq(SaveMode.ErrorIfExists, SaveMode.Overwrite, SaveMode.Append)
 
   // Relationship Metadata
   val RELATIONSHIP_SOURCE_LABELS = s"${QueryType.RELATIONSHIP.toString.toLowerCase}.source.${QueryType.LABELS.toString.toLowerCase}"
@@ -344,6 +346,9 @@ object Neo4jOptions {
   val RELATIONSHIP_PROPERTIES = s"${QueryType.RELATIONSHIP.toString.toLowerCase}.properties"
   val RELATIONSHIP_NODES_MAP = s"${QueryType.RELATIONSHIP.toString.toLowerCase}.nodes.map"
   val RELATIONSHIP_SAVE_STRATEGY = s"${QueryType.RELATIONSHIP.toString.toLowerCase}.save.strategy"
+
+  // Streaming Save Mode
+  val STREAMING_SAVE_MODE = s"streaming.$SAVE_MODE"
 
   // Query metadata
   val QUERY_COUNT = "query.count"
@@ -375,6 +380,7 @@ object Neo4jOptions {
   val DEFAULT_PUSHDOWN_COLUMNS_ENABLED = true
   val DEFAULT_PARTITIONS = 1
   val DEFAULT_OPTIMIZATION_TYPE = OptimizationType.NONE
+  val DEFAULT_STREAMING_SAVE_MODE = SaveMode.Overwrite
 }
 
 class CaseInsensitiveEnumeration extends Enumeration {
