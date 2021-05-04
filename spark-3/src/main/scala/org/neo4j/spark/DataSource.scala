@@ -36,6 +36,8 @@ class DataSource extends TableProvider
     }
   }
 
+  override def supportsExternalMetadata(): Boolean = true
+
   override def inferSchema(caseInsensitiveStringMap: CaseInsensitiveStringMap): StructType = {
     if (schema == null) {
       schema = callSchemaService(getNeo4jOptions(caseInsensitiveStringMap),  { schemaService => schemaService.struct() })
@@ -54,7 +56,11 @@ class DataSource extends TableProvider
 
   override def getTable(structType: StructType, transforms: Array[Transform], map: java.util.Map[String, String]): Table = {
     val caseInsensitiveStringMapNeo4jOptions = new CaseInsensitiveStringMap(map);
-    new Neo4jTable(inferSchema(caseInsensitiveStringMapNeo4jOptions), map, jobId)
+    new Neo4jTable(if(structType != null) {
+      structType
+    } else {
+      inferSchema(caseInsensitiveStringMapNeo4jOptions)
+    }, map, jobId)
   }
 
   override def shortName(): String = "neo4j"
