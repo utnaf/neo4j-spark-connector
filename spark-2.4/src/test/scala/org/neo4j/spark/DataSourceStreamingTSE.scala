@@ -210,7 +210,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
-  def testSinkStreamWithRelationshipWithOverwrite(): Unit = {
+  def testSinkStreamWithRelationshipWithAppena(): Unit = {
     implicit val ctx = ss.sqlContext
     import ss.implicits._
     val memStream = MemoryStream[Int]
@@ -221,8 +221,8 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
       .writeTransaction(
         new TransactionWork[Unit] {
           override def execute(tx: Transaction): Unit = {
-            tx.run("CREATE CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
-            tx.commit()
+            tx.run("CREATE CONSTRAINT ON (p:From) ASSERT p.value IS UNIQUE")
+            tx.run("CREATE CONSTRAINT ON (p:To) ASSERT p.value IS UNIQUE")
           }
         })
 
@@ -269,6 +269,13 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
       }
     }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
 
-    SparkConnectorScalaSuiteIT.session().run("DROP CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
+    SparkConnectorScalaSuiteIT.driver.session()
+      .writeTransaction(
+        new TransactionWork[Unit] {
+          override def execute(tx: Transaction): Unit = {
+            tx.run("DROP CONSTRAINT ON (p:From) ASSERT p.value IS UNIQUE")
+            tx.run("DROP CONSTRAINT ON (p:To) ASSERT p.value IS UNIQUE")
+          }
+        })
   }
 }
