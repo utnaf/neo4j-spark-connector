@@ -4,6 +4,7 @@ import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.hamcrest.Matchers
 import org.junit.{After, Test}
+import org.neo4j.driver.{SessionConfig, Transaction, TransactionWork}
 import org.neo4j.spark.Assert.ThrowingSupplier
 
 import java.util.UUID
@@ -210,13 +211,20 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testSinkStreamWithRelationshipWithOverwrite(): Unit = {
-    SparkConnectorScalaSuiteIT.session().run("CREATE CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
-
     implicit val ctx = ss.sqlContext
     import ss.implicits._
     val memStream = MemoryStream[Int]
     val partition = 5
     val checkpointLocation = "/tmp/checkpoint/" + UUID.randomUUID().toString
+
+    SparkConnectorScalaSuiteIT.driver.session()
+      .writeTransaction(
+        new TransactionWork[Unit] {
+          override def execute(tx: Transaction): Unit = {
+            tx.run("CREATE CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
+            tx.commit()
+          }
+        })
 
     query = memStream.toDF().writeStream
       .format(classOf[DataSource].getName)
@@ -248,6 +256,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
 
         val collect = dataFrame.collect()
         val data = if (dataFrame.columns.contains("source.value") && dataFrame.columns.contains("target.value")) {
+          dataFrame.show()
           collect
             .map(row => (row.getAs[Long]("source.value").toInt, row.getAs[Long]("target.value").toInt))
             .sorted
@@ -258,7 +267,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
       } catch {
         case _: Throwable => false
       }
-    }, Matchers.equalTo(true), 60L, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
 
     SparkConnectorScalaSuiteIT.session().run("DROP CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
   }
