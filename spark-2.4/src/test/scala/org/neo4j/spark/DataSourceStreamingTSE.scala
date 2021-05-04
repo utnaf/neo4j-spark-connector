@@ -258,7 +258,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
       } catch {
         case _: Throwable => false
       }
-    }, Matchers.equalTo(true), 40L, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 60L, TimeUnit.SECONDS)
 
     SparkConnectorScalaSuiteIT.session().run("DROP CONSTRAINT ON (t:Timestamp) ASSERT (t.value) IS UNIQUE")
   }
