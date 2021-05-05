@@ -274,7 +274,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 val spark = SparkSession.builder().getOrCreate()
 
 spark.read.format("org.neo4j.spark.DataSource")
-  .option("query", "MATCH (n:Person) WITH n WITH n LIMIT 2 RETURN id(n) as id, n.name as name")
+  .option("query", "MATCH (n:Person) WITH n LIMIT 2 RETURN id(n) as id, n.name as name")
   .option("schema.strategy", "string")
   .load()
   .show()
@@ -289,7 +289,37 @@ spark.read.format("org.neo4j.spark.DataSource")
 |===
 
 As you can see, the struct returned by the query is made of strings
-that you can then be casted Spark's getters (ie: `getLong`).
+that you can then be cast Spark's getters (ie: `getLong`).
+
+[[user-defined-schema]]
+===== User Defined Schema
+
+You can skip the automatic schema extraction process by providing a user defined schema using the `.schema()` method.
+
+.Using user defined schema
+[source,scala]
+----
+import org.apache.spark.sql.types.{DataTypes, StructType, StructField}
+import org.apache.spark.sql.{SaveMode, SparkSession}
+
+val spark = SparkSession.builder().getOrCreate()
+
+spark.read.format("org.neo4j.spark.DataSource")
+  .schema(StructType(StructField("id", DataTypes.StringType), StructField("name", DataTypes.StringType)))
+  .option("query", "MATCH (n:Person) WITH n LIMIT 2 RETURN id(n) as id, n.name as name")
+  .load()
+  .show()
+----
+
+.Result of the above code
+|===
+|id |name
+
+|"0"|"John Doe"
+|"1"|"Jane Doe"
+|===
+
+In this way we have total control over the schema.
 
 [[read-known-problem]]
 ===== Known Problem
