@@ -147,7 +147,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList
       }
-    }, Matchers.equalTo(true), 30, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 45, TimeUnit.SECONDS)
   }
 
 
