@@ -265,7 +265,7 @@ spark.read.format("org.neo4j.spark.DataSource")
 |1|Jane Doe
 |===
 
-[[bookmark-string-strategy]]
+[[string-strategy]]
 .Using string strategy
 [source,scala]
 ----
@@ -291,7 +291,7 @@ spark.read.format("org.neo4j.spark.DataSource")
 As you can see, the struct returned by the query is made of strings
 that you can then be casted Spark's getters (ie: `getLong`).
 
-[[bookmark-read-known-problem]]
+[[read-known-problem]]
 ===== Known Problem
 
 Being Neo4j a schema less database, this scenario may occur:
@@ -362,7 +362,7 @@ partitions and each one will manage 20 records (we use `SKIP / LIMIT` queries).
 
 Partitioning the dataset makes sense only if you're dealing with a big dataset (>= 10M of records).
 
-[[bookmark-parallelize]]
+[[parallelize]]
 ==== How we parallelize the query execution
 
 Considering that we have three options
