@@ -32,7 +32,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
     query = memStream.toDF().writeStream
       .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
-      .option("streaming.save.mode", "ErrorIfExists")
+      .option("save.mode", "ErrorIfExists")
       .option("labels", "Timestamp")
       .option("checkpointLocation", checkpointLocation)
       .option("node.keys", "value")
@@ -77,7 +77,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
     query = memStream.toDF().writeStream
       .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
-      .option("streaming.save.mode", "ErrorIfExists")
+      .option("save.mode", "ErrorIfExists")
       .option("relationship", "PAIRS")
       .option("relationship.save.strategy", "keys")
       .option("relationship.source.labels", ":From")
@@ -178,7 +178,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
     query = memStream.toDF().writeStream
       .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
-      .option("streaming.save.mode", "Overwrite")
+      .option("save.mode", "Overwrite")
       .option("labels", "Timestamp")
       .option("checkpointLocation", checkpointLocation)
       .option("node.keys", "value")
@@ -229,7 +229,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
     query = memStream.toDF().writeStream
       .format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
-      .option("streaming.save.mode", "Append")
+      .option("save.mode", "Append")
       .option("relationship", "PAIRS")
       .option("relationship.save.strategy", "keys")
       .option("relationship.source.labels", ":From")
