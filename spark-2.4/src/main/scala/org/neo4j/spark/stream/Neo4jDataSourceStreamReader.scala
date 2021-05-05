@@ -7,9 +7,9 @@ import org.apache.spark.sql.sources.v2.DataSourceOptions
 import org.apache.spark.sql.sources.v2.reader.{InputPartition, SupportsPushDownFilters}
 import org.apache.spark.sql.sources.v2.reader.streaming.{MicroBatchReader, Offset}
 import org.apache.spark.sql.types.StructType
-import org.neo4j.spark.reader.Neo4jInputPartitionReader
+import org.neo4j.spark.reader.Neo4jInputPartition
 import org.neo4j.spark.service.{PartitionSkipLimit, SchemaService}
-import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil, Validations}
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
 
 import java.util
 import java.util.Optional
@@ -73,7 +73,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
       startOffset.offset.toInt,
       endOffset.offset.toInt)
     val schema = readSchema()
-    val reader = new Neo4jInputPartitionReader(
+    val reader = new Neo4jInputPartition(
       neo4jOptions,
       filters,
       schema,
