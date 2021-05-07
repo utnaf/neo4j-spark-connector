@@ -6,7 +6,8 @@ import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.sources.v2.DataSourceOptions
 import org.apache.spark.sql.sources.v2.reader.{DataSourceReader, InputPartition, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
-import org.neo4j.spark.service.SchemaService
+import org.neo4j.spark.service.{Neo4jQueryReadStrategy, SchemaService}
+import org.neo4j.spark.util.Neo4jImplicits.StructTypeImplicit
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
 
 import scala.collection.JavaConverters._
@@ -64,7 +65,7 @@ class Neo4jDataSourceReader(private val options: DataSourceOptions, private val 
     // we generate a partition for each element
     partitionSkipLimitList
       .map(partitionSkipLimit => new Neo4jInputPartition(neo4jOptions, filters, schema, jobId,
-        partitionSkipLimit, scriptResult, requiredColumns))
+        partitionSkipLimit, scriptResult, requiredColumns, new Neo4jQueryReadStrategy(filters, partitionSkipLimit, requiredColumns.getFieldsName)))
   }
 
   override def pushFilters(filtersArray: Array[Filter]): Array[Filter] = {

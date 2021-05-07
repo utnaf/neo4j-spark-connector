@@ -150,7 +150,6 @@ class DataSourceReaderTSE extends SparkConnectorScalaBaseTSE {
 
     val result = df.select("aTime").collectAsList().get(0).getTimestamp(0)
 
-
     assertEquals(Timestamp.from(LocalDateTime.parse(localDateTime).toInstant(ZoneOffset.UTC)), result)
   }
 

@@ -28,8 +28,6 @@ class DataSource extends DataSourceV2
 
   Validations.version("2.4.*")
 
-  private val dataSourceStreamReaderCache: ConcurrentHashMap[String, Neo4jDataSourceStreamReader] = new ConcurrentHashMap()
-
   private val jobId: String = UUID.randomUUID().toString
 
   def createReader(options: DataSourceOptions) = new Neo4jDataSourceReader(options, jobId)
