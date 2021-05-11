@@ -1,10 +1,12 @@
 package org.neo4j.spark.writer
 
 import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.connector.write.streaming.StreamingWrite
 import org.apache.spark.sql.connector.write.{BatchWrite, SupportsOverwrite, SupportsTruncate, WriteBuilder}
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.AccessMode
+import org.neo4j.spark.stream.Neo4jStreamingWriter
 import org.neo4j.spark.util.{Neo4jOptions, NodeSaveMode, ValidationUtil, Validations}
 
 class Neo4jWriterBuilder(jobId: String,
@@ -14,9 +16,9 @@ class Neo4jWriterBuilder(jobId: String,
   with SupportsOverwrite
   with SupportsTruncate {
 
-  def validOptions(): Neo4jOptions = {
+  def validOptions(overrideSaveMode: Option[SaveMode] = Option.empty): Neo4jOptions = {
     neo4jOptions.validate(neo4jOptions =>
-      Validations.writer(neo4jOptions, jobId, saveMode, (o: Neo4jOptions) => {
+      Validations.writer(neo4jOptions, jobId, overrideSaveMode.getOrElse(saveMode), (o: Neo4jOptions) => {
         ValidationUtil.isFalse(
           o.relationshipMetadata.sourceSaveMode.equals(NodeSaveMode.ErrorIfExists)
             && o.relationshipMetadata.targetSaveMode.equals(NodeSaveMode.ErrorIfExists),
@@ -29,6 +31,24 @@ class Neo4jWriterBuilder(jobId: String,
     saveMode,
     validOptions()
   )
+
+  override def buildForStreaming(): StreamingWrite = {
+    val streamingSaveMode = neo4jOptions.saveMode
+    if (!Neo4jOptions.SUPPORTED_SAVE_MODES.contains(SaveMode.valueOf(streamingSaveMode))) {
+      throw new IllegalArgumentException(
+        s"""Unsupported StreamingSaveMode.
+           |You provided $streamingSaveMode, supported are:
+           |${Neo4jOptions.SUPPORTED_SAVE_MODES.mkString(",")}
+           |""".stripMargin)
+    }
+    val saveMode = SaveMode.valueOf(streamingSaveMode)
+    new Neo4jStreamingWriter(
+      jobId,
+      structType,
+      saveMode,
+      validOptions(Option(saveMode))
+    )
+  }
 
   override def overwrite(filters: Array[Filter]): WriteBuilder = {
     new Neo4jWriterBuilder(jobId, structType, SaveMode.Overwrite, neo4jOptions)

@@ -29,7 +29,8 @@ class Neo4jTable(schema: StructType, options: java.util.Map[String, String], job
     TableCapability.BATCH_WRITE,
     TableCapability.ACCEPT_ANY_SCHEMA,
     TableCapability.OVERWRITE_BY_FILTER,
-    TableCapability.OVERWRITE_DYNAMIC
+    TableCapability.OVERWRITE_DYNAMIC,
+    TableCapability.STREAMING_WRITE
   ).asJava
 
   override def newScanBuilder(options: CaseInsensitiveStringMap): SimpleScanBuilder = {
