@@ -199,6 +199,8 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
           .option("labels", "Timestamp")
           .load()
 
+        dataFrame.show()
+
         val collect = dataFrame.collect()
         val data = if (dataFrame.columns.contains("value")) {
           collect

@@ -9,8 +9,8 @@ import org.neo4j.driver.AccessMode
 import org.neo4j.spark.stream.Neo4jStreamingWriter
 import org.neo4j.spark.util.{Neo4jOptions, NodeSaveMode, ValidationUtil, Validations}
 
-class Neo4jWriterBuilder(jobId: String,
-                         structType: StructType,
+class Neo4jWriterBuilder(queryId: String,
+                         schema: StructType,
                          saveMode: SaveMode,
                          neo4jOptions: Neo4jOptions) extends WriteBuilder
   with SupportsOverwrite
@@ -18,7 +18,7 @@ class Neo4jWriterBuilder(jobId: String,
 
   def validOptions(actualSaveMode: SaveMode): Neo4jOptions = {
     neo4jOptions.validate(neo4jOptions =>
-      Validations.writer(neo4jOptions, jobId, actualSaveMode, (o: Neo4jOptions) => {
+      Validations.writer(neo4jOptions, queryId, actualSaveMode, (o: Neo4jOptions) => {
         ValidationUtil.isFalse(
           o.relationshipMetadata.sourceSaveMode.equals(NodeSaveMode.ErrorIfExists)
             && o.relationshipMetadata.targetSaveMode.equals(NodeSaveMode.ErrorIfExists),
@@ -26,31 +26,46 @@ class Neo4jWriterBuilder(jobId: String,
       }))
   }
 
-  override def buildForBatch(): BatchWrite = new Neo4jBatchWriter(jobId,
-    structType,
+  override def buildForBatch(): BatchWrite = new Neo4jBatchWriter(queryId,
+    schema,
     saveMode,
     validOptions(saveMode)
   )
 
+  @volatile
+  private var streamWriter: Neo4jStreamingWriter = _
+
+  def isNewInstance(queryId: String,
+                    schema: StructType,
+                    options: Neo4jOptions): Boolean =
+    streamWriter == null ||
+      streamWriter.queryId != queryId ||
+      streamWriter.schema != schema ||
+      streamWriter.neo4jOptions != options
+
   override def buildForStreaming(): StreamingWrite = {
-    val streamingSaveMode = neo4jOptions.saveMode
-    if (!Neo4jOptions.SUPPORTED_SAVE_MODES.contains(SaveMode.valueOf(streamingSaveMode))) {
-      throw new IllegalArgumentException(
-        s"""Unsupported StreamingSaveMode.
-           |You provided $streamingSaveMode, supported are:
-           |${Neo4jOptions.SUPPORTED_SAVE_MODES.mkString(",")}
-           |""".stripMargin)
+    if (isNewInstance(queryId, schema, neo4jOptions)) {
+      val streamingSaveMode = neo4jOptions.saveMode
+      if (!Neo4jOptions.SUPPORTED_SAVE_MODES.contains(SaveMode.valueOf(streamingSaveMode))) {
+        throw new IllegalArgumentException(
+          s"""Unsupported StreamingSaveMode.
+             |You provided $streamingSaveMode, supported are:
+             |${Neo4jOptions.SUPPORTED_SAVE_MODES.mkString(",")}
+             |""".stripMargin)
+      }
+      val saveMode = SaveMode.valueOf(streamingSaveMode)
+      streamWriter = new Neo4jStreamingWriter(
+        queryId,
+        schema,
+        saveMode,
+        validOptions(saveMode)
+      )
     }
-    val saveMode = SaveMode.valueOf(streamingSaveMode)
-    new Neo4jStreamingWriter(
-      jobId,
-      structType,
-      saveMode,
-      validOptions(saveMode)
-    )
+
+    streamWriter
   }
 
   override def overwrite(filters: Array[Filter]): WriteBuilder = {
-    new Neo4jWriterBuilder(jobId, structType, SaveMode.Overwrite, neo4jOptions)
+    new Neo4jWriterBuilder(queryId, schema, SaveMode.Overwrite, neo4jOptions)
   }
 }

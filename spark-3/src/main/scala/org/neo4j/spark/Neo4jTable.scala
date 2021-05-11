@@ -42,6 +42,6 @@ class Neo4jTable(schema: StructType, options: java.util.Map[String, String], job
     val mapOptions = new java.util.HashMap[String, String](options)
     mapOptions.put(Neo4jOptions.ACCESS_MODE, AccessMode.WRITE.toString)
     val writeNeo4jOptions = new Neo4jOptions(mapOptions)
-    new Neo4jWriterBuilder(jobId, info.schema(), SaveMode.Append, writeNeo4jOptions)
+    new Neo4jWriterBuilder(info.queryId(), info.schema(), SaveMode.Append, writeNeo4jOptions)
   }
 }
