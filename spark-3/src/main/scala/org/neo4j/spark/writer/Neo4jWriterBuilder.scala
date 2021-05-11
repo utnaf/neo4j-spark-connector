@@ -16,9 +16,9 @@ class Neo4jWriterBuilder(jobId: String,
   with SupportsOverwrite
   with SupportsTruncate {
 
-  def validOptions(overrideSaveMode: Option[SaveMode] = Option.empty): Neo4jOptions = {
+  def validOptions(actualSaveMode: SaveMode): Neo4jOptions = {
     neo4jOptions.validate(neo4jOptions =>
-      Validations.writer(neo4jOptions, jobId, overrideSaveMode.getOrElse(saveMode), (o: Neo4jOptions) => {
+      Validations.writer(neo4jOptions, jobId, actualSaveMode, (o: Neo4jOptions) => {
         ValidationUtil.isFalse(
           o.relationshipMetadata.sourceSaveMode.equals(NodeSaveMode.ErrorIfExists)
             && o.relationshipMetadata.targetSaveMode.equals(NodeSaveMode.ErrorIfExists),
@@ -29,7 +29,7 @@ class Neo4jWriterBuilder(jobId: String,
   override def buildForBatch(): BatchWrite = new Neo4jBatchWriter(jobId,
     structType,
     saveMode,
-    validOptions()
+    validOptions(saveMode)
   )
 
   override def buildForStreaming(): StreamingWrite = {
@@ -46,7 +46,7 @@ class Neo4jWriterBuilder(jobId: String,
       jobId,
       structType,
       saveMode,
-      validOptions(Option(saveMode))
+      validOptions(saveMode)
     )
   }
 
