@@ -210,7 +210,7 @@ class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
-  def testSinkStreamWithRelationshipWithAppena(): Unit = {
+  def testSinkStreamWithRelationshipWithAppend(): Unit = {
     implicit val ctx = ss.sqlContext
     import ss.implicits._
     val memStream = MemoryStream[Int]

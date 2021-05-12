@@ -22,7 +22,7 @@ class Neo4jStreamingWriter(val queryId: String,
     override def onQueryProgress(event: StreamingQueryListener.QueryProgressEvent): Unit = {}
 
     override def onQueryTerminated(event: StreamingQueryListener.QueryTerminatedEvent): Unit = {
-      if (event.runId.toString == queryId) {
+      if (event.id.toString == queryId) {
         self.close()
         SparkSession.active.streams.removeListener(this)
       }
@@ -50,9 +50,9 @@ class Neo4jStreamingWriter(val queryId: String,
     )
   }
 
-  override def commit(epochId: Long, messages: Array[WriterCommitMessage]): Unit = this.close()
+  override def commit(epochId: Long, messages: Array[WriterCommitMessage]): Unit = { }
 
-  override def abort(epochId: Long, messages: Array[WriterCommitMessage]): Unit = this.close()
+  override def abort(epochId: Long, messages: Array[WriterCommitMessage]): Unit = { }
 
   def close(): Unit = Neo4jUtil.closeSafety(driverCache)
 }
