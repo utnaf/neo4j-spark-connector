@@ -100,7 +100,7 @@ class Neo4jQueryWriteStrategy(private val saveMode: SaveMode) extends Neo4jQuery
 class Neo4jQueryStreamReadStrategy(filters: Array[Filter] = Array.empty[Filter],
                              partitionSkipLimit: PartitionSkipLimit = PartitionSkipLimit.EMPTY,
                              requiredColumns: Seq[String] = Seq.empty) extends Neo4jQueryReadStrategy(filters, partitionSkipLimit, requiredColumns) {
-  override def createStatementForQuery(options: Neo4jOptions): String = {
+  override def createStatementForNodes(options: Neo4jOptions): String = {
     val node = createNode(Neo4jUtil.NODE_ALIAS, options.nodeMetadata.labels)
     val matchQuery = filterNode(node)
     val returning = returnRequiredColumns(node, matchQuery)
@@ -125,7 +125,7 @@ class Neo4jQueryStreamReadStrategy(filters: Array[Filter] = Array.empty[Filter],
 
   }
 
-  override def createStatementForNodes(options: Neo4jOptions): String = super.createStatementForNodes(options)
+  override def createStatementForQuery(options: Neo4jOptions): String = super.createStatementForQuery(options)
 }
 
 class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],

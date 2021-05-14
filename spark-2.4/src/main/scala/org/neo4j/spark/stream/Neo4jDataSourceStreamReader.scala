@@ -31,6 +31,8 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   private var endOffset: Neo4jOffset = new Neo4jOffset(0)
 
+  private var lastStartOffset: Neo4jOffset = new Neo4jOffset(0)
+
   protected def callSchemaService[T](function: SchemaService => T): T = {
     val schemaService = new SchemaService(neo4jOptions, driverCache)
     var hasError = false
@@ -54,8 +56,8 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)
 
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
-    this.startOffset = start.orElse(startOffset).asInstanceOf[Neo4jOffset]
-    this.endOffset = end.orElse(new Neo4jOffset(Math.min(countQuery(), neo4jOptions.transactionMetadata.batchSize))).asInstanceOf[Neo4jOffset]
+    this.startOffset = start.orElse(startOffset).asInstanceOf[Neo4jOffset] + lastStartOffset.offset
+    this.endOffset = end.orElse(new Neo4jOffset(Math.min(countQuery() - this.startOffset.offset, neo4jOptions.transactionMetadata.batchSize))).asInstanceOf[Neo4jOffset]
   }
 
   override def getStartOffset: Offset = startOffset
@@ -71,7 +73,9 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   override def planInputPartitions: util.ArrayList[InputPartition[InternalRow]] = {
     val partitionSkipLimit = new PartitionSkipLimit(0,
       startOffset.offset.toInt,
-      endOffset.offset.toInt)
+      endOffset.offset.toInt
+    )
+    lastStartOffset = startOffset
     val schema = readSchema()
     val reader = new Neo4jInputPartition(
       neo4jOptions,
