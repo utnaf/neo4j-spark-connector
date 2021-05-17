@@ -4,6 +4,7 @@ import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.sources.v2.writer.DataWriter
 import org.apache.spark.sql.types.StructType
+import org.neo4j.spark.service.Neo4jQueryReadStrategy
 import org.neo4j.spark.util.Neo4jOptions
 
 class Neo4jDataWriter(jobId: String,
