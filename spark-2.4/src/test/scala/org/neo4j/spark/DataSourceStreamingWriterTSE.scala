@@ -258,7 +258,6 @@ class DataSourceStreamingWriterTSE extends SparkConnectorScalaBaseTSE {
 
         val collect = dataFrame.collect()
         val data = if (dataFrame.columns.contains("source.value") && dataFrame.columns.contains("target.value")) {
-          dataFrame.show()
           collect
             .map(row => (row.getAs[Long]("source.value").toInt, row.getAs[Long]("target.value").toInt))
             .sorted

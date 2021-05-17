@@ -43,7 +43,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .queryName("testReadStream")
       .start()
 
-    val total = 10
+    val total = 9
     Executors.newSingleThreadExecutor().submit(new Runnable {
       override def run(): Unit = {
         (1 to total).foreach(index => {
@@ -66,7 +66,8 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
-        val df = ss.sql("select * from testReadStream")
+        val df = ss.sql("select * from testReadStream order by title")
+        df.show()
         val collect = df.collect()
         val actual = if (!df.columns.contains("title")) {
           Array.empty
@@ -78,7 +79,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList
       }
-    }, Matchers.equalTo(true), 60L, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
   }
 
   @Test
@@ -122,7 +123,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
                   .consume()
               }
             })
-          Thread.sleep(100)
+          Thread.sleep(200)
         })
       }
     })
@@ -139,6 +140,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       override def get(): Boolean = {
         val df = ss.sql("select * from testReadStream")
         val collect = df.collect()
+        df.show()
         val actual: Array[Map[String, Any]] = if (!df.columns.contains("source.age") || !df.columns.contains("target.hash")) {
           Array.empty
         } else {
@@ -152,7 +154,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList
       }
-    }, Matchers.equalTo(true), 60L, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
   }
 
   @Test
@@ -168,6 +170,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
     val stream = ss.readStream.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query", "MATCH (p:Person) RETURN p.age AS age ORDER BY age")
+      .option("query.count", "MATCH (p:Person) RETURN count(p) as count")
       .load()
 
     query = stream.writeStream
@@ -175,7 +178,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .queryName("testReadStream")
       .start()
 
-    val total = 10
+    val total = 9
     Executors.newSingleThreadExecutor().submit(new Runnable {
       override def run(): Unit = {
         (1 to total).foreach(index => {
