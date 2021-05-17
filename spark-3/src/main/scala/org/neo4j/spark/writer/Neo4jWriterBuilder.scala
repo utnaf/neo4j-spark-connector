@@ -46,13 +46,8 @@ class Neo4jWriterBuilder(queryId: String,
   override def buildForStreaming(): StreamingWrite = {
     if (isNewInstance(queryId, schema, neo4jOptions)) {
       val streamingSaveMode = neo4jOptions.saveMode
-      if (!Neo4jOptions.SUPPORTED_SAVE_MODES.contains(SaveMode.valueOf(streamingSaveMode))) {
-        throw new IllegalArgumentException(
-          s"""Unsupported StreamingSaveMode.
-             |You provided $streamingSaveMode, supported are:
-             |${Neo4jOptions.SUPPORTED_SAVE_MODES.mkString(",")}
-             |""".stripMargin)
-      }
+      Validations.supportedSaveMode(streamingSaveMode)
+
       val saveMode = SaveMode.valueOf(streamingSaveMode)
       streamWriter = new Neo4jStreamingWriter(
         queryId,
