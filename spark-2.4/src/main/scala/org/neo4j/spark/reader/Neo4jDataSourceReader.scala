@@ -65,7 +65,7 @@ class Neo4jDataSourceReader(private val options: DataSourceOptions, private val 
     // we generate a partition for each element
     partitionSkipLimitList
       .map(partitionSkipLimit => new Neo4jInputPartition(neo4jOptions, filters, schema, jobId,
-        partitionSkipLimit, scriptResult, requiredColumns, new Neo4jQueryReadStrategy(filters, partitionSkipLimit, requiredColumns.getFieldsName)))
+        partitionSkipLimit, scriptResult, requiredColumns, new Neo4jQueryReadStrategy(filters, partitionSkipLimit, requiredColumns.fields.map(_.name).toSeq)))
   }
 
   override def pushFilters(filtersArray: Array[Filter]): Array[Filter] = {

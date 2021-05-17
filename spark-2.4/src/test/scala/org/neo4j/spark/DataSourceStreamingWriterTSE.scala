@@ -4,13 +4,15 @@ import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.hamcrest.Matchers
 import org.junit.{After, Test}
-import org.neo4j.driver.{SessionConfig, Transaction, TransactionWork}
+import org.neo4j.driver.summary.ResultSummary
+import org.neo4j.driver.{Transaction, TransactionWork}
 import org.neo4j.spark.Assert.ThrowingSupplier
 
 import java.util.UUID
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{Executors, TimeUnit}
+import scala.collection.mutable
 
-class DataSourceStreamingTSE extends SparkConnectorScalaBaseTSE {
+class DataSourceStreamingWriterTSE extends SparkConnectorScalaBaseTSE {
 
   private var query: StreamingQuery = null
 

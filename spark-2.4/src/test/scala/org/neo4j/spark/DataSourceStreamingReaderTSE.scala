@@ -1,11 +1,14 @@
 package org.neo4j.spark
 
+import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.hamcrest.Matchers
 import org.junit.{After, Test}
 import org.neo4j.driver.summary.ResultSummary
-import org.neo4j.driver.{Transaction, TransactionWork}
+import org.neo4j.driver.{SessionConfig, Transaction, TransactionWork}
+import org.neo4j.spark.Assert.ThrowingSupplier
 
+import java.util.UUID
 import java.util.concurrent.{Executors, TimeUnit}
 import scala.collection.mutable
 
@@ -25,7 +28,9 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
     SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
         new TransactionWork[ResultSummary] {
-          override def execute(tx: Transaction): ResultSummary = tx.run("CREATE (n:Movie {title: 'My movie 0'})").consume()
+          override def execute(tx: Transaction): ResultSummary = {
+            tx.run("CREATE (n:Movie {title: 'My movie 0'})").consume()
+          }
         })
 
     val stream = ss.readStream.format(classOf[DataSource].getName)
@@ -44,11 +49,11 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         (1 to total).foreach(index => {
           SparkConnectorScalaSuiteIT.session()
             .writeTransaction(new TransactionWork[ResultSummary] {
-                override def execute(tx: Transaction): ResultSummary = {
-                  tx.run(s"CREATE (n:Movie {title: 'My movie $index'})")
-                    .consume()
-                }
-              })
+              override def execute(tx: Transaction): ResultSummary = {
+                tx.run(s"CREATE (n:Movie {title: 'My movie $index'})")
+                  .consume()
+              }
+            })
           Thread.sleep(100)
         })
       }
@@ -73,7 +78,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList
       }
-    }, Matchers.equalTo(true), 30, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 60L, TimeUnit.SECONDS)
   }
 
   @Test
@@ -110,10 +115,10 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
               override def execute(tx: Transaction): ResultSummary = {
                 tx.run(
                   s"""
-                    |CREATE (person:Person {age: $index})
-                    |CREATE (post:Post {hash: "hash$index"})
-                    |CREATE (person)-[:LIKES]->(post)
-                    |""".stripMargin)
+                     |CREATE (person:Person {age: $index})
+                     |CREATE (post:Post {hash: "hash$index"})
+                     |CREATE (person)-[:LIKES]->(post)
+                     |""".stripMargin)
                   .consume()
               }
             })
@@ -134,7 +139,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       override def get(): Boolean = {
         val df = ss.sql("select * from testReadStream")
         val collect = df.collect()
-        df.show()
         val actual: Array[Map[String, Any]] = if (!df.columns.contains("source.age") || !df.columns.contains("target.hash")) {
           Array.empty
         } else {
@@ -148,7 +152,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList
       }
-    }, Matchers.equalTo(true), 5, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 60L, TimeUnit.SECONDS)
   }
 
   @Test
@@ -193,7 +197,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       override def get(): Boolean = {
         val df = ss.sql("select * from testReadStream order by age")
         val collect = df.collect()
-        df.show()
         val actual: Array[Map[String, Any]] = if (!df.columns.contains("age")) {
           Array.empty
         } else {
@@ -203,7 +206,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList
       }
-    }, Matchers.equalTo(true), 5, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
   }
 }
-
