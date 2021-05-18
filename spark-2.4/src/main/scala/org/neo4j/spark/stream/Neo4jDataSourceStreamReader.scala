@@ -71,6 +71,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   }
 
   override def planInputPartitions: util.ArrayList[InputPartition[InternalRow]] = {
+    println(s"+++ $startOffset $endOffset")
     val partitionSkipLimit = new PartitionSkipLimit(0,
       startOffset.offset.toInt,
       endOffset.offset.toInt

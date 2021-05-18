@@ -123,7 +123,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
                   .consume()
               }
             })
-          Thread.sleep(200)
+          Thread.sleep(100)
         })
       }
     })
@@ -138,9 +138,8 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
-        val df = ss.sql("select * from testReadStream")
+        val df = ss.sql("select * from testReadStream order by INT(`source.age`)")
         val collect = df.collect()
-        df.show()
         val actual: Array[Map[String, Any]] = if (!df.columns.contains("source.age") || !df.columns.contains("target.hash")) {
           Array.empty
         } else {
@@ -159,11 +158,11 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadStreamWithQuery(): Unit = {
+    Thread.sleep(1000)
     SparkConnectorScalaSuiteIT.session()
-      .writeTransaction(new TransactionWork[ResultSummary] {
-        override def execute(tx: Transaction): ResultSummary = {
+      .writeTransaction(new TransactionWork[Unit] {
+        override def execute(tx: Transaction): Unit = {
           tx.run(s"CREATE (person:Person) SET person.age = 0")
-            .consume()
         }
       })
 
