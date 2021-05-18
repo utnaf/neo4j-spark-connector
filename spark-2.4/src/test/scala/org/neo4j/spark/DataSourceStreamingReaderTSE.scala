@@ -1,14 +1,10 @@
 package org.neo4j.spark
 
-import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.hamcrest.Matchers
 import org.junit.{After, Test}
 import org.neo4j.driver.summary.ResultSummary
-import org.neo4j.driver.{SessionConfig, Transaction, TransactionWork}
-import org.neo4j.spark.Assert.ThrowingSupplier
-
-import java.util.UUID
+import org.neo4j.driver.{Transaction, TransactionWork}
 import java.util.concurrent.{Executors, TimeUnit}
 import scala.collection.mutable
 
@@ -67,7 +63,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
         val df = ss.sql("select * from testReadStream order by title")
-        df.show()
         val collect = df.collect()
         val actual = if (!df.columns.contains("title")) {
           Array.empty
@@ -158,18 +153,16 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadStreamWithQuery(): Unit = {
-    Thread.sleep(1000)
     SparkConnectorScalaSuiteIT.session()
-      .writeTransaction(new TransactionWork[Unit] {
-        override def execute(tx: Transaction): Unit = {
-          tx.run(s"CREATE (person:Person) SET person.age = 0")
+      .writeTransaction(new TransactionWork[ResultSummary] {
+        override def execute(tx: Transaction): ResultSummary = {
+          tx.run(s"CREATE (person:Person) SET person.age = 0").consume()
         }
       })
 
     val stream = ss.readStream.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
-      .option("query", "MATCH (p:Person) RETURN p.age AS age ORDER BY age")
-      .option("query.count", "MATCH (p:Person) RETURN count(p) as count")
+      .option("query", "MATCH (p:Person) WITH p ORDER BY p.age WITH p RETURN p.age AS age")
       .load()
 
     query = stream.writeStream
@@ -184,6 +177,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
           SparkConnectorScalaSuiteIT.session()
             .writeTransaction(new TransactionWork[ResultSummary] {
               override def execute(tx: Transaction): ResultSummary = {
+                println(s"+++ $index")
                 tx.run(s"CREATE (person:Person) SET person.age = $index")
                   .consume()
               }
