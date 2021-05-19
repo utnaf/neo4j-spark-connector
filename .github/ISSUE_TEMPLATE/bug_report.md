@@ -20,7 +20,7 @@ please ask on [the Neo4j Discussion Forum](https://community.neo4j.com/c/integra
 ### Simple Dataset (where it's possible)
 
 ```
-// Insert the schema of your dataframe or the output of the `df.show()`call
+// Insert the output of the `df.show()` call
 
 ```
 
@@ -43,3 +43,10 @@ Currently used versions
 - Scala:
 - Neo4j:
 - Neo4j Connector:
+
+## Additional information
+
+* The code of the Spark job
+* the structure of the Dataframe
+* did you define the constraints/indexes?
+* if you're you using any Spark Cloud provider please specify it (ie: Databricks)
