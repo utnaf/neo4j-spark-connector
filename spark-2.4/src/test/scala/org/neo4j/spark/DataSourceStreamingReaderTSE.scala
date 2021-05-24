@@ -23,7 +23,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
   @Test
   def testReadStreamWithLabels(): Unit = {
-    Thread.sleep(1000)
     SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
         new TransactionWork[ResultSummary] {
@@ -54,7 +53,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
                   .consume()
               }
             })
-          Thread.sleep(500)
+          Thread.sleep(100)
         })
       }
     })
@@ -79,12 +78,10 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         actual.toList == expected.toList.slice(expected.size - actual.length, expected.size)
       }
     }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
-    Thread.sleep(1000)
   }
 
   @Test
   def testReadStreamWithRelationship(): Unit = {
-    Thread.sleep(1000)
     SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
         new TransactionWork[ResultSummary] {
@@ -156,12 +153,10 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         actual.toList == expected.toList.slice(expected.size - actual.length, expected.size)
       }
     }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
-    Thread.sleep(1000)
   }
 
   @Test
   def testReadStreamWithQuery(): Unit = {
-    Thread.sleep(1000)
     val stream = ss.readStream.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("query",
@@ -210,5 +205,4 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       }
     }, Matchers.equalTo(true), 10L, TimeUnit.SECONDS)
   }
-  Thread.sleep(1000)
 }
