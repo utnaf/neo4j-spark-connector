@@ -17,7 +17,6 @@ class SimplePartitionReaderFactory(private val neo4jOptions: Neo4jOptions,
     val partitionSkipLimit = partition.asInstanceOf[Neo4jPartition].partitionSkipLimit
     new Neo4jPartitionReader(
       neo4jOptions,
-      filters,
       schema,
       jobId,
       partitionSkipLimit,

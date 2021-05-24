@@ -8,12 +8,11 @@ import org.neo4j.spark.service.{Neo4jQueryReadStrategy, PartitionSkipLimit}
 import org.neo4j.spark.util.Neo4jOptions
 
 class Neo4jPartitionReader(private val options: Neo4jOptions,
-                                private val filters: Array[Filter],
                                 private val schema: StructType,
                                 private val jobId: String,
                                 private val partitionSkipLimit: PartitionSkipLimit,
                                 private val scriptResult: java.util.List[java.util.Map[String, AnyRef]],
                                 private val requiredColumns: StructType,
                                 private val readStrategy: Neo4jQueryReadStrategy)
-  extends BasePartitionReader(options, filters, schema, jobId, partitionSkipLimit, scriptResult, requiredColumns, readStrategy)
+  extends BasePartitionReader(options, schema, jobId, partitionSkipLimit, scriptResult, requiredColumns, readStrategy, new java.util.HashMap[String, Object]())
   with PartitionReader[InternalRow]
