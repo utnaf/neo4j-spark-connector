@@ -46,11 +46,12 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
     parameters.get(parameter).trim()
   }
 
-  val saveMode = getParameter(SAVE_MODE, DEFAULT_SAVE_MODE.toString)
+  val streamingTimestampProperty: String = getParameter(STREAMING_TIMESTAMP_PROPERTY)
+  val saveMode: String = getParameter(SAVE_MODE, DEFAULT_SAVE_MODE.toString)
   val pushdownFiltersEnabled: Boolean = getParameter(PUSHDOWN_FILTERS_ENABLED, DEFAULT_PUSHDOWN_FILTERS_ENABLED.toString).toBoolean
   val pushdownColumnsEnabled: Boolean = getParameter(PUSHDOWN_COLUMNS_ENABLED, DEFAULT_PUSHDOWN_COLUMNS_ENABLED.toString).toBoolean
 
-  val schemaMetadata = Neo4jSchemaMetadata(getParameter(SCHEMA_FLATTEN_LIMIT, DEFAULT_SCHEMA_FLATTEN_LIMIT.toString).toInt,
+  val schemaMetadata: Neo4jSchemaMetadata = Neo4jSchemaMetadata(getParameter(SCHEMA_FLATTEN_LIMIT, DEFAULT_SCHEMA_FLATTEN_LIMIT.toString).toInt,
     SchemaStrategy.withCaseInsensitiveName(getParameter(SCHEMA_STRATEGY, DEFAULT_SCHEMA_STRATEGY.toString).toUpperCase),
     OptimizationType.withCaseInsensitiveName(getParameter(SCHEMA_OPTIMIZATION_TYPE, DEFAULT_OPTIMIZATION_TYPE.toString).toUpperCase))
 
@@ -97,7 +98,7 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
     AccessMode.valueOf(getParameter(ACCESS_MODE, DEFAULT_ACCESS_MODE.toString).toUpperCase())
   )
 
-  val nodeMetadata = initNeo4jNodeMetadata()
+  val nodeMetadata: Neo4jNodeMetadata = initNeo4jNodeMetadata()
 
   def mapPropsString(str: String): Map[String, String] = str.split(",")
     .map(_.trim)
@@ -126,9 +127,9 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
     Neo4jNodeMetadata(labels, nodeKeys, nodeProps)
   }
 
-  val transactionMetadata = initNeo4jTransactionMetadata()
+  val transactionMetadata: Neo4jTransactionMetadata = initNeo4jTransactionMetadata()
 
-  val script = getParameter(SCRIPT)
+  val script: Array[String] = getParameter(SCRIPT)
     .split(";")
     .map(_.trim)
     .filterNot(_.isEmpty)
@@ -145,7 +146,7 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
     Neo4jTransactionMetadata(retries, failOnTransactionCodes, batchSize, retryTimeout)
   }
 
-  val relationshipMetadata = initNeo4jRelationshipMetadata()
+  val relationshipMetadata: Neo4jRelationshipMetadata = initNeo4jRelationshipMetadata()
 
   def initNeo4jRelationshipMetadata(): Neo4jRelationshipMetadata = {
     val source = initNeo4jNodeMetadata(getParameter(RELATIONSHIP_SOURCE_NODE_KEYS, ""),
@@ -171,11 +172,11 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
     query.value.trim, getParameter(QUERY_COUNT, "").trim
   )
 
-  val queryMetadata = initNeo4jQueryMetadata()
+  val queryMetadata: Neo4jQueryMetadata = initNeo4jQueryMetadata()
 
-  val partitions = getParameter(PARTITIONS, DEFAULT_PARTITIONS.toString).toInt
+  val partitions: Int = getParameter(PARTITIONS, DEFAULT_PARTITIONS.toString).toInt
 
-  val apocConfig = Neo4jApocConfig(parameters.asScala
+  val apocConfig: Neo4jApocConfig = Neo4jApocConfig(parameters.asScala
     .filterKeys(_.startsWith("apoc."))
     .mapValues(Neo4jUtil.mapper.readValue(_, classOf[java.util.Map[String, AnyRef]]).asScala)
     .toMap)
@@ -354,6 +355,9 @@ object Neo4jOptions {
   val TRANSACTION_RETRIES = "transaction.retries"
   val TRANSACTION_RETRY_TIMEOUT = "transaction.retry.timeout"
   val TRANSACTION_CODES_FAIL = "transaction.codes.fail"
+
+  // Streaming
+  val STREAMING_TIMESTAMP_PROPERTY = "streaming.timestamp.property"
 
   val SCRIPT = "script"
 

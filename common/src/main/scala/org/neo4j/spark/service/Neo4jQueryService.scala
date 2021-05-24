@@ -104,7 +104,7 @@ class Neo4jQueryStreamReadStrategy(filters: Array[Filter] = Array.empty[Filter],
     val node = createNode(Neo4jUtil.NODE_ALIAS, options.nodeMetadata.labels)
     val matchQuery = filterNode(node)
     val returning = returnRequiredColumns(node, matchQuery)
-    renderer.render(buildStatement(returning.orderBy(Functions.id(node))))
+    renderer.render(buildStatement(returning.orderBy(Cypher.property(Neo4jUtil.NODE_ALIAS, options.streamingTimestampProperty))))
   }
 
   override def createStatementForRelationships(options: Neo4jOptions): String = {

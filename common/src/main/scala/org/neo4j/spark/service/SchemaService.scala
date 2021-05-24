@@ -196,7 +196,11 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
       return new StructType()
     }
 
-    val params = Collections.singletonMap[String, AnyRef](Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT, Collections.emptyList())
+    val params = Map[String, AnyRef](
+      Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT -> Collections.emptyList(),
+      Neo4jQueryStrategy.VARIABLE_EVENT -> Collections.emptyMap()
+    ).asJava
+
     val structFields = retrieveSchema(query, params, { record => record.asMap.asScala.toMap })
 
     val columns = getReturnedColumns(query)
