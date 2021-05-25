@@ -31,8 +31,6 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   private var endOffset: Neo4jOffset = _
 
-  private var queryStartOffset: Neo4jOffset = new Neo4jOffset(LocalDateTime.now())
-
   protected def callSchemaService[T](function: SchemaService => T): T = {
     val schemaService = new SchemaService(neo4jOptions, driverCache)
     var hasError = false
@@ -56,8 +54,8 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)
 
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
-    this.startOffset = start.orElse(startOffset).asInstanceOf[Neo4jOffset]
-    this.endOffset = queryStartOffset
+    this.startOffset = this.endOffset
+    this.endOffset = start.orElse(startOffset).asInstanceOf[Neo4jOffset]
   }
 
   override def getStartOffset: Offset = startOffset
@@ -72,19 +70,19 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
     val schema = readSchema()
     val partitionSkipLimit = PartitionSkipLimit.EMPTY
 
-    queryStartOffset = new Neo4jOffset(LocalDateTime.now())
+    this.endOffset = new Neo4jOffset(LocalDateTime.now())
 
     val filtersWithTimestamp = filters :+ GreaterThanOrEqual(
       neo4jOptions.streamingTimestampProperty,
-      Timestamp.valueOf(endOffset.offset)
+      Timestamp.valueOf(startOffset.offset)
     ) :+ LessThanOrEqual(
       neo4jOptions.streamingTimestampProperty,
-      Timestamp.valueOf(queryStartOffset.offset)
+      Timestamp.valueOf(endOffset.offset)
     )
 
     val eventsParams: java.util.Map[String, Object] = new java.util.HashMap[String, Object]()
-    eventsParams.put("fromTimestamp", endOffset.offset)
-    eventsParams.put("toTimestamp", queryStartOffset.offset)
+    eventsParams.put("fromTimestamp", startOffset.offset)
+    eventsParams.put("toTimestamp", endOffset.offset)
 
     val reader = new Neo4jInputPartition(
       neo4jOptions,
