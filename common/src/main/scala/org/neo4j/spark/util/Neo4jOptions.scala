@@ -47,6 +47,7 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
   }
 
   val streamingTimestampProperty: String = getParameter(STREAMING_TIMESTAMP_PROPERTY)
+  val streamingGetAll: Boolean = getParameter(STREAMING_GET_ALL, DEFAULT_STREAMING_GET_ALL.toString).toBoolean
   val saveMode: String = getParameter(SAVE_MODE, DEFAULT_SAVE_MODE.toString)
   val pushdownFiltersEnabled: Boolean = getParameter(PUSHDOWN_FILTERS_ENABLED, DEFAULT_PUSHDOWN_FILTERS_ENABLED.toString).toBoolean
   val pushdownColumnsEnabled: Boolean = getParameter(PUSHDOWN_COLUMNS_ENABLED, DEFAULT_PUSHDOWN_COLUMNS_ENABLED.toString).toBoolean
@@ -358,6 +359,7 @@ object Neo4jOptions {
 
   // Streaming
   val STREAMING_TIMESTAMP_PROPERTY = "streaming.timestamp.property"
+  val STREAMING_GET_ALL = "streaming.get.all"
 
   val SCRIPT = "script"
 
@@ -382,6 +384,7 @@ object Neo4jOptions {
   val DEFAULT_PARTITIONS = 1
   val DEFAULT_OPTIMIZATION_TYPE = OptimizationType.NONE
   val DEFAULT_SAVE_MODE = SaveMode.Overwrite
+  val DEFAULT_STREAMING_GET_ALL = false
 }
 
 class CaseInsensitiveEnumeration extends Enumeration {

@@ -27,9 +27,11 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   private var filters: Array[Filter] = Array[Filter]()
 
-  private var startOffset: Neo4jOffset = new Neo4jOffset(LocalDateTime.MIN)
+  private var startOffset: Neo4jOffset = _
 
   private var endOffset: Neo4jOffset = _
+
+  private var gotAll = !neo4jOptions.streamingGetAll
 
   protected def callSchemaService[T](function: SchemaService => T): T = {
     val schemaService = new SchemaService(neo4jOptions, driverCache)
@@ -54,8 +56,13 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)
 
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
-    this.startOffset = this.endOffset
-    this.endOffset = start.orElse(startOffset).asInstanceOf[Neo4jOffset]
+    this.startOffset = if (!gotAll) {
+      new Neo4jOffset(LocalDateTime.MIN)
+    }
+    else {
+      this.endOffset
+    }
+    this.endOffset = new Neo4jOffset(LocalDateTime.now())
   }
 
   override def getStartOffset: Offset = startOffset
@@ -72,13 +79,20 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
     this.endOffset = new Neo4jOffset(LocalDateTime.now())
 
-    val filtersWithTimestamp = filters :+ GreaterThanOrEqual(
-      neo4jOptions.streamingTimestampProperty,
-      Timestamp.valueOf(startOffset.offset)
-    ) :+ LessThanOrEqual(
-      neo4jOptions.streamingTimestampProperty,
-      Timestamp.valueOf(endOffset.offset)
-    )
+    var filtersWithTimestamp = filters;
+
+    if (!gotAll) {
+      gotAll = true
+    }
+    else {
+      filtersWithTimestamp = filters :+ GreaterThanOrEqual(
+        neo4jOptions.streamingTimestampProperty,
+        Timestamp.valueOf(startOffset.offset)
+      ) :+ LessThanOrEqual(
+        neo4jOptions.streamingTimestampProperty,
+        Timestamp.valueOf(endOffset.offset)
+      )
+    }
 
     val eventsParams: java.util.Map[String, Object] = new java.util.HashMap[String, Object]()
     eventsParams.put("fromTimestamp", startOffset.offset)
