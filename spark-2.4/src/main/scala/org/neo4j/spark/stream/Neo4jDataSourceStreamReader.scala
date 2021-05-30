@@ -29,6 +29,8 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   private var startOffset: Neo4jOffset = _
 
+  private val streamingStartOffset: Neo4jOffset = new Neo4jOffset(LocalDateTime.now())
+
   private var endOffset: Neo4jOffset = _
 
   private var gotAll = !neo4jOptions.streamingGetAll
@@ -62,6 +64,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
     else {
       this.endOffset
     }
+    this.startOffset = end.orElse(streamingStartOffset).asInstanceOf[Neo4jOffset]
     this.endOffset = new Neo4jOffset(LocalDateTime.now())
   }
 
@@ -79,18 +82,17 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
     this.endOffset = new Neo4jOffset(LocalDateTime.now())
 
-    var filtersWithTimestamp = filters;
+    var filtersWithTimestamp = filters
 
     if (!gotAll) {
       gotAll = true
+      // this is going to be the next start offset
+      this.endOffset = this.streamingStartOffset
     }
     else {
       filtersWithTimestamp = filters :+ GreaterThanOrEqual(
         neo4jOptions.streamingTimestampProperty,
         Timestamp.valueOf(startOffset.offset)
-      ) :+ LessThanOrEqual(
-        neo4jOptions.streamingTimestampProperty,
-        Timestamp.valueOf(endOffset.offset)
       )
     }
 

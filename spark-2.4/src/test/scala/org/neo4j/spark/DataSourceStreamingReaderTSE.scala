@@ -27,7 +27,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .writeTransaction(
         new TransactionWork[ResultSummary] {
           override def execute(tx: Transaction): ResultSummary = {
-            tx.run(s"CREATE (n:Test1_Movie {title: 'My movie 0', timestamp: datetime()})").consume()
+            tx.run(s"CREATE (n:Test1_Movie {title: 'My movie 0', timestamp: localdatetime()})").consume()
           }
         })
 
@@ -274,16 +274,16 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         new TransactionWork[ResultSummary] {
           override def execute(tx: Transaction): ResultSummary = tx.run(
             """
-              |CREATE (person:Test5_Person {age: 0, timestamp: localdatetime()})
+              |CREATE (person:Test5_Person {age: 0})
               |CREATE (post:Test5_Post {hash: "hash0"})
-              |CREATE (person)-[:LIKES]->(post)
+              |CREATE (person)-[:LIKES {timestamp: localdatetime()}]->(post)
               |""".stripMargin).consume()
         })
 
     val stream = ss.readStream.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "LIKES")
-      .option("streaming.timestamp.property", "source.timestamp")
+      .option("streaming.timestamp.property", "rel.timestamp")
       .option("streaming.get.all", "true")
       .option("relationship.source.labels", "Test5_Person")
       .option("relationship.target.labels", "Test5_Post")
@@ -303,9 +303,9 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
               override def execute(tx: Transaction): ResultSummary = {
                 tx.run(
                   s"""
-                     |CREATE (person:Test5_Person {age: $index, timestamp: localdatetime()})
+                     |CREATE (person:Test5_Person {age: $index})
                      |CREATE (post:Test5_Post {hash: "hash$index"})
-                     |CREATE (person)-[:LIKES]->(post)
+                     |CREATE (person)-[:LIKES {timestamp: localdatetime()}]->(post)
                      |""".stripMargin)
                   .consume()
               }
@@ -325,7 +325,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
-        val df = ss.sql("select * from testReadStream order by `source.timestamp`")
+        val df = ss.sql("select * from testReadStream order by `rel.timestamp`")
         val collect = df.collect()
         df.show()
         val actual: Array[Map[String, Any]] = if (!df.columns.contains("source.age") || !df.columns.contains("target.hash")) {
@@ -341,6 +341,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList
       }
-    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 60L, TimeUnit.SECONDS)
   }
+
 }
