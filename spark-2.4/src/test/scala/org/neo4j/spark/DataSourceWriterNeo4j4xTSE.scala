@@ -613,8 +613,8 @@ class DataSourceWriterNeo4j4xTSE extends SparkConnectorScalaBaseTSE {
       .single()
       .get("name")
       .asString()
-    assertEquals("spark_NODE_CONSTRAINT_Person_surname-age", constraintCount)
-    SparkConnectorScalaSuiteIT.session().run("DROP CONSTRAINT ON (p:Person) ASSERT (p.surname, p.age) IS UNIQUE")
+    assertEquals("spark_NODE_CONSTRAINTS_Person_surname-age", constraintCount)
+    SparkConnectorScalaSuiteIT.session().run("DROP CONSTRAINT `spark_NODE_CONSTRAINTS_Person_surname-age`")
   }
 
 }
