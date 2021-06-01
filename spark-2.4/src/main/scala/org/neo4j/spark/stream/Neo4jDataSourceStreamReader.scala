@@ -22,12 +22,14 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
     with SupportsPushDownFilters
     with Logging {
 
+  private var dtLog: Seq[LocalDateTime] = Seq()
+
   private val neo4jOptions: Neo4jOptions = new Neo4jOptions(options.asMap())
     .validate(options => Validations.read(options, jobId))
 
   private var filters: Array[Filter] = Array[Filter]()
 
-  private var startOffset: Neo4jOffset = _
+  private var startOffset: Neo4jOffset = new Neo4jOffset(LocalDateTime.MIN)
 
   private val streamingStartOffset: Neo4jOffset = new Neo4jOffset(LocalDateTime.now())
 
@@ -58,13 +60,12 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)
 
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
-    this.startOffset = if (!gotAll) {
-      new Neo4jOffset(LocalDateTime.MIN)
+    this.startOffset = if (!(neo4jOptions.streamingGetAll && !gotAll)) {
+      start.orElse(this.endOffset).asInstanceOf[Neo4jOffset]
     }
     else {
-      this.endOffset
+      null
     }
-    this.startOffset = end.orElse(streamingStartOffset).asInstanceOf[Neo4jOffset]
     this.endOffset = new Neo4jOffset(LocalDateTime.now())
   }
 
@@ -80,25 +81,20 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
     val schema = readSchema()
     val partitionSkipLimit = PartitionSkipLimit.EMPTY
 
-    this.endOffset = new Neo4jOffset(LocalDateTime.now())
-
     var filtersWithTimestamp = filters
 
     if (!gotAll) {
       gotAll = true
-      // this is going to be the next start offset
-      this.endOffset = this.streamingStartOffset
     }
     else {
       filtersWithTimestamp = filters :+ GreaterThanOrEqual(
         neo4jOptions.streamingTimestampProperty,
-        Timestamp.valueOf(startOffset.offset)
+        Timestamp.valueOf(endOffset.offset)
       )
     }
 
     val eventsParams: java.util.Map[String, Object] = new java.util.HashMap[String, Object]()
-    eventsParams.put("fromTimestamp", startOffset.offset)
-    eventsParams.put("toTimestamp", endOffset.offset)
+    eventsParams.put("fromTimestamp", endOffset.offset)
 
     val reader = new Neo4jInputPartition(
       neo4jOptions,
