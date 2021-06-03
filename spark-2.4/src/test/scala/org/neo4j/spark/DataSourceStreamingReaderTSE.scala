@@ -78,7 +78,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList
       }
-    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 40L, TimeUnit.SECONDS)
   }
 
   @Test
@@ -153,7 +153,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList.slice(expected.size - actual.length, expected.size)
       }
-    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 40L, TimeUnit.SECONDS)
   }
 
   @Test
@@ -205,7 +205,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList.slice(expected.size - actual.length, expected.size)
       }
-    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 40L, TimeUnit.SECONDS)
   }
 
   @Test
