@@ -9,7 +9,7 @@ import org.apache.spark.sql.sources.{Filter, GreaterThan, GreaterThanOrEqual, Le
 import org.apache.spark.sql.types.StructType
 import org.neo4j.spark.reader.Neo4jInputPartition
 import org.neo4j.spark.service.{Neo4jQueryStreamReadStrategy, PartitionSkipLimit, SchemaService}
-import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations}
+import org.neo4j.spark.util.{DriverCache, LastTimestampCache, Neo4jOptions, Validations}
 
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -22,8 +22,6 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
     with SupportsPushDownFilters
     with Logging {
 
-  private var dtLog: Seq[LocalDateTime] = Seq()
-
   private val neo4jOptions: Neo4jOptions = new Neo4jOptions(options.asMap())
     .validate(options => Validations.read(options, jobId))
 
@@ -33,9 +31,11 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   private val streamingStartOffset: Neo4jOffset = new Neo4jOffset(LocalDateTime.now())
 
-  private var endOffset: Neo4jOffset = _
+  private var endOffset: Neo4jOffset = new Neo4jOffset(LocalDateTime.now())
 
   private var gotAll = !neo4jOptions.streamingGetAll
+
+  private val lastTimestampCache = new LastTimestampCache
 
   protected def callSchemaService[T](function: SchemaService => T): T = {
     val schemaService = new SchemaService(neo4jOptions, driverCache)
@@ -60,11 +60,16 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   private val driverCache = new DriverCache(neo4jOptions.connection, jobId)
 
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
-    this.startOffset = if (!(neo4jOptions.streamingGetAll && !gotAll)) {
-      start.orElse(this.endOffset).asInstanceOf[Neo4jOffset]
+    this.startOffset = if (neo4jOptions.streamingGetAll && !gotAll) {
+      start.orElse(this.streamingStartOffset).asInstanceOf[Neo4jOffset]
     }
     else {
-      null
+      val lastTimestamp = lastTimestampCache.get(jobId)
+      new Neo4jOffset(if (lastTimestamp != null) {
+        lastTimestamp
+      } else {
+        this.endOffset.offset
+      })
     }
     this.endOffset = new Neo4jOffset(LocalDateTime.now())
   }
@@ -75,9 +80,13 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
 
   override def deserializeOffset(json: String): Offset = new Neo4jOffset(LocalDateTime.parse(json))
 
-  override def commit(end: Offset): Unit = { }
+  override def commit(end: Offset): Unit = {
+    println(s"+++ $end")
+  }
 
   override def planInputPartitions: util.ArrayList[InputPartition[InternalRow]] = {
+    this.endOffset = new Neo4jOffset(LocalDateTime.now())
+
     val schema = readSchema()
     val partitionSkipLimit = PartitionSkipLimit.EMPTY
 
@@ -87,14 +96,14 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
       gotAll = true
     }
     else {
-      filtersWithTimestamp = filters :+ GreaterThanOrEqual(
+      filtersWithTimestamp = filters :+ GreaterThan(
         neo4jOptions.streamingTimestampProperty,
-        Timestamp.valueOf(endOffset.offset)
+        Timestamp.valueOf(startOffset.offset)
       )
     }
 
     val eventsParams: java.util.Map[String, Object] = new java.util.HashMap[String, Object]()
-    eventsParams.put("fromTimestamp", endOffset.offset)
+    eventsParams.put("fromTimestamp", startOffset.offset)
 
     val reader = new Neo4jInputPartition(
       neo4jOptions,
@@ -104,6 +113,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
       new util.ArrayList[util.Map[String, AnyRef]](),
       new StructType(),
       new Neo4jQueryStreamReadStrategy(filtersWithTimestamp, partitionSkipLimit, Seq()),
+      lastTimestampCache,
       eventsParams
     )
     new util.ArrayList[InputPartition[InternalRow]](Seq(reader).asJava)

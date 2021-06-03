@@ -105,6 +105,8 @@ object Neo4jImplicits {
       structFieldName == value.unquote() || structFieldName == value
     }
 
+    def getFieldIndex(fieldName: String): Long = structType.fields.map(_.name).indexOf(fieldName)
+
     def getMissingFields(fields: Set[String]): Set[String] = fields
       .map(field => {
         val maybeField = structType

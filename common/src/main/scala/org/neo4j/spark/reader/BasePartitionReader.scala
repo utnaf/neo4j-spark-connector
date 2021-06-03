@@ -2,12 +2,13 @@ package org.neo4j.spark.reader
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.StructType
-import org.neo4j.driver.{Record, Session, Transaction, Values}
-import org.neo4j.spark.service.{MappingService, Neo4jQueryReadStrategy, Neo4jQueryService, Neo4jQueryStrategy, Neo4jQueryStreamReadStrategy, Neo4jReadMappingStrategy, PartitionSkipLimit}
-import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil}
+import org.neo4j.driver.{Record, Session, Transaction}
+import org.neo4j.spark.service.{MappingService, Neo4jQueryReadStrategy, Neo4jQueryService, Neo4jQueryStrategy, Neo4jReadMappingStrategy, PartitionSkipLimit}
+import org.neo4j.spark.util.{DriverCache, LastTimestampCache, Neo4jOptions, Neo4jUtil}
+import org.neo4j.spark.util.Neo4jImplicits.StructTypeImplicit
 
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util
 import scala.collection.JavaConverters._
 
@@ -18,7 +19,8 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
                                    private val scriptResult: java.util.List[java.util.Map[String, AnyRef]],
                                    private val requiredColumns: StructType,
                                    private val readStrategy: Neo4jQueryReadStrategy,
-                                   private val eventFields: java.util.Map[String, AnyRef]) extends Logging {
+                                   private val eventFields: java.util.Map[String, AnyRef],
+                                   private val lastTimestampCache: LastTimestampCache) extends Logging {
   private var result: Iterator[Record] = _
   private var session: Session = _
   private var transaction: Transaction = _
@@ -47,7 +49,23 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
     result.hasNext
   }
 
-  def get: InternalRow = mappingService.convert(result.next(), schema)
+  def get: InternalRow = {
+    val convertedRow = mappingService.convert(result.next(), schema)
+
+    if (options.streamingTimestampProperty != "") {
+      lastTimestampCache.set(
+        jobId,
+        LocalDateTime.ofInstant(
+          Instant.ofEpochMilli(
+            convertedRow.getLong(schema.getFieldIndex(options.streamingTimestampProperty).toInt) / 1000
+          ),
+          ZoneOffset.UTC
+        )
+      )
+    }
+
+    convertedRow
+  }
 
   def close(): Unit = {
     Neo4jUtil.closeSafety(transaction, log)

@@ -42,10 +42,17 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .queryName("testReadStream")
       .start()
 
-    val total = 100
+    val total = 60
+
+    val expected = (1 to total).map(index => Map(
+      "<labels>" -> mutable.WrappedArray.make(Array("Test1_Movie")),
+      "title" -> s"My movie $index"
+    ))
+
     Executors.newSingleThreadExecutor().submit(new Runnable {
       override def run(): Unit = {
         (1 to total).foreach(index => {
+          Thread.sleep(200)
           SparkConnectorScalaSuiteIT.session()
             .writeTransaction(new TransactionWork[ResultSummary] {
               override def execute(tx: Transaction): ResultSummary = {
@@ -53,15 +60,9 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
                   .consume()
               }
             })
-          Thread.sleep(200)
         })
       }
     })
-
-    val expected = (1 to total).map(index => Map(
-      "<labels>" -> mutable.WrappedArray.make(Array("Test1_Movie")),
-      "title" -> s"My movie $index"
-    ))
 
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
@@ -75,7 +76,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
             "title" -> row.getAs[String]("title")
           ))
         }
-        actual.toList == expected.toList.slice(expected.size - actual.length, expected.size)
+        actual.toList == expected.toList
       }
     }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
   }
@@ -106,10 +107,11 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .queryName("testReadStream")
       .start()
 
-    val total = 200
+    val total = 100
     Executors.newSingleThreadExecutor().submit(new Runnable {
       override def run(): Unit = {
         (1 to total).foreach(index => {
+          Thread.sleep(200)
           SparkConnectorScalaSuiteIT.session()
             .writeTransaction(new TransactionWork[ResultSummary] {
               override def execute(tx: Transaction): ResultSummary = {
@@ -122,7 +124,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
                   .consume()
               }
             })
-          Thread.sleep(200)
         })
       }
     })
@@ -159,11 +160,12 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
   def testReadStreamWithQuery(): Unit = {
     val stream = ss.readStream.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("streaming.timestamp.property", "timestamp")
       .option("query",
         """
           |MATCH (p:Test3_Person)
-          |WHERE p.timestamp >= $event.fromTimestamp
-          |RETURN p.age AS age
+          |WHERE p.timestamp > $event.fromTimestamp
+          |RETURN p.age AS age, p.timestamp AS timestamp
           |""".stripMargin)
       .load()
 
@@ -172,10 +174,11 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .queryName("testReadStream")
       .start()
 
-    val total = 100
+    val total = 60
     Executors.newSingleThreadExecutor().submit(new Runnable {
       override def run(): Unit = {
         (1 to total).foreach(index => {
+          Thread.sleep(200)
           SparkConnectorScalaSuiteIT.session()
             .writeTransaction(new TransactionWork[ResultSummary] {
               override def execute(tx: Transaction): ResultSummary = {
@@ -183,7 +186,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
                   .consume()
               }
             })
-          Thread.sleep(200)
         })
       }
     })
@@ -228,10 +230,11 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .queryName("testReadStream")
       .start()
 
-    val total = 100
+    val total = 60
     Executors.newSingleThreadExecutor().submit(new Runnable {
       override def run(): Unit = {
         (1 to total).foreach(index => {
+          Thread.sleep(200)
           SparkConnectorScalaSuiteIT.session()
             .writeTransaction(new TransactionWork[ResultSummary] {
               override def execute(tx: Transaction): ResultSummary = {
@@ -239,7 +242,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
                   .consume()
               }
             })
-          Thread.sleep(200)
         })
       }
     })
@@ -274,16 +276,16 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         new TransactionWork[ResultSummary] {
           override def execute(tx: Transaction): ResultSummary = tx.run(
             """
-              |CREATE (person:Test5_Person {age: 0})
+              |CREATE (person:Test5_Person {age: 0, timestamp: localdatetime()})
               |CREATE (post:Test5_Post {hash: "hash0"})
-              |CREATE (person)-[:LIKES {timestamp: localdatetime()}]->(post)
+              |CREATE (person)-[:LIKES]->(post)
               |""".stripMargin).consume()
         })
 
     val stream = ss.readStream.format(classOf[DataSource].getName)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("relationship", "LIKES")
-      .option("streaming.timestamp.property", "rel.timestamp")
+      .option("streaming.timestamp.property", "source.timestamp")
       .option("streaming.get.all", "true")
       .option("relationship.source.labels", "Test5_Person")
       .option("relationship.target.labels", "Test5_Post")
@@ -294,23 +296,23 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .queryName("testReadStream")
       .start()
 
-    val total = 20
+    val total = 60
     Executors.newSingleThreadExecutor().submit(new Runnable {
       override def run(): Unit = {
         (1 to total).foreach(index => {
+          Thread.sleep(200)
           SparkConnectorScalaSuiteIT.session()
             .writeTransaction(new TransactionWork[ResultSummary] {
               override def execute(tx: Transaction): ResultSummary = {
                 tx.run(
                   s"""
-                     |CREATE (person:Test5_Person {age: $index})
+                     |CREATE (person:Test5_Person {age: $index, timestamp: localdatetime()})
                      |CREATE (post:Test5_Post {hash: "hash$index"})
-                     |CREATE (person)-[:LIKES {timestamp: localdatetime()}]->(post)
+                     |CREATE (person)-[:LIKES]->(post)
                      |""".stripMargin)
                   .consume()
               }
             })
-          Thread.sleep(100)
         })
       }
     })
@@ -325,9 +327,9 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
 
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
-        val df = ss.sql("select * from testReadStream order by `rel.timestamp`")
+        val df = ss.sql("select * from testReadStream order by `source.timestamp`")
         val collect = df.collect()
-        df.show()
+        df.show(61, truncate = false)
         val actual: Array[Map[String, Any]] = if (!df.columns.contains("source.age") || !df.columns.contains("target.hash")) {
           Array.empty
         } else {
@@ -341,7 +343,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         actual.toList == expected.toList
       }
-    }, Matchers.equalTo(true), 60L, TimeUnit.SECONDS)
+    }, Matchers.equalTo(true), 40L, TimeUnit.SECONDS)
   }
 
 }
