@@ -12,9 +12,9 @@ object LastTimestampCache {
 }
 
 class LastTimestampCache extends Serializable {
-  def get(jobId: String): LocalDateTime = {
+  def get(jobId: String): Option[LocalDateTime] = {
     this.synchronized {
-      cache.getOrDefault(jobId, null)
+      Option(cache.getOrDefault(jobId, null))
     }
   }
 

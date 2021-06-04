@@ -64,12 +64,7 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
       start.orElse(this.streamingStartOffset).asInstanceOf[Neo4jOffset]
     }
     else {
-      val lastTimestamp = lastTimestampCache.get(jobId)
-      new Neo4jOffset(if (lastTimestamp != null) {
-        lastTimestamp
-      } else {
-        this.endOffset.offset
-      })
+      new Neo4jOffset(this.lastTimestampCache.get(jobId).getOrElse(LocalDateTime.now()))
     }
     this.endOffset = new Neo4jOffset(LocalDateTime.now())
   }
@@ -87,13 +82,16 @@ class Neo4jDataSourceStreamReader(private val options: DataSourceOptions, privat
   override def planInputPartitions: util.ArrayList[InputPartition[InternalRow]] = {
     this.endOffset = new Neo4jOffset(LocalDateTime.now())
 
-    val schema = readSchema()
     val partitionSkipLimit = PartitionSkipLimit.EMPTY
 
     var filtersWithTimestamp = filters
 
     if (!gotAll) {
       gotAll = true
+      filtersWithTimestamp = filters :+ LessThanOrEqual(
+        neo4jOptions.streamingTimestampProperty,
+        Timestamp.valueOf(endOffset.offset)
+      )
     }
     else {
       filtersWithTimestamp = filters :+ GreaterThan(

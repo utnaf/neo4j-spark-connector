@@ -2,8 +2,7 @@ package org.neo4j.spark
 
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.hamcrest.Matchers
-import org.joda.time.LocalDateTime
-import org.junit.{After, Test}
+import org.junit.{After, Ignore, Test}
 import org.neo4j.driver.summary.ResultSummary
 import org.neo4j.driver.{Transaction, TransactionWork}
 
@@ -107,7 +106,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       .queryName("testReadStream")
       .start()
 
-    val total = 100
+    val total = 60
     Executors.newSingleThreadExecutor().submit(new Runnable {
       override def run(): Unit = {
         (1 to total).foreach(index => {
@@ -140,6 +139,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       override def get(): Boolean = {
         val df = ss.sql("select * from testReadStream order by `source.timestamp`")
         val collect = df.collect()
+        df.show(61, truncate = false)
         val actual: Array[Map[String, Any]] = if (!df.columns.contains("source.age") || !df.columns.contains("target.hash")) {
           Array.empty
         } else {
@@ -151,20 +151,33 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
             "target.hash" -> row.getAs[java.util.List[String]]("target.hash")
           ))
         }
-        actual.toList == expected.toList.slice(expected.size - actual.length, expected.size)
+        actual.toList == expected.toList
       }
     }, Matchers.equalTo(true), 40L, TimeUnit.SECONDS)
   }
 
   @Test
+  @Ignore
   def testReadStreamWithQuery(): Unit = {
+    SparkConnectorScalaSuiteIT.session()
+      .writeTransaction(
+        new TransactionWork[ResultSummary] {
+          override def execute(tx: Transaction): ResultSummary = tx
+            .run("CREATE (person:Test3_Person) SET person.age = 0, person.timestamp = localdatetime()")
+            .consume()
+        })
+
     val stream = ss.readStream.format(classOf[DataSource].getName)
+//      .schema(StructType(Seq(
+//        StructField("age", DataTypes.LongType, nullable = false),
+//        StructField("timestamp", DataTypes.TimestampType, nullable = false))
+//      ))
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("streaming.timestamp.property", "timestamp")
       .option("query",
         """
           |MATCH (p:Test3_Person)
-          |WHERE p.timestamp > $event.fromTimestamp
+          |WHERE p.timestamp > localdatetime($event.fromTimestamp)
           |RETURN p.age AS age, p.timestamp AS timestamp
           |""".stripMargin)
       .load()
@@ -203,7 +216,11 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
             "age" -> row.getAs[String]("age")
           ))
         }
-        actual.toList == expected.toList.slice(expected.size - actual.length, expected.size)
+        df.show(60)
+        df.printSchema()
+        val actualList = actual.toList
+        val expectedList = expected.toList
+        actualList == expectedList
       }
     }, Matchers.equalTo(true), 40L, TimeUnit.SECONDS)
   }
