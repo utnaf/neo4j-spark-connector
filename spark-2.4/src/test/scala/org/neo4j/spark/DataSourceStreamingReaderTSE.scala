@@ -110,7 +110,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
     Executors.newSingleThreadExecutor().submit(new Runnable {
       override def run(): Unit = {
         (1 to total).foreach(index => {
-          Thread.sleep(200)
+          Thread.sleep(100)
           SparkConnectorScalaSuiteIT.session()
             .writeTransaction(new TransactionWork[ResultSummary] {
               override def execute(tx: Transaction): ResultSummary = {
@@ -157,7 +157,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
-  @Ignore
   def testReadStreamWithQuery(): Unit = {
     SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
