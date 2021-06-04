@@ -9,8 +9,7 @@ import org.neo4j.driver.summary.ResultSummary
 
 
 object SparkConnectorScalaSuiteIT {
-  val server: Neo4jContainerExtension = new Neo4jContainerExtension(
-    s"neo4j${if (TestUtil.experimental()) "/neo4j-experimental" else "" }:${TestUtil.neo4jVersion()}-enterprise")
+  val server: Neo4jContainerExtension = new Neo4jContainerExtension()
     .withNeo4jConfig("dbms.security.auth_enabled", "false")
     .withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
     .withDatabases(Seq("db1", "db2"))
