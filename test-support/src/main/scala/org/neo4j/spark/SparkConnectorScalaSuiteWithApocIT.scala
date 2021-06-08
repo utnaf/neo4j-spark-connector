@@ -61,7 +61,7 @@ object SparkConnectorScalaSuiteWithApocIT {
 
   def session(): Session = {
     if (_session == null || !_session.isOpen) {
-      _session = driver.session
+      _session = if (driver != null) driver.session else null
     }
     _session
   }

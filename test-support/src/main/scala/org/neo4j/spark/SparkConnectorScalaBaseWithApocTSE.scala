@@ -20,8 +20,6 @@ object SparkConnectorScalaBaseWithApocTSE {
       startedFromSuite = false
       SparkConnectorScalaSuiteWithApocIT.setUpContainer()
     }
-
-    Assume.assumeFalse(TestUtil.experimental())
   }
 
   @AfterClass
