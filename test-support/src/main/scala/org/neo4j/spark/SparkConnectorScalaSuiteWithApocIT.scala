@@ -11,11 +11,8 @@ object SparkConnectorScalaSuiteWithApocIT {
   val server: Neo4jContainerExtension = new Neo4jContainerExtension()
     .withNeo4jConfig("dbms.security.auth_enabled", "false")
     .withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
+    .withEnv("NEO4JLABS_PLUGINS", "[\"apoc\"]")
     .withDatabases(Seq("db1", "db2"))
-
-  if (!TestUtil.experimental()) {
-    server.withEnv("NEO4JLABS_PLUGINS", "[\"apoc\"]")
-  }
 
   var conf: SparkConf = _
   var ss: SparkSession = _
@@ -27,6 +24,7 @@ object SparkConnectorScalaSuiteWithApocIT {
 
   @BeforeClass
   def setUpContainer(): Unit = {
+    Assume.assumeFalse("Neo4j Preview versions doesn't have APOC", TestUtil.experimental())
     if (!server.isRunning) {
       try {
         server.start()
