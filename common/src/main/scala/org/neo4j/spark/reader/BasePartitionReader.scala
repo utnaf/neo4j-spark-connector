@@ -7,7 +7,6 @@ import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.{Record, Session, Transaction, Values}
 import org.neo4j.spark.service.{MappingService, Neo4jQueryReadStrategy, Neo4jQueryService, Neo4jQueryStrategy, Neo4jReadMappingStrategy, PartitionSkipLimit}
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil}
-import org.neo4j.spark.util.Neo4jImplicits.StructTypeImplicit
 
 import scala.collection.JavaConverters._
 
@@ -35,11 +34,15 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
       transaction = session.beginTransaction()
       log.info(s"Running the following query on Neo4j: $query")
       result = transaction.run(query, Values
-        .value(Map[String, AnyRef](Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT -> scriptResult).asJava))
+        .value(getQueryParameters))
         .asScala
     }
 
     result.hasNext
+  }
+
+  protected def getQueryParameters = {
+    Map[String, AnyRef](Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT -> scriptResult).asJava
   }
 
   def get: InternalRow = mappingService.convert(result.next(), schema)

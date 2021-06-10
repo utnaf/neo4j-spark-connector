@@ -279,4 +279,9 @@ object Neo4jUtil {
       case not: Not => mapSparkFiltersToCypher(not.child, container, attributeAlias).not()
       case filter@(_: Filter) => throw new IllegalArgumentException(s"Filter of type `${filter}` is not supported.")
     }
+
+  def getStreamingPropertyName(options: Neo4jOptions) = options.query.queryType match {
+    case QueryType.RELATIONSHIP => s"rel.${options.streamingOptions.propertyName}"
+    case _ => options.streamingOptions.propertyName
+  }
 }

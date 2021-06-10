@@ -291,6 +291,7 @@ object Neo4jQueryStrategy {
   val VARIABLE_EVENT = "event"
   val VARIABLE_EVENTS = "events"
   val VARIABLE_SCRIPT_RESULT = "scriptResult"
+  val VARIABLE_STREAM = "stream"
 }
 
 abstract class Neo4jQueryStrategy {

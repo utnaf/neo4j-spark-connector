@@ -3,6 +3,7 @@ package org.neo4j.spark.util
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.neo4j.driver.Config.TrustStrategy
 import org.neo4j.driver._
+import org.neo4j.spark.util.QueryType.Value
 
 import java.io.File
 import java.net.URI
@@ -192,7 +193,14 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
       s"_${relationshipMetadata.target.labels.mkString("-")}"
     case _ => s"table_query_${UUID.randomUUID()}"
   }
+
+  val streamingOptions = Neo4jStreamingOptions(getParameter(STREAMING_PROPERTY_NAME),
+    StreamingFrom.withCaseInsensitiveName(getParameter(STREAMING_FROM, DEFAULT_STREAMING_FROM.toString)),
+    getParameter(STREAMING_QUERY_OFFSET))
+
 }
+
+case class Neo4jStreamingOptions(propertyName: String, from: StreamingFrom.Value, queryOffset: String)
 
 case class Neo4jApocConfig(procedureConfigMap: Map[String, AnyRef])
 
@@ -355,6 +363,11 @@ object Neo4jOptions {
   val TRANSACTION_RETRY_TIMEOUT = "transaction.retry.timeout"
   val TRANSACTION_CODES_FAIL = "transaction.codes.fail"
 
+  // Streaming
+  val STREAMING_PROPERTY_NAME = "streaming.property.name"
+  val STREAMING_FROM = "streaming.from"
+  val STREAMING_QUERY_OFFSET = "streaming.query.offset"
+
   val SCRIPT = "script"
 
   // defaults
@@ -378,6 +391,7 @@ object Neo4jOptions {
   val DEFAULT_PARTITIONS = 1
   val DEFAULT_OPTIMIZATION_TYPE = OptimizationType.NONE
   val DEFAULT_SAVE_MODE = SaveMode.Overwrite
+  val DEFAULT_STREAMING_FROM = StreamingFrom.ALL
 }
 
 class CaseInsensitiveEnumeration extends Enumeration {
@@ -385,6 +399,10 @@ class CaseInsensitiveEnumeration extends Enumeration {
     values.find(_.toString.toLowerCase() == s.toLowerCase).getOrElse(
       throw new NoSuchElementException(s"No value found for '$s'"))
   }
+}
+
+object StreamingFrom extends CaseInsensitiveEnumeration {
+  val ALL, NOW = Value // TODO add VALUE with a specific value to start with
 }
 
 object QueryType extends CaseInsensitiveEnumeration {

@@ -196,7 +196,9 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
       return new StructType()
     }
 
-    val params = Collections.singletonMap[String, AnyRef](Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT, Collections.emptyList())
+    val params = Map[String, AnyRef](Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT -> Collections.emptyList(),
+      Neo4jQueryStrategy.VARIABLE_STREAM -> Collections.emptyMap())
+      .asJava
     val structFields = retrieveSchema(query, params, { record => record.asMap.asScala.toMap })
 
     val columns = getReturnedColumns(query)
@@ -593,6 +595,40 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
           }
         })
     }
+  }
+
+  private def lastOffsetForNode(): AnyRef = {
+    val label = options.nodeMetadata.labels.head
+    session.run(
+      s"""MATCH (n:$label)
+        |RETURN max(n.${options.streamingOptions.propertyName}) AS ${options.streamingOptions.propertyName}""".stripMargin)
+      .single()
+      .get(options.streamingOptions.propertyName)
+      .asObject()
+  }
+
+  private def lastOffsetForRelationship(): AnyRef = {
+    val sourceLabel = options.relationshipMetadata.source.labels.head.quote()
+    val targetLabel = options.relationshipMetadata.target.labels.head.quote()
+    val relType = options.relationshipMetadata.relationshipType.quote()
+
+    session.run(
+      s"""MATCH (s:$sourceLabel)-[r:$relType]->(t:$targetLabel)
+         |RETURN max(r.${options.streamingOptions.propertyName}) AS ${options.streamingOptions.propertyName}""".stripMargin)
+      .single()
+      .get(options.streamingOptions.propertyName)
+      .asObject()
+  }
+
+  private def lastOffsetForQuery(): AnyRef = session.run(options.streamingOptions.queryOffset)
+    .single()
+    .get(0)
+    .asObject()
+
+  def lastOffset(): AnyRef = options.query.queryType match {
+    case QueryType.LABELS => lastOffsetForNode()
+    case QueryType.RELATIONSHIP => lastOffsetForRelationship()
+    case QueryType.QUERY => lastOffsetForQuery()
   }
 
   private def logSchemaResolutionChange(e: ClientException): Unit = {
