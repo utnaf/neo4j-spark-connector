@@ -44,13 +44,13 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
         override def get(): Offset = Neo4jOffset24(neo4jOptions.streamingOptions.from.value())
       })
       .asInstanceOf[Neo4jOffset24]
-    val lastOffset = Neo4jOffset24(OffsetStorage.getLastOffset(jobId))
+    val lastOffset: java.lang.Long = OffsetStorage.getLastOffset(jobId)
     endOffset = end
       .map(new function.Function[Offset, Offset] {
-        override def apply(o: Offset): Offset = if (lastOffset == null || o.asInstanceOf[Neo4jOffset24].offset > lastOffset.offset) o else lastOffset
+        override def apply(o: Offset): Offset = if (lastOffset == null || o.asInstanceOf[Neo4jOffset24].offset > lastOffset) o else Neo4jOffset24(lastOffset)
       })
       .orElseGet(new Supplier[Offset] {
-        override def get(): Offset = if (lastOffset == null) Neo4jOffset24(startOffset.offset + 1) else lastOffset
+        override def get(): Offset = if (lastOffset == null) Neo4jOffset24(startOffset.offset + 1) else Neo4jOffset24(lastOffset)
       })
       .asInstanceOf[Neo4jOffset24]
   }

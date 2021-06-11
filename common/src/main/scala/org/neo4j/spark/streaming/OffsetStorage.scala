@@ -5,13 +5,13 @@ import java.util.function
 
 object OffsetStorage {
 
-  private val cache = new ConcurrentHashMap[String, Long]()
+  private val cache = new ConcurrentHashMap[String, java.lang.Long]()
 
-  def getLastOffset(jobId: String) = cache.get(jobId)
+  def getLastOffset(jobId: String): java.lang.Long = cache.get(jobId)
 
   def setLastOffset(jobId: String,
-                    neo4jOffset: Long) = cache.compute(jobId, new function.BiFunction[String, Long, Long] {
-    override def apply(id: String, offset: Long): Long = {
+                    neo4jOffset: java.lang.Long) = cache.compute(jobId, new function.BiFunction[String, java.lang.Long, java.lang.Long] {
+    override def apply(id: String, offset: java.lang.Long): java.lang.Long = {
       if (offset == null || offset < neo4jOffset) {
         neo4jOffset
       } else {

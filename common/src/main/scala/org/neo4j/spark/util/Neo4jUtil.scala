@@ -1,8 +1,5 @@
 package org.neo4j.spark.util
 
-import java.time._
-import java.time.format.DateTimeFormatter
-import java.util.Properties
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.{JsonSerializer, ObjectMapper, SerializerProvider}
@@ -17,13 +14,13 @@ import org.neo4j.driver.internal._
 import org.neo4j.driver.types.{Entity, Path}
 import org.neo4j.driver.{Session, Transaction, Value, Values}
 import org.neo4j.spark.service.SchemaService
-import org.neo4j.spark.streaming.Neo4jOffset
-import org.neo4j.spark.streaming.Neo4jOffset.ALL
-import org.neo4j.spark.util.Neo4jImplicits.EntityImplicits
-import org.slf4j.Logger
-import org.neo4j.spark.util.Neo4jImplicits._
+import org.neo4j.spark.util.Neo4jImplicits.{EntityImplicits, _}
 import org.neo4j.spark.util.Validations.validateConnection
+import org.slf4j.Logger
 
+import java.time._
+import java.time.format.DateTimeFormatter
+import java.util.Properties
 import scala.collection.JavaConverters._
 
 object Neo4jUtil {
