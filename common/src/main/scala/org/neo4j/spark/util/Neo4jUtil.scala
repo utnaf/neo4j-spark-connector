@@ -288,7 +288,8 @@ object Neo4jUtil {
     case _ => options.streamingOptions.propertyName
   }
 
-  def callSchemaService[T](neo4jOptions: Neo4jOptions, driverCache: DriverCache, function: SchemaService => T): T = {
+  def callSchemaService[T](neo4jOptions: Neo4jOptions, jobId: String, function: SchemaService => T): T = {
+    val driverCache = new DriverCache(neo4jOptions.connection, jobId)
     val schemaService = new SchemaService(neo4jOptions, driverCache)
     var hasError = false
     try {
@@ -306,7 +307,5 @@ object Neo4jUtil {
       }
     }
   }
-
-  def callSchemaService[T](neo4jOptions: Neo4jOptions, jobId: String, function: SchemaService => T): T = callSchemaService(neo4jOptions, new DriverCache(neo4jOptions.connection, jobId), function)
 
 }

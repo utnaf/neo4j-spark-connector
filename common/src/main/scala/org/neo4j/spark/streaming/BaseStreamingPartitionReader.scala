@@ -23,8 +23,7 @@ class BaseStreamingPartitionReader(private val options: Neo4jOptions,
     jobId,
     partitionSkipLimit,
     scriptResult,
-    requiredColumns,
-  ) {
+    requiredColumns) {
 
   private val prop = Neo4jUtil.getStreamingPropertyName(options)
 

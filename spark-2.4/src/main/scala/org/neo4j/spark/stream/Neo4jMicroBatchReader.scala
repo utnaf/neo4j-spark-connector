@@ -13,7 +13,7 @@ import org.neo4j.spark.util.{Neo4jOptions, Neo4jUtil, Validations}
 
 import java.util
 import java.util.function.Supplier
-import java.util.{Collections, Optional}
+import java.util.{Collections, Optional, function}
 import scala.collection.JavaConverters._
 
 class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
@@ -46,7 +46,9 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
       .asInstanceOf[Neo4jOffset]
     val lastOffset = OffsetStorage.getLastOffset(jobId)
     endOffset = end
-      .map(o => if (lastOffset == null || o.asInstanceOf[Neo4jOffset].offset > lastOffset.offset) o else lastOffset)
+      .map(new function.Function[Offset, Offset] {
+        override def apply(o: Offset): Offset = if (lastOffset == null || o.asInstanceOf[Neo4jOffset].offset > lastOffset.offset) o else lastOffset
+      })
       .orElseGet(new Supplier[Offset] {
         override def get(): Offset = if (lastOffset == null) new Neo4jOffset(startOffset.offset + 1) else lastOffset
       })
