@@ -402,7 +402,16 @@ class CaseInsensitiveEnumeration extends Enumeration {
 }
 
 object StreamingFrom extends CaseInsensitiveEnumeration {
-  val ALL, NOW = Value // TODO add VALUE with a specific value to start with
+  val ALL, NOW = Value
+
+  class StreamingFromValue(value: Value) {
+    def value(): Long = value match {
+      case ALL => -1L
+      case NOW => System.currentTimeMillis()
+    }
+  }
+
+  implicit def valToStreamingFromValue(value: Value) = new StreamingFromValue(value)
 }
 
 object QueryType extends CaseInsensitiveEnumeration {

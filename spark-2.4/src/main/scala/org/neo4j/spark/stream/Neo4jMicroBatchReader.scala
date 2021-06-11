@@ -8,8 +8,8 @@ import org.apache.spark.sql.sources.v2.reader.{InputPartition, SupportsPushDownF
 import org.apache.spark.sql.sources.{Filter, GreaterThan}
 import org.apache.spark.sql.types.StructType
 import org.neo4j.spark.service.PartitionSkipLimit
-import org.neo4j.spark.streaming.{Neo4jOffset, OffsetStorage}
-import org.neo4j.spark.util.{Neo4jOptions, Neo4jUtil, Validations}
+import org.neo4j.spark.streaming.OffsetStorage
+import org.neo4j.spark.util.{Neo4jOptions, Neo4jUtil, StreamingFrom, Validations}
 
 import java.util
 import java.util.function.Supplier
@@ -28,9 +28,9 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
 
   private var filters: Array[Filter] = Array[Filter]()
 
-  private var startOffset: Neo4jOffset = null
+  private var startOffset: Neo4jOffset24 = null
 
-  private var endOffset: Neo4jOffset = null
+  private var endOffset: Neo4jOffset24 = null
 
   private val schema = optionalSchema.orElseGet(new Supplier[StructType] {
     override def get(): StructType = Neo4jUtil.callSchemaService(neo4jOptions, jobId, { schemaService => schemaService.struct() })
@@ -41,30 +41,30 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
     startOffset = start
       .orElseGet(new Supplier[Offset] {
-        override def get(): Offset = Neo4jOffset.from(neo4jOptions, jobId)
+        override def get(): Offset = Neo4jOffset24(neo4jOptions.streamingOptions.from.value())
       })
-      .asInstanceOf[Neo4jOffset]
-    val lastOffset = OffsetStorage.getLastOffset(jobId)
+      .asInstanceOf[Neo4jOffset24]
+    val lastOffset = Neo4jOffset24(OffsetStorage.getLastOffset(jobId))
     endOffset = end
       .map(new function.Function[Offset, Offset] {
-        override def apply(o: Offset): Offset = if (lastOffset == null || o.asInstanceOf[Neo4jOffset].offset > lastOffset.offset) o else lastOffset
+        override def apply(o: Offset): Offset = if (lastOffset == null || o.asInstanceOf[Neo4jOffset24].offset > lastOffset.offset) o else lastOffset
       })
       .orElseGet(new Supplier[Offset] {
-        override def get(): Offset = if (lastOffset == null) new Neo4jOffset(startOffset.offset + 1) else lastOffset
+        override def get(): Offset = if (lastOffset == null) Neo4jOffset24(startOffset.offset + 1) else lastOffset
       })
-      .asInstanceOf[Neo4jOffset]
+      .asInstanceOf[Neo4jOffset24]
   }
 
   override def getStartOffset: Offset = startOffset
 
   override def getEndOffset: Offset = endOffset
 
-  override def deserializeOffset(json: String): Offset = new Neo4jOffset(json.toLong)
+  override def deserializeOffset(json: String): Offset = Neo4jOffset24(json.toLong)
 
   override def commit(end: Offset): Unit = {}
 
   override def planInputPartitions: util.ArrayList[InputPartition[InternalRow]] = {
-    val (filters, partitions) = if (startOffset != Neo4jOffset.ALL) {
+    val (filters, partitions) = if (startOffset.offset != StreamingFrom.ALL.value()) {
       val prop = Neo4jUtil.getStreamingPropertyName(neo4jOptions)
       (this.filters :+ GreaterThan(prop, endOffset.offset),
         Seq(PartitionSkipLimit.EMPTY))
