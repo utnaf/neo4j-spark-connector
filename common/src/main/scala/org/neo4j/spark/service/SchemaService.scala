@@ -226,37 +226,8 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
     StructType(sortedStructFields)
   }
 
-  private def getReturnedColumns(query: String): Array[String] = {
-    val plan = session.run(s"EXPLAIN $query").consume().plan()
-
-    if (plan.arguments().containsKey("Details")) {
-      plan.arguments()
-        .get("Details")
-        .asString()
-        .replaceAll("\"", "")
-        .split(',')
-        .map(_.trim)
-    }
-    else {
-      val lastChild = plan.children().get(0)
-
-      lastChild.operatorType() match {
-        case "EagerAggregation" => lastChild.identifiers().asScala.toArray
-        case "ProcedureCall" => plan.identifiers().asScala.toArray
-        case _ =>
-          try {
-            val expressions = lastChild.arguments().get("Expressions").asString()
-            val firstLevelExpressions = "\\{(.*?)}".r.replaceAllIn(expressions.substring(1,expressions.length-1),"_")
-
-            "([^,:]*?):".r.findAllMatchIn(firstLevelExpressions).map(_.group(1).trim).toArray
-          } catch {
-            case e: Exception =>
-              log.warn(s"I was unable to understand the returned column using EXPLAIN due to '${e.getMessage}'")
-              Array.empty
-          }
-      }
-    }
-  }
+  private def getReturnedColumns(query: String): Array[String] = session.run("EXPLAIN " + query)
+    .keys().asScala.toArray
 
   def struct(): StructType = {
     val struct = options.query.queryType match {
@@ -597,17 +568,17 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
     }
   }
 
-  private def lastOffsetForNode(): AnyRef = {
+  private def lastOffsetForNode(): Long = {
     val label = options.nodeMetadata.labels.head
     session.run(
       s"""MATCH (n:$label)
         |RETURN max(n.${options.streamingOptions.propertyName}) AS ${options.streamingOptions.propertyName}""".stripMargin)
       .single()
       .get(options.streamingOptions.propertyName)
-      .asObject()
+      .asLong(-1)
   }
 
-  private def lastOffsetForRelationship(): AnyRef = {
+  private def lastOffsetForRelationship(): Long = {
     val sourceLabel = options.relationshipMetadata.source.labels.head.quote()
     val targetLabel = options.relationshipMetadata.target.labels.head.quote()
     val relType = options.relationshipMetadata.relationshipType.quote()
@@ -617,15 +588,15 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
          |RETURN max(r.${options.streamingOptions.propertyName}) AS ${options.streamingOptions.propertyName}""".stripMargin)
       .single()
       .get(options.streamingOptions.propertyName)
-      .asObject()
+      .asLong(-1)
   }
 
-  private def lastOffsetForQuery(): AnyRef = session.run(options.streamingOptions.queryOffset)
+  private def lastOffsetForQuery(): Long = session.run(options.streamingOptions.queryOffset)
     .single()
     .get(0)
-    .asObject()
+    .asLong(-1)
 
-  def lastOffset(): AnyRef = options.query.queryType match {
+  def lastOffset(): Long = options.query.queryType match {
     case QueryType.LABELS => lastOffsetForNode()
     case QueryType.RELATIONSHIP => lastOffsetForRelationship()
     case QueryType.QUERY => lastOffsetForQuery()

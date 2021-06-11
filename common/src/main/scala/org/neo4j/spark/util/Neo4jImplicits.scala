@@ -92,6 +92,21 @@ object Neo4jImplicits {
       case _ => null
     })
 
+    def getValue: Option[Any] = Option(filter match {
+      case eqns: EqualNullSafe => eqns.value
+      case eq: EqualTo => eq.value
+      case gt: GreaterThan => gt.value
+      case gte: GreaterThanOrEqual => gte.value
+      case lt: LessThan => lt.value
+      case lte: LessThanOrEqual => lte.value
+      case in: In => in.values
+      case startWith: StringStartsWith => startWith.value
+      case endsWith: StringEndsWith => endsWith.value
+      case contains: StringContains => contains.value
+      case not: Not => not.child.getValue.orNull
+      case _ => null
+    })
+
     def isAttribute(entityType: String): Boolean = {
       getAttribute.exists(_.contains(s"$entityType."))
     }

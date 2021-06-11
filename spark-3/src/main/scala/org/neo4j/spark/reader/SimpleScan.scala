@@ -22,24 +22,6 @@ class SimpleScan(
 
   var scriptResult: java.util.List[java.util.Map[String, AnyRef]] = _
 
-  private def callSchemaService[T](function: SchemaService => T): T = {
-    val driverCache = new DriverCache(neo4jOptions.connection, jobId)
-    val schemaService = new SchemaService(neo4jOptions, driverCache)
-    var hasError = false
-    try {
-      function(schemaService)
-    } catch {
-      case e: Throwable =>
-        hasError = true
-        throw e
-    } finally {
-      schemaService.close()
-      if (hasError) {
-        driverCache.close()
-      }
-    }
-  }
-
   private def createPartitions() = {
     // we get the skip/limit for each partition and execute the "script"
     val (partitionSkipLimitList, scriptResult) = callSchemaService { schemaService =>

@@ -17,10 +17,13 @@ import org.neo4j.driver.internal._
 import org.neo4j.driver.types.{Entity, Path}
 import org.neo4j.driver.{Session, Transaction, Value, Values}
 import org.neo4j.spark.service.SchemaService
+import org.neo4j.spark.streaming.Neo4jOffset
+import org.neo4j.spark.streaming.Neo4jOffset.ALL
 import org.neo4j.spark.util.Neo4jImplicits.EntityImplicits
 import org.slf4j.Logger
-
 import org.neo4j.spark.util.Neo4jImplicits._
+import org.neo4j.spark.util.Validations.validateConnection
+
 import scala.collection.JavaConverters._
 
 object Neo4jUtil {
@@ -284,4 +287,26 @@ object Neo4jUtil {
     case QueryType.RELATIONSHIP => s"rel.${options.streamingOptions.propertyName}"
     case _ => options.streamingOptions.propertyName
   }
+
+  def callSchemaService[T](neo4jOptions: Neo4jOptions, driverCache: DriverCache, function: SchemaService => T): T = {
+    val schemaService = new SchemaService(neo4jOptions, driverCache)
+    var hasError = false
+    try {
+      validateConnection(driverCache.getOrCreate().session(neo4jOptions.session.toNeo4jSession))
+      function(schemaService)
+    } catch {
+      case e: Throwable => {
+        hasError = true
+        throw e
+      }
+    } finally {
+      schemaService.close()
+      if (hasError) {
+        driverCache.close()
+      }
+    }
+  }
+
+  def callSchemaService[T](neo4jOptions: Neo4jOptions, jobId: String, function: SchemaService => T): T = callSchemaService(neo4jOptions, new DriverCache(neo4jOptions.connection, jobId), function)
+
 }
