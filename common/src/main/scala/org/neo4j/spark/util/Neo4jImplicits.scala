@@ -1,7 +1,7 @@
 package org.neo4j.spark.util
 
 import javax.lang.model.SourceVersion
-import org.apache.spark.sql.types.{DataTypes, MapType, StructField, StructType}
+import org.apache.spark.sql.types.{DataType, DataTypes, MapType, StructField, StructType}
 import org.neo4j.driver.types.{Entity, Node, Relationship}
 import org.neo4j.spark.service.SchemaService
 import org.apache.spark.sql.sources.{EqualNullSafe, EqualTo, Filter, GreaterThan, GreaterThanOrEqual, In, IsNotNull, IsNull, LessThan, LessThanOrEqual, Not, StringContains, StringEndsWith, StringStartsWith}
@@ -118,6 +118,11 @@ object Neo4jImplicits {
     private def isValidMapOrStructField(field: String, structFieldName: String) = {
       val value: String = """(`.*`)|([^\.]*)""".r.findFirstIn(field).getOrElse("")
       structFieldName == value.unquote() || structFieldName == value
+    }
+
+    def getByName(name: String): Option[StructField] = {
+      val index = structType.fieldIndex(name)
+      if (index > -1) Some(structType(index)) else None
     }
 
     def getFieldIndex(fieldName: String): Long = structType.fields.map(_.name).indexOf(fieldName)

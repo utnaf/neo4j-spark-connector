@@ -27,15 +27,16 @@ class BaseStreamingPartitionReader(private val options: Neo4jOptions,
 
   private val prop = Neo4jUtil.getStreamingPropertyName(options)
 
-  private val index = schema.getFieldIndex(prop).toInt
+  private val field = filters.find(f => f.getAttribute
+      .map(name => name == prop).getOrElse(false))
+
 
   private lazy val values = {
     val map = new util.HashMap[String, AnyRef](super.getQueryParameters)
-    val value = if (map.containsKey(prop)) {
-      map.get(prop)
-    } else {
-      StreamingFrom.ALL.value()
-    }
+    val value: Long = field
+      .flatMap(f => f.getValue)
+      .getOrElse(StreamingFrom.ALL.value())
+      .asInstanceOf[Long]
     map.put(Neo4jQueryStrategy.VARIABLE_STREAM, Collections.singletonMap("offset", value))
     map
   }
@@ -48,10 +49,11 @@ class BaseStreamingPartitionReader(private val options: Neo4jOptions,
 
 
   private def updateOffset(row: InternalRow) = {
-    val timestamp = schema(index).dataType match {
-      case DataTypes.LongType => row.getLong(index)
-      case _ => row.getUTF8String(index).toString.toLong
-    }
+    val fieldIndex = schema.fieldIndex(prop)
+    val timestamp = schema(fieldIndex).dataType match {
+        case DataTypes.LongType => row.getLong(fieldIndex)
+        case _ => row.getUTF8String(fieldIndex).toString.toLong
+      }
     OffsetStorage.setLastOffset(jobId, timestamp)
   }
 
