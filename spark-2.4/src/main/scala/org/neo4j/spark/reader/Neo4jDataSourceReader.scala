@@ -25,7 +25,7 @@ class Neo4jDataSourceReader(private val options: DataSourceOptions, private val 
   private val structType = if (userDefinedSchema != null) {
     userDefinedSchema
   } else {
-    Neo4jUtil.callSchemaService(neo4jOptions, jobId, { schemaService => schemaService
+    Neo4jUtil.callSchemaService(neo4jOptions, jobId, filters, { schemaService => schemaService
       .struct() })
   }
 
@@ -40,7 +40,7 @@ class Neo4jDataSourceReader(private val options: DataSourceOptions, private val 
 
   private def createPartitions(schema: StructType) = {
     // we get the skip/limit for each partition and execute the "script"
-    val (partitionSkipLimitList, scriptResult) = Neo4jUtil.callSchemaService(neo4jOptions, jobId, { schemaService =>
+    val (partitionSkipLimitList, scriptResult) = Neo4jUtil.callSchemaService(neo4jOptions, jobId, filters, { schemaService =>
       (schemaService.skipLimitFromPartition(), schemaService.execute(neo4jOptions.script)) })
     // we generate a partition for each element
     partitionSkipLimitList

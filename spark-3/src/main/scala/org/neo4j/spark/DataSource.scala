@@ -1,14 +1,14 @@
 package org.neo4j.spark
 
-import java.util.UUID
 import org.apache.spark.sql.connector.catalog.{Table, TableProvider}
 import org.apache.spark.sql.connector.expressions.Transform
-import org.apache.spark.sql.sources.DataSourceRegister
+import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
-import org.neo4j.spark.service.SchemaService
 import org.neo4j.spark.util.Validations.validateConnection
-import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Validations, Neo4jUtil}
+import org.neo4j.spark.util.{Neo4jOptions, Neo4jUtil, Validations}
+
+import java.util.UUID
 
 class DataSource extends TableProvider
   with DataSourceRegister {
@@ -25,7 +25,8 @@ class DataSource extends TableProvider
 
   override def inferSchema(caseInsensitiveStringMap: CaseInsensitiveStringMap): StructType = {
     if (schema == null) {
-      schema = Neo4jUtil.callSchemaService(getNeo4jOptions(caseInsensitiveStringMap), jobId, { schemaService => schemaService.struct() })
+      validateConnection(new util.DriverCache(neo4jOptions.connection, jobId).getOrCreate().session(neo4jOptions.session.toNeo4jSession))
+      schema = Neo4jUtil.callSchemaService(getNeo4jOptions(caseInsensitiveStringMap), jobId, Array.empty[Filter], { schemaService => schemaService.struct() })
     }
 
     schema

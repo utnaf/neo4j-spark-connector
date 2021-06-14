@@ -255,7 +255,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
   def createStatementForNodeCount(options: Neo4jOptions): String = {
     val node = createNode(Neo4jUtil.NODE_ALIAS, options.nodeMetadata.labels)
     val matchQuery = filterNode(node)
-    renderer.render(buildStatement(matchQuery.returning(Functions.count(node))))
+    renderer.render(buildStatement(matchQuery.returning(Functions.count(node).as("count"))))
   }
 
   def createStatementForRelationshipCount(options: Neo4jOptions): String = {
@@ -267,7 +267,7 @@ class Neo4jQueryReadStrategy(filters: Array[Filter] = Array.empty[Filter],
 
     val matchQuery: StatementBuilder.OngoingReadingWithoutWhere = filterRelationship(sourceNode, targetNode, relationship)
 
-    renderer.render(buildStatement(matchQuery.returning(Functions.count(sourceNode))))
+    renderer.render(buildStatement(matchQuery.returning(Functions.count(sourceNode).as("count"))))
   }
 
   private def assembleConditionQuery(matchQuery: StatementBuilder.OngoingReadingWithoutWhere, filters: Array[Condition]): StatementBuilder.OngoingReadingWithWhere = {

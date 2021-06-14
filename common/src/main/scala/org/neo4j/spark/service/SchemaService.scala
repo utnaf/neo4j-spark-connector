@@ -367,7 +367,7 @@ class SchemaService(private val options: Neo4jOptions, private val driverCache: 
     }
   }
 
-  def count(filters: Array[Filter] = Array.empty[Filter]): Long = options.query.queryType match {
+  def count(filters: Array[Filter] = this.filters): Long = options.query.queryType match {
     case QueryType.LABELS => countForNode(filters)
     case QueryType.RELATIONSHIP => countForRelationship(filters)
     case QueryType.QUERY => countForQuery()

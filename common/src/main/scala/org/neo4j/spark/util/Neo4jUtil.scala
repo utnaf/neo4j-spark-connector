@@ -285,12 +285,14 @@ object Neo4jUtil {
     case _ => options.streamingOptions.propertyName
   }
 
-  def callSchemaService[T](neo4jOptions: Neo4jOptions, jobId: String, function: SchemaService => T): T = {
+  def callSchemaService[T](neo4jOptions: Neo4jOptions,
+                           jobId: String,
+                           filters: Array[Filter],
+                           function: SchemaService => T): T = {
     val driverCache = new DriverCache(neo4jOptions.connection, jobId)
-    val schemaService = new SchemaService(neo4jOptions, driverCache)
+    val schemaService = new SchemaService(neo4jOptions, driverCache, filters)
     var hasError = false
     try {
-      validateConnection(driverCache.getOrCreate().session(neo4jOptions.session.toNeo4jSession))
       function(schemaService)
     } catch {
       case e: Throwable => {

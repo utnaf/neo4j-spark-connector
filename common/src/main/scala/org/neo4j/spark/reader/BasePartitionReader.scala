@@ -3,10 +3,9 @@ package org.neo4j.spark.reader
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.sources.Filter
-import org.apache.spark.sql.types.{MapType, StructType}
+import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.{Record, Session, Transaction, Values}
 import org.neo4j.spark.service.{MappingService, Neo4jQueryReadStrategy, Neo4jQueryService, Neo4jQueryStrategy, Neo4jReadMappingStrategy, PartitionSkipLimit}
-import org.neo4j.spark.util.Neo4jImplicits.{CypherImplicits, FilterImplicit, StructTypeImplicit}
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil}
 
 import java.util

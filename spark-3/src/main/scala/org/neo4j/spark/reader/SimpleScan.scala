@@ -24,7 +24,7 @@ class SimpleScan(
 
   private def createPartitions() = {
     // we get the skip/limit for each partition and execute the "script"
-    val (partitionSkipLimitList, scriptResult) = Neo4jUtil.callSchemaService(neo4jOptions, jobId, { schemaService =>
+    val (partitionSkipLimitList, scriptResult) = Neo4jUtil.callSchemaService(neo4jOptions, jobId, filters, { schemaService =>
       (schemaService.skipLimitFromPartition(), schemaService.execute(neo4jOptions.script))
     })
     // we generate a partition for each element

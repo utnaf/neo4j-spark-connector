@@ -11,9 +11,9 @@ import org.neo4j.spark.service.PartitionSkipLimit
 import org.neo4j.spark.streaming.OffsetStorage
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil, StreamingFrom, Validations}
 
-import java.{lang, util}
 import java.util.function.Supplier
 import java.util.{Collections, Optional, function}
+import java.{lang, util}
 import scala.collection.JavaConverters._
 
 class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
@@ -33,15 +33,14 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
   private var endOffset: Neo4jOffset24 = null
 
   private val schema = optionalSchema.orElseGet(new Supplier[StructType] {
-    override def get(): StructType = Neo4jUtil.callSchemaService(neo4jOptions, jobId, { schemaService => schemaService.struct() })
+    override def get(): StructType = Neo4jUtil.callSchemaService(neo4jOptions, jobId, filters, { schemaService => schemaService.struct() })
   })
 
   override def readSchema(): StructType = schema
 
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
     setStartOffset(start)
-    val lastOffset: lang.Long = OffsetStorage.getLastOffset(jobId)
-    setEndOffset(end, lastOffset)
+    setEndOffset(end)
 
     setForLastEmpty()
   }
@@ -52,7 +51,7 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
     // so we check if
     if (startOffset.offset == endOffset.offset) {
       // there is a database change by invoking the last offset inserted offset
-      val lastOffset = Neo4jUtil.callSchemaService[Long](neo4jOptions, jobId, {
+      val lastOffset = Neo4jUtil.callSchemaService[Long](neo4jOptions, jobId, filters, {
         schemaService =>
           try {
             schemaService.lastOffset()
@@ -68,7 +67,8 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
     }
   }
 
-  private def setEndOffset(end: Optional[Offset], lastOffset: lang.Long) = {
+  private def setEndOffset(end: Optional[Offset]) = {
+    val lastOffset: lang.Long = OffsetStorage.getLastOffset(jobId)
     endOffset = end
       .map(new function.Function[Offset, Offset] {
         override def apply(o: Offset): Offset = if (lastOffset == null || o.asInstanceOf[Neo4jOffset24].offset > lastOffset) o else Neo4jOffset24(lastOffset)
@@ -96,13 +96,14 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
   override def commit(end: Offset): Unit = {}
 
   override def planInputPartitions: util.ArrayList[InputPartition[InternalRow]] = {
-    val (filters, numPartitions) = if (startOffset.offset != StreamingFrom.ALL.value()) {
+    val filters = if (startOffset.offset != StreamingFrom.ALL.value()) {
       val prop = Neo4jUtil.getStreamingPropertyName(neo4jOptions)
-      (this.filters :+ GreaterThan(prop, endOffset.offset),
-        Seq(PartitionSkipLimit.EMPTY))
+      this.filters :+ GreaterThan(prop, endOffset.offset)
     } else {
-      (this.filters, Neo4jUtil.callSchemaService(neo4jOptions, jobId, { schemaService => schemaService.skipLimitFromPartition() }))
+      this.filters
     }
+    val numPartitions = Neo4jUtil.callSchemaService(neo4jOptions, jobId, filters,
+      { schemaService => schemaService.skipLimitFromPartition() })
     val partitions = numPartitions
       .map(partitionSkipLimit => new Neo4jStreamingInputPartition(neo4jOptions, filters, schema, jobId,
         partitionSkipLimit, Collections.emptyList(), new StructType()))

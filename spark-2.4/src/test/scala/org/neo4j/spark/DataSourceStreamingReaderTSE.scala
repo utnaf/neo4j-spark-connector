@@ -88,6 +88,71 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
   }
 
   @Test
+  def testReadStreamWithLabelsWithPartitions(): Unit = {
+    SparkConnectorScalaSuiteIT.session()
+      .writeTransaction(
+        new TransactionWork[ResultSummary] {
+          override def execute(tx: Transaction): ResultSummary = {
+            tx.run(s"CREATE (n:Test1_Movie {title: 'My movie 0', timestamp: timestamp()})").consume()
+          }
+        })
+
+    val stream = ss.readStream.format(classOf[DataSource].getName)
+      .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
+      .option("labels", "Test1_Movie")
+      .option("streaming.property.name", "timestamp")
+      .option("streaming.from", "NOW")
+      .option("partitions", "5")
+      .load()
+
+    query = stream.writeStream
+      .format("memory")
+      .queryName("testReadStream")
+      .start()
+
+    val total = 500
+
+    val expected = (1 to total).map(index => Map(
+      "<labels>" -> mutable.WrappedArray.make(Array("Test1_Movie")),
+      "title" -> s"My movie $index"
+    ))
+
+    Executors.newSingleThreadExecutor().submit(new Runnable {
+      override def run(): Unit = {
+        Thread.sleep(5000)
+        SparkConnectorScalaSuiteIT.session()
+          .writeTransaction(new TransactionWork[ResultSummary] {
+            override def execute(tx: Transaction): ResultSummary = {
+              tx.run(
+                s"""UNWIND range(1, $total) AS index
+                   |CREATE (n:Test1_Movie {title: 'My movie ' + index, timestamp: timestamp()})""".stripMargin)
+                .consume()
+            }
+          })
+      }
+    })
+
+    val counter = new AtomicInteger();
+    Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
+      override def get(): Boolean = {
+        val df = ss.sql("select * from testReadStream order by timestamp")
+        val collect = df.collect()
+        val actual = if (!df.columns.contains("title")) {
+          Array.empty
+        } else {
+          collect.map(row => Map(
+            "<labels>" -> row.getAs[java.util.List[String]]("<labels>"),
+            "title" -> row.getAs[String]("title")
+          ))
+        }
+        // we test the equality for three times just to be sure that there are no duplications
+        // println(s"${actual.size} ${actual.distinct.size} dups ${actual.groupBy(e => e).filter(e => e._2.size > 1).keys} => ${actual.toList == expected.toList} && ${counter.get() + 1 == 3}")
+        actual.toList == expected.toList && counter.incrementAndGet() == 3
+      }
+    }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
+  }
+
+  @Test
   def testReadStreamWithLabelsGetAll(): Unit = {
     SparkConnectorScalaSuiteIT.session()
       .writeTransaction(
