@@ -9,9 +9,9 @@ import org.apache.spark.sql.sources.{Filter, GreaterThan}
 import org.apache.spark.sql.types.StructType
 import org.neo4j.spark.service.PartitionSkipLimit
 import org.neo4j.spark.streaming.OffsetStorage
-import org.neo4j.spark.util.{Neo4jOptions, Neo4jUtil, StreamingFrom, Validations}
+import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil, StreamingFrom, Validations}
 
-import java.util
+import java.{lang, util}
 import java.util.function.Supplier
 import java.util.{Collections, Optional, function}
 import scala.collection.JavaConverters._
@@ -39,18 +39,50 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
   override def readSchema(): StructType = schema
 
   override def setOffsetRange(start: Optional[Offset], end: Optional[Offset]): Unit = {
-    startOffset = start
-      .orElseGet(new Supplier[Offset] {
-        override def get(): Offset = Neo4jOffset24(neo4jOptions.streamingOptions.from.value())
+    setStartOffset(start)
+    val lastOffset: lang.Long = OffsetStorage.getLastOffset(jobId)
+    setEndOffset(end, lastOffset)
+
+    setForLastEmpty()
+  }
+
+  private def setForLastEmpty() = {
+    // if in the last cycle the partition returned
+    // an empty result this means that start will be set equal end,
+    // so we check if
+    if (startOffset.offset == endOffset.offset) {
+      // there is a database change by invoking the last offset inserted offset
+      val lastOffset = Neo4jUtil.callSchemaService[Long](neo4jOptions, jobId, {
+        schemaService =>
+          try {
+            schemaService.lastOffset()
+          } catch {
+            case _ => -1L
+          }
       })
-      .asInstanceOf[Neo4jOffset24]
-    val lastOffset: java.lang.Long = OffsetStorage.getLastOffset(jobId)
+      // if a the last offset into the database is changed
+      if (lastOffset > endOffset.offset) {
+        // we just increment the end offset in order to manage push spark to do a new query over the database
+        endOffset = Neo4jOffset24(endOffset.offset + 1)
+      }
+    }
+  }
+
+  private def setEndOffset(end: Optional[Offset], lastOffset: lang.Long) = {
     endOffset = end
       .map(new function.Function[Offset, Offset] {
         override def apply(o: Offset): Offset = if (lastOffset == null || o.asInstanceOf[Neo4jOffset24].offset > lastOffset) o else Neo4jOffset24(lastOffset)
       })
       .orElseGet(new Supplier[Offset] {
         override def get(): Offset = if (lastOffset == null) Neo4jOffset24(startOffset.offset + 1) else Neo4jOffset24(lastOffset)
+      })
+      .asInstanceOf[Neo4jOffset24]
+  }
+
+  private def setStartOffset(start: Optional[Offset]) = {
+    startOffset = start
+      .orElseGet(new Supplier[Offset] {
+        override def get(): Offset = Neo4jOffset24(neo4jOptions.streamingOptions.from.value())
       })
       .asInstanceOf[Neo4jOffset24]
   }
@@ -64,23 +96,24 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
   override def commit(end: Offset): Unit = {}
 
   override def planInputPartitions: util.ArrayList[InputPartition[InternalRow]] = {
-    val (filters, partitions) = if (startOffset.offset != StreamingFrom.ALL.value()) {
+    val (filters, numPartitions) = if (startOffset.offset != StreamingFrom.ALL.value()) {
       val prop = Neo4jUtil.getStreamingPropertyName(neo4jOptions)
       (this.filters :+ GreaterThan(prop, endOffset.offset),
         Seq(PartitionSkipLimit.EMPTY))
     } else {
       (this.filters, Neo4jUtil.callSchemaService(neo4jOptions, jobId, { schemaService => schemaService.skipLimitFromPartition() }))
     }
-    val collection = partitions
+    val partitions = numPartitions
       .map(partitionSkipLimit => new Neo4jStreamingInputPartition(neo4jOptions, filters, schema, jobId,
         partitionSkipLimit, Collections.emptyList(), new StructType()))
       .toList
       .asJavaCollection
-    new util.ArrayList[InputPartition[InternalRow]](collection)
+    new util.ArrayList[InputPartition[InternalRow]](partitions)
   }
 
   override def stop(): Unit = {
     OffsetStorage.clearForJobId(jobId)
+    new DriverCache(neo4jOptions.connection, jobId).close()
   }
 
   override def pushFilters(filtersArray: Array[Filter]): Array[Filter] = {
