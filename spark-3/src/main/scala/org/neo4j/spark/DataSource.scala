@@ -25,8 +25,9 @@ class DataSource extends TableProvider
 
   override def inferSchema(caseInsensitiveStringMap: CaseInsensitiveStringMap): StructType = {
     if (schema == null) {
-      validateConnection(new util.DriverCache(neo4jOptions.connection, jobId).getOrCreate().session(neo4jOptions.session.toNeo4jSession))
-      schema = Neo4jUtil.callSchemaService(getNeo4jOptions(caseInsensitiveStringMap), jobId, Array.empty[Filter], { schemaService => schemaService.struct() })
+      val neo4jOpts = getNeo4jOptions(caseInsensitiveStringMap)
+      validateConnection(new util.DriverCache(neo4jOpts.connection, jobId).getOrCreate().session(neo4jOptions.session.toNeo4jSession))
+      schema = Neo4jUtil.callSchemaService(neo4jOpts, jobId, Array.empty[Filter], { schemaService => schemaService.struct() })
     }
 
     schema

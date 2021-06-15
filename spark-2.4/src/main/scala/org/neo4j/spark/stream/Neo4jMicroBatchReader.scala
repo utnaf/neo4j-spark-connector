@@ -50,7 +50,7 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
     // an empty result this means that start will be set equal end,
     // so we check if
     if (startOffset.offset == endOffset.offset) {
-      // there is a database change by invoking the last offset inserted offset
+      // there is a database change by invoking the last offset inserted
       val lastOffset = Neo4jUtil.callSchemaService[Long](neo4jOptions, jobId, filters, {
         schemaService =>
           try {
@@ -61,7 +61,7 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
       })
       // if a the last offset into the database is changed
       if (lastOffset > endOffset.offset) {
-        // we just increment the end offset in order to manage push spark to do a new query over the database
+        // we just increment the end offset in order to push spark to do a new query over the database
         endOffset = Neo4jOffset24(endOffset.offset + 1)
       }
     }
