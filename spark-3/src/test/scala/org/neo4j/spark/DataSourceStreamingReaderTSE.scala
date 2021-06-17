@@ -33,7 +33,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         })
 
     val stream = ss.readStream.format(classOf[DataSource].getName)
-      .option("partitions", 1)
       .option("url", SparkConnectorScalaSuiteIT.server.getBoltUrl)
       .option("labels", "Test1_Movie")
       .option("streaming.property.name", "timestamp")
@@ -72,7 +71,6 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
     Assert.assertEventually(new Assert.ThrowingSupplier[Boolean, Exception] {
       override def get(): Boolean = {
         val df = ss.sql("select * from testReadStream order by timestamp")
-        df.show(100)
         val collect = df.collect()
         val actual = if (!df.columns.contains("title")) {
           Array.empty
@@ -84,7 +82,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         }
         // we test the equality for three times just to be sure that there are no duplications
         // println(s"${actual.size} ${actual.distinct.size} dups ${actual.groupBy(e => e).filter(e => e._2.size > 1).keys} => ${actual.toList == expected.toList} && ${counter.get() + 1 == 3}")
-        actual.toList == expected.toList
+        actual.toList == expected.toList && counter.incrementAndGet() == 3
       }
     }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
   }
@@ -148,7 +146,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
           ))
         }
         // we test the equality for three times just to be sure that there are no duplications
-        // println(s"${actual.size} ${actual.distinct.size} dups ${actual.groupBy(e => e).filter(e => e._2.size > 1).keys} => ${actual.toList == expected.toList} && ${counter.get() + 1 == 3}")
+        println(s"${actual.size} ${actual.distinct.size} dups ${actual.groupBy(e => e).filter(e => e._2.size > 1).keys} => ${actual.toList == expected.toList} && ${counter.get() + 1 == 3}")
         actual.toList == expected.toList && counter.incrementAndGet() == 3
       }
     }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
@@ -212,7 +210,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
             "title" -> row.getAs[String]("title")
           ))
         }
-        // println(s"${actual.size} ${actual.distinct.size} dups ${actual.groupBy(e => e).filter(e => e._2.size > 1).keys} => ${actual.toList == expected.toList} && ${counter.get() + 1 == 3}")
+        println(s"${actual.size} ${actual.distinct.size} dups ${actual.groupBy(e => e).filter(e => e._2.size > 1).keys} => ${actual.toList == expected.toList} && ${counter.get() + 1 == 3}")
         actual.toList == expected.toList && counter.incrementAndGet() == 3
       }
     }, Matchers.equalTo(true), 30L, TimeUnit.SECONDS)
@@ -508,6 +506,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
       override def get(): Boolean = {
         val df = ss.sql("select * from testReadStream ")
         val collect = df.collect()
+        df.show(100)
         val actual: Array[Int] = if (!df.columns.contains("age")) {
           Array.empty
         } else {
@@ -517,7 +516,7 @@ class DataSourceStreamingReaderTSE extends SparkConnectorScalaBaseTSE {
         val actualList = actual.toList
         val expectedList = expected.toList
         // println(s"${actual.size} ${actual.distinct.size} dups ${actual.groupBy(e => e).filter(e => e._2.size > 1).keys} => ${actual.toList == expected.toList} && ${counter.get() + 1 == 3}")
-        actualList == expectedList && counter.incrementAndGet() == 3
+        actualList == expectedList
       }
     }, Matchers.equalTo(true), 40L, TimeUnit.SECONDS)
   }

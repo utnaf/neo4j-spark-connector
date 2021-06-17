@@ -3,7 +3,7 @@ package org.neo4j.spark.stream
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.{InputPartition, PartitionReaderFactory, Scan, SupportsPushDownFilters}
-import org.apache.spark.sql.connector.read.streaming.{MicroBatchStream, Offset}
+import org.apache.spark.sql.connector.read.streaming.{MicroBatchStream, Offset, ReadLimit}
 import org.apache.spark.sql.sources.{Filter, GreaterThan}
 import org.apache.spark.sql.types.StructType
 import org.neo4j.spark.reader.{Neo4jPartition, SimplePartitionReaderFactory}
@@ -64,7 +64,12 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
 
   override def latestOffset(): Offset = {
     val lastOffset: lang.Long = OffsetStorage.getLastOffset(jobId)
-    Neo4jOffset(lastOffset)
+    if (lastOffset == null) {
+      initialOffset()
+    }
+    else {
+      Neo4jOffset(lastOffset)
+    }
   }
 
   override def initialOffset(): Offset = Neo4jOffset(neo4jOptions.streamingOptions.from.value())
