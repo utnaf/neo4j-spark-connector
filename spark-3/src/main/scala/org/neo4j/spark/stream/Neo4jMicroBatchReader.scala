@@ -32,13 +32,13 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
     scriptResult
   }
 
+  private var lastUsedOffset: Neo4jOffset = null
+
   private var filters: Array[Filter] = Array[Filter]()
 
   override def deserializeOffset(json: String): Offset = Neo4jOffset(json.toLong)
 
-  override def commit(end: Offset): Unit = {
-    println("+++ committing " + end)
-  }
+  override def commit(end: Offset): Unit = { }
 
   override def planInputPartitions(start: Offset, end: Offset): Array[InputPartition] = {
     this.filters = if (start.asInstanceOf[Neo4jOffset].offset != StreamingFrom.ALL.value()) {
@@ -49,10 +49,12 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
       this.filters
     }
 
-    val numPartitions = Neo4jUtil.callSchemaService(neo4jOptions, jobId, filters,
-      { schemaService => schemaService.skipLimitFromPartition() })
+    val partitions = Neo4jUtil.callSchemaService(
+      neo4jOptions, jobId, filters,
+      { schemaService => schemaService.skipLimitFromPartition() }
+    )
 
-    numPartitions
+    partitions
       .map(p => Neo4jStreamingPartition(p, filters))
       .toArray
   }
@@ -63,13 +65,43 @@ class Neo4jMicroBatchReader(private val optionalSchema: Optional[StructType],
   }
 
   override def latestOffset(): Offset = {
-    val lastOffset: lang.Long = OffsetStorage.getLastOffset(jobId)
-    if (lastOffset == null) {
-      initialOffset()
+    val lastReadOffset: lang.Long = OffsetStorage.getLastOffset(jobId)
+
+    // the current offset is build by the last read offset, if any, or from the last used offset
+    var currentOffset: Neo4jOffset = if (lastReadOffset == null) {
+      // if the last used offset is not set yet, we use the initial offset
+      if (lastUsedOffset == null) {
+        lastUsedOffset = initialOffset().asInstanceOf[Neo4jOffset]
+      }
+
+      lastUsedOffset
     }
     else {
-      Neo4jOffset(lastOffset)
+      Neo4jOffset(lastReadOffset)
     }
+
+    // if in the last cycle the partition returned
+    // an empty result this means that start will be set equal end,
+    // so we check if
+    if (lastUsedOffset != null && currentOffset.offset == lastUsedOffset.offset) {
+      // there is a database change by invoking the last offset inserted
+      val lastNeo4jOffset = Neo4jUtil.callSchemaService[Long](neo4jOptions, jobId, filters, {
+        schemaService =>
+          try {
+            schemaService.lastOffset()
+          } catch {
+            case _ => -1L
+          }
+      })
+      // if a the last offset into the database is changed
+      if (lastNeo4jOffset > currentOffset.offset) {
+        // we just increment the end offset in order to push spark to do a new query over the database
+        currentOffset = Neo4jOffset(currentOffset.offset + 1)
+      }
+    }
+
+    lastUsedOffset = currentOffset
+    currentOffset
   }
 
   override def initialOffset(): Offset = Neo4jOffset(neo4jOptions.streamingOptions.from.value())
