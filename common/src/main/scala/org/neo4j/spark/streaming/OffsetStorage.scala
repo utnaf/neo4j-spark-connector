@@ -22,4 +22,5 @@ object OffsetStorage {
 
   def clearForJobId(jobId: String) = cache.remove(jobId)
 
+  def size() = cache.size()
 }

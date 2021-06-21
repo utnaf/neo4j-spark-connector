@@ -196,11 +196,15 @@ class Neo4jOptions(private val options: java.util.Map[String, String]) extends S
 
   val streamingOptions = Neo4jStreamingOptions(getParameter(STREAMING_PROPERTY_NAME),
     StreamingFrom.withCaseInsensitiveName(getParameter(STREAMING_FROM, DEFAULT_STREAMING_FROM.toString)),
-    getParameter(STREAMING_QUERY_OFFSET))
+    getParameter(STREAMING_QUERY_OFFSET),
+    getParameter(STREAMING_CLEAN_STRUCT_TYPE_STORAGE, DEFAULT_STREAMING_CLEAN_STRUCT_TYPE_STORAGE.toString).toBoolean)
 
 }
 
-case class Neo4jStreamingOptions(propertyName: String, from: StreamingFrom.Value, queryOffset: String)
+case class Neo4jStreamingOptions(propertyName: String,
+                                 from: StreamingFrom.Value,
+                                 queryOffset: String,
+                                 cleanStructTypeStorage: Boolean)
 
 case class Neo4jApocConfig(procedureConfigMap: Map[String, AnyRef])
 
@@ -367,6 +371,7 @@ object Neo4jOptions {
   val STREAMING_PROPERTY_NAME = "streaming.property.name"
   val STREAMING_FROM = "streaming.from"
   val STREAMING_QUERY_OFFSET = "streaming.query.offset"
+  val STREAMING_CLEAN_STRUCT_TYPE_STORAGE = "streaming.clean.struct-type.storage"
 
   val SCRIPT = "script"
 
@@ -392,6 +397,7 @@ object Neo4jOptions {
   val DEFAULT_OPTIMIZATION_TYPE = OptimizationType.NONE
   val DEFAULT_SAVE_MODE = SaveMode.Overwrite
   val DEFAULT_STREAMING_FROM = StreamingFrom.ALL
+  val DEFAULT_STREAMING_CLEAN_STRUCT_TYPE_STORAGE = false
 }
 
 class CaseInsensitiveEnumeration extends Enumeration {

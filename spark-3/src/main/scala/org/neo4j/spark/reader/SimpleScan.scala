@@ -8,6 +8,7 @@ import org.neo4j.spark.service.PartitionSkipLimit
 import org.neo4j.spark.stream.Neo4jMicroBatchReader
 import org.neo4j.spark.util.{Neo4jOptions, Neo4jUtil}
 
+
 import java.util.Optional
 
 case class Neo4jPartition(partitionSkipLimit: PartitionSkipLimit) extends InputPartition
