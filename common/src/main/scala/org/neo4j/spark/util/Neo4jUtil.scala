@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, ArrayData, DateTim
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.neo4j.cypherdsl.core.{Condition, Cypher, Property, PropertyContainer}
+import org.neo4j.cypherdsl.core.{Condition, Cypher, Expression, Functions, Property, PropertyContainer}
 import org.neo4j.driver.internal._
 import org.neo4j.driver.types.{Entity, Path}
 import org.neo4j.driver.{Session, Transaction, Value, Values}
@@ -266,8 +266,16 @@ object Neo4jUtil {
   def paramsFromFilters(filters: Array[Filter]): Map[String, Any] = {
     filters.flatMap(f => f.flattenFilters).map(Neo4jUtil.getAttributeAndValue)
       .filter(_.nonEmpty)
-      .map(valAndAtt => valAndAtt.head.toString.unquote() -> valAndAtt(1))
+      .map(valAndAtt => valAndAtt.head.toString.unquote() -> toParamValue(valAndAtt(1)))
       .toMap
+  }
+
+  def toParamValue(value: Any): Any = {
+    value match {
+      case date: java.sql.Date => date.toString
+      case timestamp: java.sql.Timestamp => timestamp.toLocalDateTime.toString
+      case _ => value
+    }
   }
 
   /**
@@ -285,13 +293,22 @@ object Neo4jUtil {
 
     val base64ed = java.util.Base64.getEncoder.encodeToString(attributeValue.getBytes())
 
-    s"${base64ed}_$attribute".quote()
+    s"${base64ed}_${attribute.unquote()}".quote()
+  }
+
+  def valueToCypherExpression(attribute: String, value: Any): Expression = {
+    val parameter = Cypher.parameter(createParameterName(attribute, value))
+    value match {
+      case d: java.sql.Date => Functions.date(parameter)
+      case t: java.sql.Timestamp => Functions.localdatetime(parameter)
+      case _ => parameter
+    }
   }
 
   def mapSparkFiltersToCypher(filter: Filter, container: PropertyContainer, attributeAlias: Option[String] = None): Condition = {
     filter match {
       case eqns: EqualNullSafe =>
-        val parameter = Cypher.parameter(createParameterName(eqns.attribute, eqns.value))
+        val parameter = valueToCypherExpression(eqns.attribute, eqns.value)
         val property = getCorrectProperty(container, attributeAlias.getOrElse(eqns.attribute))
         property.isNull.and(parameter.isNull)
           .or(
@@ -299,31 +316,31 @@ object Neo4jUtil {
           )
       case eq: EqualTo =>
         getCorrectProperty(container, attributeAlias.getOrElse(eq.attribute))
-          .isEqualTo(Cypher.parameter(createParameterName(eq.attribute, eq.value)))
+          .isEqualTo(valueToCypherExpression(eq.attribute, eq.value))
       case gt: GreaterThan =>
         getCorrectProperty(container, attributeAlias.getOrElse(gt.attribute))
-          .gt(Cypher.parameter(createParameterName(gt.attribute, gt.value)))
+          .gt(valueToCypherExpression(gt.attribute, gt.value))
       case gte: GreaterThanOrEqual =>
         getCorrectProperty(container, attributeAlias.getOrElse(gte.attribute))
-          .gte(Cypher.parameter(createParameterName(gte.attribute, gte.value)))
+          .gte(valueToCypherExpression(gte.attribute, gte.value))
       case lt: LessThan =>
         getCorrectProperty(container, attributeAlias.getOrElse(lt.attribute))
-          .lt(Cypher.parameter(createParameterName(lt.attribute, lt.value)))
+          .lt(valueToCypherExpression(lt.attribute, lt.value))
       case lte: LessThanOrEqual =>
         getCorrectProperty(container, attributeAlias.getOrElse(lte.attribute))
-          .lte(Cypher.parameter(createParameterName(lte.attribute, lte.value)))
+          .lte(valueToCypherExpression(lte.attribute, lte.value))
       case in: In =>
         getCorrectProperty(container, attributeAlias.getOrElse(in.attribute))
-          .in(Cypher.parameter(createParameterName(in.attribute, in.values)))
+          .in(valueToCypherExpression(in.attribute, in.values))
       case startWith: StringStartsWith =>
         getCorrectProperty(container, attributeAlias.getOrElse(startWith.attribute))
-          .startsWith(Cypher.parameter(createParameterName(startWith.attribute, startWith.value)))
+          .startsWith(valueToCypherExpression(startWith.attribute, startWith.value))
       case endsWith: StringEndsWith =>
         getCorrectProperty(container, attributeAlias.getOrElse(endsWith.attribute))
-          .endsWith(Cypher.parameter(createParameterName(endsWith.attribute, endsWith.value)))
+          .endsWith(valueToCypherExpression(endsWith.attribute, endsWith.value))
       case contains: StringContains =>
         getCorrectProperty(container, attributeAlias.getOrElse(contains.attribute))
-          .contains(Cypher.parameter(createParameterName(contains.attribute, contains.value)))
+          .contains(valueToCypherExpression(contains.attribute, contains.value))
       case notNull: IsNotNull => getCorrectProperty(container, attributeAlias.getOrElse(notNull.attribute)).isNotNull
       case isNull: IsNull => getCorrectProperty(container, attributeAlias.getOrElse(isNull.attribute)).isNull
       case not: Not => mapSparkFiltersToCypher(not.child, container, attributeAlias).not()
