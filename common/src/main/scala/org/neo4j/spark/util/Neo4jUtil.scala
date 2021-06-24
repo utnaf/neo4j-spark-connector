@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, ArrayData, DateTim
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.neo4j.cypherdsl.core.{Condition, Cypher, Expression, Functions, Parameter, Property, PropertyContainer}
+import org.neo4j.cypherdsl.core.{Condition, Cypher, Property, PropertyContainer}
 import org.neo4j.driver.internal._
 import org.neo4j.driver.types.{Entity, Path}
 import org.neo4j.driver.{Session, Transaction, Value, Values}
@@ -313,6 +313,7 @@ object Neo4jUtil {
       case not: Not => mapSparkFiltersToCypher(not.child, container, attributeAlias).not()
       case filter@(_: Filter) => throw new IllegalArgumentException(s"Filter of type `$filter` is not supported.")
     }
+  }
 
   def getStreamingPropertyName(options: Neo4jOptions) = options.query.queryType match {
     case QueryType.RELATIONSHIP => s"rel.${options.streamingOptions.propertyName}"
