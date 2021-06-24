@@ -4,7 +4,7 @@ import javax.lang.model.SourceVersion
 import org.apache.spark.sql.types.{DataType, DataTypes, MapType, StructField, StructType}
 import org.neo4j.driver.types.{Entity, Node, Relationship}
 import org.neo4j.spark.service.SchemaService
-import org.apache.spark.sql.sources.{EqualNullSafe, EqualTo, Filter, GreaterThan, GreaterThanOrEqual, In, IsNotNull, IsNull, LessThan, LessThanOrEqual, Not, StringContains, StringEndsWith, StringStartsWith}
+import org.apache.spark.sql.sources.{And, EqualNullSafe, EqualTo, Filter, GreaterThan, GreaterThanOrEqual, In, IsNotNull, IsNull, LessThan, LessThanOrEqual, Not, Or, StringContains, StringEndsWith, StringStartsWith}
 
 import scala.collection.JavaConverters._
 
@@ -75,6 +75,14 @@ object Neo4jImplicits {
   }
 
   implicit class FilterImplicit(filter: Filter) {
+    def flattenFilters: Array[Filter] = {
+      filter match {
+        case or: Or => Array(or.left.flattenFilters, or.right.flattenFilters).flatten
+        case and: And => Array(and.left.flattenFilters, and.right.flattenFilters).flatten
+        case f: Filter => Array(f)
+      }
+    }
+
     def getAttribute: Option[String] = Option(filter match {
       case eqns: EqualNullSafe => eqns.attribute
       case eq: EqualTo => eq.attribute

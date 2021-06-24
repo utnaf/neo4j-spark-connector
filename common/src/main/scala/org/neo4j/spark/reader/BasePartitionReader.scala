@@ -7,17 +7,19 @@ import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.{Record, Session, Transaction, Values}
 import org.neo4j.spark.service.{MappingService, Neo4jQueryReadStrategy, Neo4jQueryService, Neo4jQueryStrategy, Neo4jReadMappingStrategy, PartitionSkipLimit}
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil}
+import org.neo4j.spark.util.Neo4jImplicits.{CypherImplicits, FilterImplicit, StructTypeImplicit}
 
 import java.util
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 abstract class BasePartitionReader(private val options: Neo4jOptions,
-                          private val filters: Array[Filter],
-                          private val schema: StructType,
-                          private val jobId: String,
-                          private val partitionSkipLimit: PartitionSkipLimit,
-                          private val scriptResult: java.util.List[java.util.Map[String, AnyRef]],
-                          private val requiredColumns: StructType) extends Logging {
+                                   private val filters: Array[Filter],
+                                   private val schema: StructType,
+                                   private val jobId: String,
+                                   private val partitionSkipLimit: PartitionSkipLimit,
+                                   private val scriptResult: java.util.List[java.util.Map[String, AnyRef]],
+                                   private val requiredColumns: StructType) extends Logging {
   private var result: Iterator[Record] = _
   private var session: Session = _
   private var transaction: Transaction = _
@@ -44,13 +46,6 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
     result.hasNext
   }
 
-  protected def getQueryParameters: util.Map[String, AnyRef] = {
-    if (log.isDebugEnabled) {
-      log.debug(s"Query Parameters are: $values")
-    }
-    values
-  }
-
   def get: InternalRow = mappingService.convert(result.next(), schema)
 
   def close(): Unit = {
@@ -59,4 +54,19 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
     driverCache.close()
   }
 
+  protected def getQueryParameters: util.Map[String, Any] = {
+    val params = mutable.HashMap[String, Any]()
+    params.put(Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT, scriptResult)
+    val flatten = filters.flatMap(f => f.flattenFilters)
+
+    flatten.map(Neo4jUtil.getAttributeAndValue)
+      .filter(_.nonEmpty)
+      .foreach(valAndAtt => params.put(valAndAtt.head.toString.unquote(), valAndAtt(1)))
+
+    if (log.isDebugEnabled) {
+      log.debug(s"Query Parameters are: $params")
+    }
+
+    params.asJava
+  }
 }

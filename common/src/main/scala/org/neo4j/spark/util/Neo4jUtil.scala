@@ -3,24 +3,28 @@ package org.neo4j.spark.util
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.{JsonSerializer, ObjectMapper, SerializerProvider}
+import com.google.common.base.Charsets
+import com.google.common.io.BaseEncoding
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{GenericRowWithSchema, UnsafeArrayData, UnsafeMapData, UnsafeRow}
 import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, ArrayData, DateTimeUtils}
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.neo4j.cypherdsl.core.{Condition, Cypher, Expression, Functions, Property, PropertyContainer}
+import org.neo4j.cypherdsl.core.{Condition, Cypher, Expression, Functions, Parameter, Property, PropertyContainer}
 import org.neo4j.driver.internal._
 import org.neo4j.driver.types.{Entity, Path}
 import org.neo4j.driver.{Session, Transaction, Value, Values}
 import org.neo4j.spark.service.SchemaService
 import org.neo4j.spark.util.Neo4jImplicits.{EntityImplicits, _}
-import org.neo4j.spark.util.Validations.validateConnection
 import org.slf4j.Logger
 
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.Properties
+import org.neo4j.spark.util.Neo4jImplicits._
+
+import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
 object Neo4jUtil {
@@ -239,45 +243,75 @@ object Neo4jUtil {
 
   def connectorVersion: String = properties.getOrDefault("version", "UNKNOWN").toString
 
-  def valueToCypherExpression(value: Any): Expression = {
-    value match {
-      case date: java.sql.Date => Functions.date(date.toString)
-      case timestamp: java.sql.Timestamp => Functions.localdatetime(Cypher.literalOf(timestamp.toLocalDateTime.toString))
-      case _ => Cypher.literalOf(value)
+  def getCorrectProperty(container: PropertyContainer, attribute: String): Property = {
+    container.property(attribute.split('.'): _*)
+  }
+
+  @tailrec
+  def getAttributeAndValue(filter: Filter): Seq[Any] = {
+    filter match {
+      case f: EqualTo => Seq(createParameterName(f.attribute, f.value), f.value)
+      case f: GreaterThan => Seq(createParameterName(f.attribute, f.value), f.value)
+      case f: GreaterThanOrEqual => Seq(createParameterName(f.attribute, f.value), f.value)
+      case f: LessThan => Seq(createParameterName(f.attribute, f.value), f.value)
+      case f: LessThanOrEqual => Seq(createParameterName(f.attribute, f.value), f.value)
+      case f: In => Seq(createParameterName(f.attribute, f.values), f.values)
+      case f: StringStartsWith => Seq(createParameterName(f.attribute, f.value), f.value)
+      case f: StringEndsWith => Seq(createParameterName(f.attribute, f.value), f.value)
+      case f: StringContains => Seq(createParameterName(f.attribute, f.value), f.value)
+      case f: Not => getAttributeAndValue(f.child)
+      case _ => Seq()
     }
   }
 
-  def getCorrectProperty(container: PropertyContainer, attribute: String): Property = {
-    container.property(attribute.split('.') : _*)
+  /**
+   * df: we need this to handle scenarios like `WHERE age > 19 and age < 22`,
+   * so we can't basically add a parameter named $age.
+   * So we base64 encode the value to ensure a unique parameter name
+   */
+  def createParameterName(attribute: String, value: Any): String = {
+    s"${BaseEncoding.base64().encode(value.toString.getBytes(Charsets.UTF_8))}_$attribute".quote()
   }
 
-  def mapSparkFiltersToCypher(filter: Filter, container: PropertyContainer, attributeAlias: Option[String] = None): Condition =
+  def mapSparkFiltersToCypher(filter: Filter, container: PropertyContainer, attributeAlias: Option[String] = None): Condition = {
     filter match {
-      case eqns: EqualNullSafe => getCorrectProperty(container, attributeAlias.getOrElse(eqns.attribute))
-        .isNull.and(valueToCypherExpression(eqns.value).isNull).or(getCorrectProperty(container, attributeAlias.getOrElse(eqns.attribute)).isEqualTo(Cypher.literalOf(eqns.value)))
-      case eq: EqualTo => getCorrectProperty(container, attributeAlias.getOrElse(eq.attribute))
-        .isEqualTo(valueToCypherExpression(eq.value))
-      case gt: GreaterThan => getCorrectProperty(container, attributeAlias.getOrElse(gt.attribute))
-        .gt(valueToCypherExpression(gt.value))
-      case gte: GreaterThanOrEqual => getCorrectProperty(container, attributeAlias.getOrElse(gte.attribute))
-        .gte(valueToCypherExpression(gte.value))
-      case lt: LessThan => getCorrectProperty(container, attributeAlias.getOrElse(lt.attribute))
-        .lt(valueToCypherExpression(lt.value))
-      case lte: LessThanOrEqual => getCorrectProperty(container, attributeAlias.getOrElse(lte.attribute))
-        .lte(valueToCypherExpression(lte.value))
+      case eqns: EqualNullSafe =>
+        val property = getCorrectProperty(container, attributeAlias.getOrElse(eqns.attribute))
+        property.isNull.and(property.isNull)
+          .or(
+            property.isEqualTo(Cypher.parameter(createParameterName(eqns.attribute, eqns.value)))
+          )
+      case eq: EqualTo =>
+        getCorrectProperty(container, attributeAlias.getOrElse(eq.attribute))
+          .isEqualTo(Cypher.parameter(createParameterName(eq.attribute, eq.value)))
+      case gt: GreaterThan =>
+        getCorrectProperty(container, attributeAlias.getOrElse(gt.attribute))
+          .gt(Cypher.parameter(createParameterName(gt.attribute, gt.value)))
+      case gte: GreaterThanOrEqual =>
+        getCorrectProperty(container, attributeAlias.getOrElse(gte.attribute))
+          .gte(Cypher.parameter(createParameterName(gte.attribute, gte.value)))
+      case lt: LessThan =>
+        getCorrectProperty(container, attributeAlias.getOrElse(lt.attribute))
+          .lt(Cypher.parameter(createParameterName(lt.attribute, lt.value)))
+      case lte: LessThanOrEqual =>
+        getCorrectProperty(container, attributeAlias.getOrElse(lte.attribute))
+          .lte(Cypher.parameter(createParameterName(lte.attribute, lte.value)))
       case in: In =>
-        val values = in.values.map(valueToCypherExpression)
-        getCorrectProperty(container, attributeAlias.getOrElse(in.attribute)).in(valueToCypherExpression(values.toIterable.asJava))
+        getCorrectProperty(container, attributeAlias.getOrElse(in.attribute))
+          .in(Cypher.parameter(createParameterName(in.attribute, in.values)))
+      case startWith: StringStartsWith =>
+        getCorrectProperty(container, attributeAlias.getOrElse(startWith.attribute))
+          .startsWith(Cypher.parameter(createParameterName(startWith.attribute, startWith.value)))
+      case endsWith: StringEndsWith =>
+        getCorrectProperty(container, attributeAlias.getOrElse(endsWith.attribute))
+          .endsWith(Cypher.parameter(createParameterName(endsWith.attribute, endsWith.value)))
+      case contains: StringContains =>
+        getCorrectProperty(container, attributeAlias.getOrElse(contains.attribute))
+          .contains(Cypher.parameter(createParameterName(contains.attribute, contains.value)))
       case notNull: IsNotNull => getCorrectProperty(container, attributeAlias.getOrElse(notNull.attribute)).isNotNull
       case isNull: IsNull => getCorrectProperty(container, attributeAlias.getOrElse(isNull.attribute)).isNull
-      case startWith: StringStartsWith => getCorrectProperty(container, attributeAlias.getOrElse(startWith.attribute))
-        .startsWith(valueToCypherExpression(startWith.value))
-      case endsWith: StringEndsWith => getCorrectProperty(container, attributeAlias.getOrElse(endsWith.attribute))
-        .endsWith(valueToCypherExpression(endsWith.value))
-      case contains: StringContains => getCorrectProperty(container, attributeAlias.getOrElse(contains.attribute))
-        .contains(valueToCypherExpression(contains.value))
       case not: Not => mapSparkFiltersToCypher(not.child, container, attributeAlias).not()
-      case filter@(_: Filter) => throw new IllegalArgumentException(s"Filter of type `${filter}` is not supported.")
+      case filter@(_: Filter) => throw new IllegalArgumentException(s"Filter of type `$filter` is not supported.")
     }
 
   def getStreamingPropertyName(options: Neo4jOptions) = options.query.queryType match {
