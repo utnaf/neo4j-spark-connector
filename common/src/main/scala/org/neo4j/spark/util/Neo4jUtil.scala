@@ -22,12 +22,9 @@ import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 import org.neo4j.spark.util.Neo4jImplicits._
-import org.spark_project.guava.io.BaseEncoding
 
-import java.util
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 object Neo4jUtil {
 
@@ -285,7 +282,10 @@ object Neo4jUtil {
     else {
       value.toString
     }
-    s"${BaseEncoding.base64().encode(attributeValue.getBytes(Charsets.UTF_8))}_$attribute".quote()
+
+    val base64ed = java.util.Base64.getEncoder.encodeToString(attributeValue.getBytes())
+
+    s"${base64ed}_$attribute".quote()
   }
 
   def mapSparkFiltersToCypher(filter: Filter, container: PropertyContainer, attributeAlias: Option[String] = None): Condition = {
