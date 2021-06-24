@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.{JsonSerializer, ObjectMapper, SerializerProvider}
 import com.google.common.base.Charsets
-import com.google.common.io.BaseEncoding
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{GenericRowWithSchema, UnsafeArrayData, UnsafeMapData, UnsafeRow}
 import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, ArrayData, DateTimeUtils}
@@ -23,6 +22,7 @@ import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 import org.neo4j.spark.util.Neo4jImplicits._
+import org.spark_project.guava.io.BaseEncoding
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
