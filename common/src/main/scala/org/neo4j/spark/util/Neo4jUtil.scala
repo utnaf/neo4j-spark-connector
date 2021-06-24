@@ -270,16 +270,23 @@ object Neo4jUtil {
    * So we base64 encode the value to ensure a unique parameter name
    */
   def createParameterName(attribute: String, value: Any): String = {
-    s"${BaseEncoding.base64().encode(value.toString.getBytes(Charsets.UTF_8))}_$attribute".quote()
+    val attributeValue = if (value == null) {
+      "NULL"
+    }
+    else {
+      value.toString
+    }
+    s"${BaseEncoding.base64().encode(attributeValue.getBytes(Charsets.UTF_8))}_$attribute".quote()
   }
 
   def mapSparkFiltersToCypher(filter: Filter, container: PropertyContainer, attributeAlias: Option[String] = None): Condition = {
     filter match {
       case eqns: EqualNullSafe =>
+        val parameter = Cypher.parameter(createParameterName(eqns.attribute, eqns.value))
         val property = getCorrectProperty(container, attributeAlias.getOrElse(eqns.attribute))
-        property.isNull.and(property.isNull)
+        property.isNull.and(parameter.isNull)
           .or(
-            property.isEqualTo(Cypher.parameter(createParameterName(eqns.attribute, eqns.value)))
+            property.isEqualTo(parameter)
           )
       case eq: EqualTo =>
         getCorrectProperty(container, attributeAlias.getOrElse(eq.attribute))
