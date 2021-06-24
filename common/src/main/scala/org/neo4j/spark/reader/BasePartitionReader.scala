@@ -7,7 +7,6 @@ import org.apache.spark.sql.types.StructType
 import org.neo4j.driver.{Record, Session, Transaction, Values}
 import org.neo4j.spark.service.{MappingService, Neo4jQueryReadStrategy, Neo4jQueryService, Neo4jQueryStrategy, Neo4jReadMappingStrategy, PartitionSkipLimit}
 import org.neo4j.spark.util.{DriverCache, Neo4jOptions, Neo4jUtil}
-import org.neo4j.spark.util.Neo4jImplicits.{CypherImplicits, FilterImplicit, StructTypeImplicit}
 
 import java.util
 import scala.collection.JavaConverters._
@@ -30,9 +29,6 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
     .createQuery()
 
   private val mappingService = new MappingService(new Neo4jReadMappingStrategy(options, requiredColumns), options)
-
-  private lazy val values: util.Map[String, AnyRef] = Map(Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT -> scriptResult).asJava
-    .asInstanceOf[util.Map[String, AnyRef]]
 
   def next: Boolean = {
     if (result == null) {
@@ -57,11 +53,8 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
   protected def getQueryParameters: util.Map[String, Any] = {
     val params = mutable.HashMap[String, Any]()
     params.put(Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT, scriptResult)
-    val flatten = filters.flatMap(f => f.flattenFilters)
-
-    flatten.map(Neo4jUtil.getAttributeAndValue)
-      .filter(_.nonEmpty)
-      .foreach(valAndAtt => params.put(valAndAtt.head.toString.unquote(), valAndAtt(1)))
+    Neo4jUtil.paramsFromFilters(filters)
+      .foreach(p => params.put(p._1, p._2))
 
     if (log.isDebugEnabled) {
       log.debug(s"Query Parameters are: $params")

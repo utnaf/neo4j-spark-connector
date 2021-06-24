@@ -36,7 +36,7 @@ class BaseStreamingPartitionReader(private val options: Neo4jOptions,
       .flatMap(f => f.getValue)
       .getOrElse(StreamingFrom.ALL.value())
       .asInstanceOf[Long]
-    map.put(Neo4jQueryStrategy.VARIABLE_STREAM, Collections.singletonMap("offset", value))
+    map.put(Neo4jUtil.createParameterName(Neo4jQueryStrategy.VARIABLE_STREAM, value), Collections.singletonMap("offset", value))
     map
   }
 

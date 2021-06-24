@@ -24,8 +24,10 @@ import java.util.Properties
 import org.neo4j.spark.util.Neo4jImplicits._
 import org.spark_project.guava.io.BaseEncoding
 
+import java.util
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 object Neo4jUtil {
 
@@ -262,6 +264,13 @@ object Neo4jUtil {
       case f: Not => getAttributeAndValue(f.child)
       case _ => Seq()
     }
+  }
+
+  def paramsFromFilters(filters: Array[Filter]): Map[String, Any] = {
+    filters.flatMap(f => f.flattenFilters).map(Neo4jUtil.getAttributeAndValue)
+      .filter(_.nonEmpty)
+      .map(valAndAtt => valAndAtt.head.toString.unquote() -> valAndAtt(1))
+      .toMap
   }
 
   /**
