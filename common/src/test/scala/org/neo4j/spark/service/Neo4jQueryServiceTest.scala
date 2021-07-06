@@ -4,6 +4,7 @@ import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.sources._
 import org.junit.Assert._
 import org.junit.Test
+import org.neo4j.spark.util.Neo4jImplicits.CypherImplicits
 import org.neo4j.spark.util.{Neo4jOptions, Neo4jUtil, QueryType}
 
 import scala.collection.immutable.HashMap
@@ -107,7 +108,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    val paramName = "$" + Neo4jUtil.createParameterName("name", "John Doe")
+    val paramName = "$" + "name".toParameterName("John Doe")
 
     assertEquals(s"MATCH (n:`Person`) WHERE n.name = $paramName RETURN n", query)
   }
@@ -126,8 +127,8 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    val nameParameterName = "$" + Neo4jUtil.createParameterName("name", "John Doe")
-    val ageParameterName = "$" + Neo4jUtil.createParameterName("age", 36)
+    val nameParameterName = "$" + "name".toParameterName("John Doe")
+    val ageParameterName = "$" + "age".toParameterName(36)
 
     assertEquals(
       s"""MATCH (n:`Person`)
@@ -150,8 +151,8 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    val nameParameterName = "$" + Neo4jUtil.createParameterName("name", null)
-    val ageParameterName = "$" + Neo4jUtil.createParameterName("age", 36)
+    val nameParameterName = "$" + "name".toParameterName(null)
+    val ageParameterName = "$" + "age".toParameterName(36)
 
     assertEquals(s"MATCH (n:`Person`) WHERE (((n.name IS NULL AND $nameParameterName IS NULL) OR n.name = $nameParameterName) AND n.age = $ageParameterName) RETURN n", query)
   }
@@ -170,8 +171,8 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    val nameOneParameterName = "$" + Neo4jUtil.createParameterName("name", "Person Name")
-    val nameTwoParameterName = "$" + Neo4jUtil.createParameterName("name", "Person Surname")
+    val nameOneParameterName = "$" + "name".toParameterName("Person Name")
+    val nameTwoParameterName = "$" + "name".toParameterName("Person Surname")
 
     assertEquals(
       s"""MATCH (n:`Person`)
@@ -259,7 +260,7 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    val parameterName = "$" + Neo4jUtil.createParameterName("source.name", "John Doe")
+    val parameterName = "$" + "source.name".toParameterName("John Doe")
 
     assertEquals("MATCH (source:`Person`) " +
       "MATCH (target:`Person`) " +
@@ -282,8 +283,8 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    val paramOneName = "$" + Neo4jUtil.createParameterName("source.name", "John Doe")
-    val paramTwoName = "$" + Neo4jUtil.createParameterName("target.name", "John Doe")
+    val paramOneName = "$" + "source.name".toParameterName("John Doe")
+    val paramTwoName = "$" + "target.name".toParameterName("John Doe")
 
     assertEquals("MATCH (source:`Person`) " +
       "MATCH (target:`Person`) " +
@@ -307,8 +308,8 @@ class Neo4jQueryServiceTest {
 
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
-    val sourceIdParameterName = "$" + Neo4jUtil.createParameterName("source.id", 14)
-    val targetIdParameterName = "$" + Neo4jUtil.createParameterName("target.id", 16)
+    val sourceIdParameterName = "$" + "source.id".toParameterName(14)
+    val targetIdParameterName = "$" + "target.id".toParameterName(16)
 
     assertEquals(
       s"""MATCH (source:`Person`)
@@ -335,12 +336,12 @@ class Neo4jQueryServiceTest {
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
     val parameterNames: Map[String, String] = HashMap(
-      "name_1" -> "$".concat(Neo4jUtil.createParameterName("name", "John Doe")),
-      "name_2" -> "$".concat(Neo4jUtil.createParameterName("name", "John Scofield")),
-      "age_1" -> "$".concat(Neo4jUtil.createParameterName("age", 15)),
-      "age_2" -> "$".concat(Neo4jUtil.createParameterName("age", 18)),
-      "age_3" -> "$".concat(Neo4jUtil.createParameterName("age", 22)),
-      "age_4" -> "$".concat(Neo4jUtil.createParameterName("age", 11))
+      "name_1" -> "$".concat("name".toParameterName("John Doe")),
+      "name_2" -> "$".concat("name".toParameterName("John Scofield")),
+      "age_1" -> "$".concat("age".toParameterName(15)),
+      "age_2" -> "$".concat("age".toParameterName(18)),
+      "age_3" -> "$".concat("age".toParameterName(22)),
+      "age_4" -> "$".concat("age".toParameterName(11))
     )
 
     assertEquals(
@@ -370,12 +371,12 @@ class Neo4jQueryServiceTest {
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
     val parameterNames = Map(
-      "source.name_1" -> "$".concat(Neo4jUtil.createParameterName("source.name", "John Doe")),
-      "target.name_1" -> "$".concat(Neo4jUtil.createParameterName("target.name", "John Doraemon")),
-      "source.name_2" -> "$".concat(Neo4jUtil.createParameterName("source.name", "Jane Doe")),
-      "target.age_1" -> "$".concat(Neo4jUtil.createParameterName("target.age", 34)),
-      "target.age_2" -> "$".concat(Neo4jUtil.createParameterName("target.age", 18)),
-      "rel.score" -> "$".concat(Neo4jUtil.createParameterName("rel.score", 12))
+      "source.name_1" -> "$".concat("source.name".toParameterName("John Doe")),
+      "target.name_1" -> "$".concat("target.name".toParameterName("John Doraemon")),
+      "source.name_2" -> "$".concat("source.name".toParameterName("Jane Doe")),
+      "target.age_1" -> "$".concat("target.age".toParameterName(34)),
+      "target.age_2" -> "$".concat("target.age".toParameterName(18)),
+      "rel.score" -> "$".concat("rel.score".toParameterName(12))
     )
 
     assertEquals(
@@ -407,12 +408,12 @@ class Neo4jQueryServiceTest {
     val query: String = new Neo4jQueryService(neo4jOptions, new Neo4jQueryReadStrategy(filters)).createQuery()
 
     val parameterNames = Map(
-      "source.name_1" -> "$".concat(Neo4jUtil.createParameterName("source.name", "John Doe")),
-      "target.name_1" -> "$".concat(Neo4jUtil.createParameterName("target.name", "John Doraemon")),
-      "source.name_2" -> "$".concat(Neo4jUtil.createParameterName("source.name", "Jane Doe")),
-      "target.age_1" -> "$".concat(Neo4jUtil.createParameterName("target.age", 34)),
-      "target.age_2" -> "$".concat(Neo4jUtil.createParameterName("target.age", 18)),
-      "rel.score" -> "$".concat(Neo4jUtil.createParameterName("rel.score", 12))
+      "source.name_1" -> "$".concat("source.name".toParameterName("John Doe")),
+      "target.name_1" -> "$".concat("target.name".toParameterName("John Doraemon")),
+      "source.name_2" -> "$".concat("source.name".toParameterName("Jane Doe")),
+      "target.age_1" -> "$".concat("target.age".toParameterName(34)),
+      "target.age_2" -> "$".concat("target.age".toParameterName(18)),
+      "rel.score" -> "$".concat("rel.score".toParameterName(12))
     )
 
     assertEquals(

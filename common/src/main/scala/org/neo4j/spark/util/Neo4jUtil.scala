@@ -249,15 +249,15 @@ object Neo4jUtil {
   @tailrec
   def getAttributeAndValue(filter: Filter): Seq[Any] = {
     filter match {
-      case f: EqualTo => Seq(createParameterName(f.attribute, f.value), f.value)
-      case f: GreaterThan => Seq(createParameterName(f.attribute, f.value), f.value)
-      case f: GreaterThanOrEqual => Seq(createParameterName(f.attribute, f.value), f.value)
-      case f: LessThan => Seq(createParameterName(f.attribute, f.value), f.value)
-      case f: LessThanOrEqual => Seq(createParameterName(f.attribute, f.value), f.value)
-      case f: In => Seq(createParameterName(f.attribute, f.values), f.values)
-      case f: StringStartsWith => Seq(createParameterName(f.attribute, f.value), f.value)
-      case f: StringEndsWith => Seq(createParameterName(f.attribute, f.value), f.value)
-      case f: StringContains => Seq(createParameterName(f.attribute, f.value), f.value)
+      case f: EqualTo => Seq(f.attribute.toParameterName(f.value), f.value)
+      case f: GreaterThan => Seq(f.attribute.toParameterName(f.value), f.value)
+      case f: GreaterThanOrEqual => Seq(f.attribute.toParameterName(f.value), f.value)
+      case f: LessThan => Seq(f.attribute.toParameterName(f.value), f.value)
+      case f: LessThanOrEqual => Seq(f.attribute.toParameterName(f.value), f.value)
+      case f: In => Seq(f.attribute.toParameterName(f.values), f.values)
+      case f: StringStartsWith => Seq(f.attribute.toParameterName(f.value), f.value)
+      case f: StringEndsWith => Seq(f.attribute.toParameterName(f.value), f.value)
+      case f: StringContains => Seq(f.attribute.toParameterName(f.value), f.value)
       case f: Not => getAttributeAndValue(f.child)
       case _ => Seq()
     }
@@ -278,26 +278,8 @@ object Neo4jUtil {
     }
   }
 
-  /**
-   * df: we need this to handle scenarios like `WHERE age > 19 and age < 22`,
-   * so we can't basically add a parameter named $age.
-   * So we base64 encode the value to ensure a unique parameter name
-   */
-  def createParameterName(attribute: String, value: Any): String = {
-    val attributeValue = if (value == null) {
-      "NULL"
-    }
-    else {
-      value.toString
-    }
-
-    val base64ed = java.util.Base64.getEncoder.encodeToString(attributeValue.getBytes())
-
-    s"${base64ed}_${attribute.unquote()}".quote()
-  }
-
   def valueToCypherExpression(attribute: String, value: Any): Expression = {
-    val parameter = Cypher.parameter(createParameterName(attribute, value))
+    val parameter = Cypher.parameter(attribute.toParameterName(value))
     value match {
       case d: java.sql.Date => Functions.date(parameter)
       case t: java.sql.Timestamp => Functions.localdatetime(parameter)

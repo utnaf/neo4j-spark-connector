@@ -29,6 +29,24 @@ object Neo4jImplicits {
         str
       }
     }
+
+    /**
+     * df: we need this to handle scenarios like `WHERE age > 19 and age < 22`,
+     * so we can't basically add a parameter named $age.
+     * So we base64 encode the value to ensure a unique parameter name
+     */
+    def toParameterName(value: Any): String = {
+      val attributeValue = if (value == null) {
+        "NULL"
+      }
+      else {
+        value.toString
+      }
+
+      val base64ed = java.util.Base64.getEncoder.encodeToString(attributeValue.getBytes())
+
+      s"${base64ed}_${str.unquote()}".quote()
+    }
   }
 
   implicit class EntityImplicits(entity: Entity) {
