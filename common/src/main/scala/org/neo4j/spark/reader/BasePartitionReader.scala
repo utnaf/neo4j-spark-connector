@@ -28,6 +28,19 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
   private val query: String = new Neo4jQueryService(options, new Neo4jQueryReadStrategy(filters, partitionSkipLimit, requiredColumns.fieldNames))
     .createQuery()
 
+  private lazy val values = {
+    val params = mutable.HashMap[String, Any]()
+    params.put(Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT, scriptResult)
+    Neo4jUtil.paramsFromFilters(filters)
+      .foreach(p => params.put(p._1, p._2))
+
+    if (log.isDebugEnabled) {
+      log.debug(s"Query Parameters are: $params")
+    }
+
+    params.asJava
+  }
+
   private val mappingService = new MappingService(new Neo4jReadMappingStrategy(options, requiredColumns), options)
 
   def next: Boolean = {
@@ -50,16 +63,5 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
     driverCache.close()
   }
 
-  protected def getQueryParameters: util.Map[String, Any] = {
-    val params = mutable.HashMap[String, Any]()
-    params.put(Neo4jQueryStrategy.VARIABLE_SCRIPT_RESULT, scriptResult)
-    Neo4jUtil.paramsFromFilters(filters)
-      .foreach(p => params.put(p._1, p._2))
-
-    if (log.isDebugEnabled) {
-      log.debug(s"Query Parameters are: $params")
-    }
-
-    params.asJava
-  }
+  protected def getQueryParameters: util.Map[String, Any] = values
 }
