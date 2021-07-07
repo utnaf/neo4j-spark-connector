@@ -6,6 +6,7 @@ import org.neo4j.driver.types.{Entity, Node, Relationship}
 import org.neo4j.spark.service.SchemaService
 import org.apache.spark.sql.sources.{And, EqualNullSafe, EqualTo, Filter, GreaterThan, GreaterThanOrEqual, In, IsNotNull, IsNull, LessThan, LessThanOrEqual, Not, Or, StringContains, StringEndsWith, StringStartsWith}
 
+import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
 object Neo4jImplicits {
@@ -138,6 +139,22 @@ object Neo4jImplicits {
     }
 
     def getAttributeWithoutEntityName: Option[String] = filter.getAttribute.map(_.unquote().split('.').tail.mkString("."))
+
+    def getAttributeAndValue: Seq[Any] = {
+      filter match {
+        case f: EqualTo => Seq(f.attribute.toParameterName(f.value), f.value)
+        case f: GreaterThan => Seq(f.attribute.toParameterName(f.value), f.value)
+        case f: GreaterThanOrEqual => Seq(f.attribute.toParameterName(f.value), f.value)
+        case f: LessThan => Seq(f.attribute.toParameterName(f.value), f.value)
+        case f: LessThanOrEqual => Seq(f.attribute.toParameterName(f.value), f.value)
+        case f: In => Seq(f.attribute.toParameterName(f.values), f.values)
+        case f: StringStartsWith => Seq(f.attribute.toParameterName(f.value), f.value)
+        case f: StringEndsWith => Seq(f.attribute.toParameterName(f.value), f.value)
+        case f: StringContains => Seq(f.attribute.toParameterName(f.value), f.value)
+        case f: Not => f.getAttributeAndValue
+        case _ => Seq()
+      }
+    }
   }
 
   implicit class StructTypeImplicit(structType: StructType) {

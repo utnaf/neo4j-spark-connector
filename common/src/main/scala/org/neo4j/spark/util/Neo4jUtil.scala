@@ -3,7 +3,6 @@ package org.neo4j.spark.util
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.{JsonSerializer, ObjectMapper, SerializerProvider}
-import com.google.common.base.Charsets
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{GenericRowWithSchema, UnsafeArrayData, UnsafeMapData, UnsafeRow}
 import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, ArrayData, DateTimeUtils}
@@ -246,25 +245,8 @@ object Neo4jUtil {
     container.property(attribute.split('.'): _*)
   }
 
-  @tailrec
-  def getAttributeAndValue(filter: Filter): Seq[Any] = {
-    filter match {
-      case f: EqualTo => Seq(f.attribute.toParameterName(f.value), f.value)
-      case f: GreaterThan => Seq(f.attribute.toParameterName(f.value), f.value)
-      case f: GreaterThanOrEqual => Seq(f.attribute.toParameterName(f.value), f.value)
-      case f: LessThan => Seq(f.attribute.toParameterName(f.value), f.value)
-      case f: LessThanOrEqual => Seq(f.attribute.toParameterName(f.value), f.value)
-      case f: In => Seq(f.attribute.toParameterName(f.values), f.values)
-      case f: StringStartsWith => Seq(f.attribute.toParameterName(f.value), f.value)
-      case f: StringEndsWith => Seq(f.attribute.toParameterName(f.value), f.value)
-      case f: StringContains => Seq(f.attribute.toParameterName(f.value), f.value)
-      case f: Not => getAttributeAndValue(f.child)
-      case _ => Seq()
-    }
-  }
-
   def paramsFromFilters(filters: Array[Filter]): Map[String, Any] = {
-    filters.flatMap(f => f.flattenFilters).map(Neo4jUtil.getAttributeAndValue)
+    filters.flatMap(f => f.flattenFilters).map(_.getAttributeAndValue)
       .filter(_.nonEmpty)
       .map(valAndAtt => valAndAtt.head.toString.unquote() -> toParamValue(valAndAtt(1)))
       .toMap
