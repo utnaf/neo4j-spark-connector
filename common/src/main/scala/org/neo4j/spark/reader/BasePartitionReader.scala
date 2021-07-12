@@ -34,10 +34,6 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
     Neo4jUtil.paramsFromFilters(filters)
       .foreach(p => params.put(p._1, p._2))
 
-    if (log.isDebugEnabled) {
-      log.debug(s"Query Parameters are: $params")
-    }
-
     params.asJava
   }
 
@@ -48,7 +44,13 @@ abstract class BasePartitionReader(private val options: Neo4jOptions,
       session = driverCache.getOrCreate().session(options.session.toNeo4jSession)
       transaction = session.beginTransaction()
       log.info(s"Running the following query on Neo4j: $query")
-      result = transaction.run(query, Values.value(getQueryParameters))
+
+      val queryParams = getQueryParameters
+      if (log.isDebugEnabled) {
+        log.debug(s"Query Parameters are: $queryParams")
+      }
+
+      result = transaction.run(query, Values.value(queryParams))
         .asScala
     }
 
