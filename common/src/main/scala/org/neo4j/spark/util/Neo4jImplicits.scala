@@ -140,8 +140,15 @@ object Neo4jImplicits {
 
     def getAttributeWithoutEntityName: Option[String] = filter.getAttribute.map(_.unquote().split('.').tail.mkString("."))
 
+    /**
+     * df: we are not handling AND/OR because they are not actually filters
+     * and have a different internal structure. Before calling this function on the filters
+     * it's highly suggested FilterImplicit::flattenFilter() which returns a collection
+     * of filters, including the one contained in the ANDs/ORs objects.
+     */
     def getAttributeAndValue: Seq[Any] = {
       filter match {
+        case f: EqualNullSafe => Seq(f.attribute.toParameterName(f.value), f.value)
         case f: EqualTo => Seq(f.attribute.toParameterName(f.value), f.value)
         case f: GreaterThan => Seq(f.attribute.toParameterName(f.value), f.value)
         case f: GreaterThanOrEqual => Seq(f.attribute.toParameterName(f.value), f.value)
