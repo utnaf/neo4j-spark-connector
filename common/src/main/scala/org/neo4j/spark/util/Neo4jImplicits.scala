@@ -151,7 +151,7 @@ object Neo4jImplicits {
         case f: StringStartsWith => Seq(f.attribute.toParameterName(f.value), f.value)
         case f: StringEndsWith => Seq(f.attribute.toParameterName(f.value), f.value)
         case f: StringContains => Seq(f.attribute.toParameterName(f.value), f.value)
-        case f: Not => f.getAttributeAndValue
+        case f: Not => f.child.getAttributeAndValue
         case _ => Seq()
       }
     }
